@@ -1,0 +1,5 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement style="height: 906px; justify-content: flex-start; align-items: flex-start; width: 308px;">
+        <ui:Label text="状态机编辑器" display-tooltip-when-elided="true" />
+    </ui:VisualElement>
+</ui:UXML>
