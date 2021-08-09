@@ -9,7 +9,7 @@ namespace Prota.Animation2D
     public static partial class Animation2DEditor
     {
         
-        [MenuItem("Assets/ProtaFramework/动画/比较两个贴图", priority = 5)]
+        [MenuItem(Menu.compareTextures, priority = Menu.compareTexturesPriority)]
         static void CompareTextures()
         {
             var s = Selection.objects;

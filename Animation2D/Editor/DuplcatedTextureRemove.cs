@@ -9,8 +9,8 @@ namespace Prota.Animation2D
     // 删除导出的动画序列中的重复图片.
     public static partial class Animation2DEditor
     {
-        [MenuItem("Assets/ProtaFramework/动画/删除重复图片")]
-        static void Remove()
+        [MenuItem(Menu.removeDulicatedTextures, priority = Menu.removeDulicatedTexturesPriority)]
+        static void RemoveDuplicatedTextures()
         {
             var curSelectPath = AssetDatabase.GetAssetPath(Selection.activeInstanceID);
             if(!AssetDatabase.IsValidFolder(curSelectPath))
@@ -26,7 +26,7 @@ namespace Prota.Animation2D
             {
                 var pre = textures[i - 1];
                 var cur = textures[i];
-                if(pre.AlmostSame(cur)) sameAsPrev[i] = true;
+                if(pre.Same(cur)) sameAsPrev[i] = true;
             }
             
             for(int i = 1; i < textures.Count; i++) if(sameAsPrev[i])

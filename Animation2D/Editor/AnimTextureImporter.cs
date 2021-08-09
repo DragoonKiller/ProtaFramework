@@ -44,8 +44,8 @@ namespace Prota.Animation2D
             importer.mipmapEnabled = true;
         }
         
-        [MenuItem("Assets/ProtaFramework/动画/刷新贴图设置", false, 5)]
-        static void Reimport()
+        [MenuItem(Animation2DEditor.Menu.refreshTextureSettings, priority = Animation2DEditor.Menu.refreshTextureSettingsPriority)]
+        public static void Reimport()
         {
             foreach(var g in Selection.objects)
             {

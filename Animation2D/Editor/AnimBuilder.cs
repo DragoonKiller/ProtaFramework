@@ -17,8 +17,8 @@ namespace Prota.Animation2D
         
         const string genTrackName = "GeneratedTrack.Sprite";
         
-        [MenuItem("Assets/ProtaFramework/动画/构建动画Timeline", priority = 1)]
-        static void BuildAnimationTrack()
+        [MenuItem(Menu.buildTimeline, priority = Menu.buildTimelinePriority)]
+        static void BuildAnimation()
         {
             var curSelectPath = AssetDatabase.GetAssetPath(Selection.activeInstanceID);
             var files = GetAllFiles(curSelectPath);
