@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using Prota.Unity;
 using UnityEngine.Timeline;
 
-namespace Prota.Animation2D
+namespace Prota.Animation
 {
     
     // 要求格式: 文件名的最后由 "_xxxx" 结尾, xxxx 是数字.

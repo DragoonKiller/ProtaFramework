@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Prota.Unity
 {
-    public static class MathExt
+    public static partial class MethodExtensions
     {
         public static Vector2 X(this Vector2 a, float x) => new Vector2(x, a.y);
         public static Vector2 Y(this Vector2 a, float y) => new Vector2(a.x, y);
@@ -26,6 +26,10 @@ namespace Prota.Unity
         public static Color A(this Color c, float a) => new Color(c.r, c.g, c.b, a);
         
         public static Vector4 ToVec4(this Color c) => new Vector4(c.r, c.g, c.b, c.a);
+        
+        public static Vector4 ToVec4(this Quaternion q) => new Vector4(q.x, q.y, q.z, q.w);
+        
+        public static Quaternion ToQuaternion(this Vector4 q) => new Quaternion(q.x, q.y, q.z, q.w); 
         
         
         public static float Abs(this float x) => Mathf.Abs(x);

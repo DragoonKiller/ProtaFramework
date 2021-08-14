@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using Prota.Unity;
 
-namespace Prota.Animation2D
+namespace Prota.Animation
 {
     public static partial class Animation2DEditor
     {        

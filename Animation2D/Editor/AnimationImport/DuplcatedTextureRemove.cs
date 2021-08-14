@@ -4,7 +4,7 @@ using Prota.Editor;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace Prota.Animation2D
+namespace Prota.Animation
 {
     // 删除导出的动画序列中的重复图片.
     public static partial class Animation2DEditor

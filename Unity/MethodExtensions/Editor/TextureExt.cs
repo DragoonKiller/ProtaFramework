@@ -6,7 +6,7 @@ using Prota.Unity;
 
 namespace Prota.Editor
 {
-    public static class TextureExt
+    public static partial class MethodExtensions
     {
         public static bool Same(this Texture2D a, Texture2D b)
         {

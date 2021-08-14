@@ -1,10 +1,10 @@
 using UnityEngine;
 using UnityEditor;
 using Prota.Unity;
-using Prota.Animation2D;
+using Prota.Animation;
 using Prota.Editor;
 
-namespace Prota.Animation2D
+namespace Prota.Animation
 {
     public static partial class Animation2DEditor
     {

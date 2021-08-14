@@ -1,10 +1,12 @@
 using System;
 using UnityEngine;
 
+using Prota.Common;
+using System.Collections.Generic;
 
 namespace Prota.Unity
 {
-    public static class TransformExt
+    public static partial class MethodExtensions
     {
         public static void ForeachChild(this Transform t, Action<Transform> f)
         {
@@ -15,6 +17,15 @@ namespace Prota.Unity
             }
         }
         
+        public static void ForeachParent(this Transform t, Action<Transform> f)
+        {
+            while(true)
+            {
+                t = t.parent;
+                if(t == null) return;
+                f(t);
+            }
+        }
         
         private static Action<Transform> currentRecursiveTransformOp;
         private static void ForeachTransformRecursivelyInternal(Transform t)
@@ -41,5 +52,4 @@ namespace Prota.Unity
             return d;
         }
     }
-    
 }
