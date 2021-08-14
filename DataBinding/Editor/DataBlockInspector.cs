@@ -6,7 +6,7 @@ using System;
 using System.Linq;
 using Prota.Unity;
 
-namespace Prota.DataBinding
+namespace Prota.Data
 {
     [CustomEditor(typeof(DataBlock))]
     public class DataBlockInspector : UnityEditor.Editor
@@ -54,6 +54,7 @@ namespace Prota.DataBinding
             Undo.RecordObject(dataBlock, "DataBlockInspector");
             var changed = false;
             changed |= BlockName();
+            Sub();
             changed |= Data();
             changed |= AddDataBlock();
             if(changed) dataBlock.WriteData();
@@ -67,8 +68,36 @@ namespace Prota.DataBinding
             }
         }
         
+        
+        bool subFold = false;
+        
+        void Sub()
+        {
+            EditorGUILayout.Space(5);
+            this.SeperateLine(2, Color.black);
+            EditorGUILayout.Space(2);
+            
+            if(dataBlock.sub.Count() == 0)
+            {
+                EditorGUILayout.LabelField("没有子级数据.");
+                return;
+            }
+            
+            subFold = EditorGUILayout.Foldout(subFold, "子级数据");
+            if(!subFold) return;
+            foreach(var sub in dataBlock.sub)
+            {
+                EditorGUILayout.ObjectField(sub.blockName, sub, typeof(DataBlock), true);
+            }
+            
+            EditorGUILayout.Space(2);
+        }
+        
+        
         bool BlockName()
         {
+            this.SeperateLine(2, Color.black);
+            EditorGUILayout.Space(2);
             var originalName = dataBlock.blockName;
             dataBlock.blockName = EditorGUILayout.TextField("数据块名称:", dataBlock.blockName);
             EditorGUILayout.Space(5);
@@ -85,14 +114,18 @@ namespace Prota.DataBinding
             var dataList = GetRecords().ToList();
             dataList.Sort((p, q) => p.FindPropertyRelative("name").stringValue.CompareTo(q.FindPropertyRelative("name").stringValue));
             
+            EditorGUILayout.Space(5);
+            this.SeperateLine(2, Color.black);
+            
+            if(dataList.Count == 0)
+            {
+                EditorGUILayout.LabelField("没有数据.");
+                return false;
+            }
+            
             int toBeRemove = -1;
             for(int i = 0; i < dataList.Count; i++)
             {
-                if(i == 0)
-                {
-                    EditorGUILayout.Space(5);
-                    this.SeperateLine(2, Color.black);
-                }
                 changed |= TypedBindingEditor(dataList[i], out var removal);
                 if(removal) toBeRemove = i;
             }
@@ -114,6 +147,9 @@ namespace Prota.DataBinding
         Vector2 offsetAddDataBlock;
         bool AddDataBlock()
         {
+            EditorGUILayout.Space(5);
+            this.SeperateLine(2, Color.black);
+            
             useAddDataBlock = EditorGUILayout.BeginFoldoutHeaderGroup(useAddDataBlock, "添加数据块");
             if(!useAddDataBlock)
             {
@@ -158,6 +194,7 @@ namespace Prota.DataBinding
                 {
                     _nameStyle = new GUIStyle(EditorStyles.largeLabel);
                     _nameStyle.fontStyle = FontStyle.Bold;
+                    _nameStyle.richText = true;
                 }
                 return _nameStyle;
             }
@@ -183,9 +220,7 @@ namespace Prota.DataBinding
             ss.Reset();
             
             EditorGUILayout.BeginHorizontal();
-            this.SetColor(new Color(0.6f, 0.8f, 1f, 1));
-            EditorGUILayout.LabelField(pname, nameStyle, GUILayout.MinWidth(100));
-            this.ResetColor();
+            EditorGUILayout.LabelField("<color=#FFC0A0>" + pname + "</color> <color=#A0C0FF>(" + type + ")</color>", nameStyle, GUILayout.MinWidth(100));
             if(GUILayout.Button("x", GUILayout.Width(20))) removal = true;
             EditorGUILayout.EndHorizontal();
             
@@ -305,7 +340,9 @@ namespace Prota.DataBinding
                 g.Deserialize(ss);
                 foreach(var f in g.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
                 {
+                    var originalValue = f.GetValue(g);
                     var result = this.AnyField(f.Name, g, f);
+                    if(originalValue != f.GetValue(g)) cg = g;
                     if(!result) EditorGUILayout.LabelField(f.Name);
                 }
             }

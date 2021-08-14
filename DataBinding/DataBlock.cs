@@ -4,10 +4,10 @@ using UnityEngine;
 using Prota.Unity;
 using System.Collections;
 
-namespace Prota.DataBinding
+namespace Prota.Data
 {
     [Serializable]
-    public class DataBlock : MonoBehaviour, IEnumerable<DataBinding>
+    public class DataBlock : ProtaScript, IEnumerable<DataBinding>
     {
         [Serializable]
         class SerializedRecord
@@ -134,7 +134,7 @@ namespace Prota.DataBinding
         }
         
 
-        public struct SubAccessor
+        public struct SubAccessor : IEnumerable<DataBlock>
         {
             public DataBlock block;
             
@@ -144,22 +144,31 @@ namespace Prota.DataBinding
             {
                 get
                 {
-                    if(subCache == null) subCache = new List<DataBlock>();
-                    
-                    for(int i = 0; i < block.transform.childCount; i++)
+                    foreach(var sub in this)
                     {
-                        var child = block.transform.GetChild(i);
-                        child.GetComponentsInChildren<DataBlock>(subCache);
-                        foreach(var sub in subCache)
-                        {
-                            var val = sub[name];
-                            if(val != null) return val;
-                        }
+                        var val = sub[name];
+                        if(val != null) return val;
                     }
                     return null;
                 }
             }
-            
+
+            public IEnumerator<DataBlock> GetEnumerator()
+            {
+                if(subCache == null) subCache = new List<DataBlock>();
+                
+                for(int i = 0; i < block.transform.childCount; i++)
+                {
+                    var child = block.transform.GetChild(i);
+                    child.GetComponentsInChildren<DataBlock>(subCache);
+                    foreach(var sub in subCache)
+                    {
+                        yield return sub;
+                    }
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }
         
         

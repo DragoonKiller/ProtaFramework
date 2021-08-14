@@ -35,7 +35,7 @@ namespace Prota.CommonResources
             }
         }
         
-        Dictionary<string, UnityEngine.Object> resources;
+        Dictionary<string, UnityEngine.Object> resources = new Dictionary<string, UnityEngine.Object>();
         
         public List<Record> records = new List<Record>();
         

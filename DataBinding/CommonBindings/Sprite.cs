@@ -3,7 +3,7 @@ using System;
 
 using Prota.Unity;
 
-namespace Prota.DataBinding
+namespace Prota.Data
 {
     public partial class DataBinding
     {
@@ -14,8 +14,12 @@ namespace Prota.DataBinding
             
             public UnityEngine.Sprite sprite
             {
-                get => target.sprite;
-                set => target.sprite = value;
+                get => target ? target.sprite : null;
+                set 
+                {
+                    if(target == null) return;
+                    target.sprite = value;
+                }
             }
 
             public override void Deserialize(SerializedData s) { }

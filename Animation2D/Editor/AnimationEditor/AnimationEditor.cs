@@ -5,14 +5,14 @@ namespace Prota.Animation
 {
     public sealed class AnimationEditorWindow : EditorWindow
     {
-        ProtaAnimationState target;
+        ProtaAnimation target;
         
         
-        public void Set(ProtaAnimationState e) => target = e;
+        public void Set(ProtaAnimation e) => target = e;
         
         void OnGUI()
         {
-            EditorGUILayout.ObjectField(target, typeof(ProtaAnimationState), true);
+            EditorGUILayout.ObjectField(target, typeof(ProtaAnimation), true);
         }
         
     }

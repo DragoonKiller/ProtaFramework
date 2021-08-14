@@ -2,7 +2,7 @@ using UnityEngine;
 using System;
 using Prota.Unity;
 
-namespace Prota.DataBinding
+namespace Prota.Data
 {
     public partial class DataBinding
     {

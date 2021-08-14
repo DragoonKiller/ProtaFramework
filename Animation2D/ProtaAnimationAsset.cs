@@ -1,28 +1,13 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Prota.Unity;
 
 namespace Prota.Animation
 {
-    /// <summary>
-    /// 表示一段动画.
-    /// 一段动画会包含很多个 ProtaAnimationTrack.
-    /// </summary>
-    [Serializable]
-    public class ProtaAnimationAsset
+    public sealed class ProtaAnimationAsset : ScriptableObject
     {
         [SerializeField]
-        List<ProtaAnimationTrack> trackList;
-        public IReadOnlyList<ProtaAnimationTrack> tracks => trackList;
-        
-        
-        
-        
-        
-        
-        
-        
-        
+        public List<ProtaAnimationTrackAsset> tracks = new List<ProtaAnimationTrackAsset>();
     }
-    
 }

@@ -3,7 +3,7 @@ using System;
 using Prota.Unity;
 using System.Collections.Generic;
 
-namespace Prota.DataBinding
+namespace Prota.Data
 {
     [Serializable]
     public abstract partial class DataBinding : ISerializable

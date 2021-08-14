@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 
-using Prota.Common;
 using System.Collections.Generic;
 
 namespace Prota.Unity

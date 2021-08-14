@@ -86,6 +86,10 @@ namespace Prota.Unity
             {
                 f.SetValue(target, EditorGUILayout.RectField((Rect)f.GetValue(target)));
             }
+            else if(typeof(UnityEngine.Object).IsAssignableFrom(f.FieldType))
+            {
+                EditorGUILayout.ObjectField(label, f.GetValue(target) as UnityEngine.Object, typeof(UnityEngine.Object), true);
+            }
             else return false;
             
             return true;

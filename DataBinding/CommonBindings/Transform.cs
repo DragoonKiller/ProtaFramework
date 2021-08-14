@@ -4,7 +4,7 @@ using System;
 using Vec3 = UnityEngine.Vector3;
 using Prota.Unity;
 
-namespace Prota.DataBinding
+namespace Prota.Data
 {
     public partial class DataBinding
     {

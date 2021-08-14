@@ -4,7 +4,7 @@ using System.Text;
 using System.Runtime.Serialization;
 using Prota.Unity;
 
-namespace Prota.DataBinding
+namespace Prota.Data
 {
     public partial class DataBinding
     {

@@ -2,17 +2,28 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using Prota.Unity;
 
 namespace Prota.Unity
 {
     [Serializable]
-    public class SerializedData
+    public sealed class SerializedData : ICloneable<SerializedData>, ICloneable
     {
         [SerializeField]
         public List<int> data = new List<int>();
         
+        
         [NonSerialized]
         int current = 0;
+        
+        object ICloneable.Clone() => this.Clone();
+        
+        public SerializedData Clone()
+        {
+            var res = new SerializedData();
+            res.data = new List<int>(data);
+            return res;
+        }
         
         public void Clear()
         {
