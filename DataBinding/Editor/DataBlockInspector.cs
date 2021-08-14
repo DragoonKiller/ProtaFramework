@@ -88,6 +88,11 @@ namespace Prota.DataBinding
             int toBeRemove = -1;
             for(int i = 0; i < dataList.Count; i++)
             {
+                if(i == 0)
+                {
+                    EditorGUILayout.Space(5);
+                    this.SeperateLine(2, Color.black);
+                }
                 changed |= TypedBindingEditor(dataList[i], out var removal);
                 if(removal) toBeRemove = i;
             }
@@ -117,7 +122,6 @@ namespace Prota.DataBinding
             }
             newBindingName = EditorGUILayout.TextField("名称:", newBindingName);
             newBindingFilter = EditorGUILayout.TextField("搜索:", newBindingFilter);
-            var ss = EditorStyles.foldout;
             offsetAddDataBlock = EditorGUILayout.BeginScrollView(offsetAddDataBlock, GUILayout.Height(100));
             DataBinding newObj = null;
             foreach(var t in bindingTypeCache)
@@ -161,6 +165,8 @@ namespace Prota.DataBinding
         
         bool TypedBindingEditor(SerializedProperty t, out bool removal)
         {
+            EditorGUILayout.Space(2);
+            
             removal = false;
             var w = GUILayout.Width(200);
             var lname = "";
@@ -177,14 +183,15 @@ namespace Prota.DataBinding
             ss.Reset();
             
             EditorGUILayout.BeginHorizontal();
+            this.SetColor(new Color(0.6f, 0.8f, 1f, 1));
             EditorGUILayout.LabelField(pname, nameStyle, GUILayout.MinWidth(100));
+            this.ResetColor();
             if(GUILayout.Button("x", GUILayout.Width(20))) removal = true;
             EditorGUILayout.EndHorizontal();
             
             if(type == "Int")
             {
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.Space(5);
                 var g = new DataBinding.Int();
                 g.Deserialize(ss);
                 var originalValue = g.value;
@@ -195,7 +202,6 @@ namespace Prota.DataBinding
             else if(type == "Float")
             {
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.Space(5);
                 var g = new DataBinding.Float();
                 g.Deserialize(ss);
                 var originalValue = g.value;
@@ -206,7 +212,6 @@ namespace Prota.DataBinding
             else if(type == "Color")
             {
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.Space(5);
                 var g = new DataBinding.Color();
                 g.Deserialize(ss);
                 var originalValue = g.value;
@@ -217,7 +222,6 @@ namespace Prota.DataBinding
             else if(type == "Vector2")
             {
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.Space(5);
                 var g = new DataBinding.Vector2();
                 g.Deserialize(ss);
                 var originalValue = g.value;
@@ -228,7 +232,6 @@ namespace Prota.DataBinding
             else if(type == "Vector3")
             {
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.Space(5);
                 var g = new DataBinding.Vector3();
                 g.Deserialize(ss);
                 var originalValue = g.value;
@@ -239,7 +242,6 @@ namespace Prota.DataBinding
             else if(type == "Vector4")
             {
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.Space(5);
                 var g = new DataBinding.Vector4();
                 g.Deserialize(ss);
                 var originalValue = g.value;
@@ -250,18 +252,16 @@ namespace Prota.DataBinding
             else if(type == "String")
             {
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.Space(5);
                 var g = new DataBinding.String();
                 g.Deserialize(ss);
                 var originalValue = g.value;
-                g.value = EditorGUILayout.TextField(lname, g.value);
+                g.value = EditorGUILayout.TextArea(g.value);
                 if(g.value != originalValue) cg = g;
                 EditorGUILayout.EndHorizontal();
             }
             else if(type == "Quaternion")
             {
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.Space(5);
                 var g = new DataBinding.Quaternion();
                 g.Deserialize(ss);
                 var originalValue = g.value;
@@ -272,7 +272,6 @@ namespace Prota.DataBinding
             else if(type == "EulerAngle")
             {
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.Space(5);
                 var g = new DataBinding.EulerAngle();
                 g.Deserialize(ss);
                 var originalValue = g.value;
@@ -290,20 +289,29 @@ namespace Prota.DataBinding
             {
                 var g = new DataBinding.Transform();
                 g.Bind(pname, dataBlock);
-                EditorGUILayout.ObjectField("target", g.transform, typeof(UnityEngine.Rigidbody2D), true);
+                EditorGUILayout.ObjectField("target", g.transform, typeof(UnityEngine.Transform), true);
             }
             else if(type == "Sprite")
             {
                 var g = new DataBinding.Sprite();
                 g.Bind(pname, dataBlock);
-                EditorGUILayout.ObjectField("target", g.target, typeof(UnityEngine.Rigidbody2D), true);
-                EditorGUILayout.ObjectField("sprite", g.sprite, typeof(UnityEngine.Rigidbody2D), true);
+                EditorGUILayout.ObjectField("target", g.target, typeof(UnityEngine.SpriteRenderer), true);
+                EditorGUILayout.ObjectField("sprite", g.sprite, typeof(UnityEngine.Sprite), true);
             }
             else
             {
-                
+                // 反射枚举所有元素.
+                var g = Activator.CreateInstance(DataBinding.types[type]) as DataBinding;
+                g.Deserialize(ss);
+                foreach(var f in g.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    var result = this.AnyField(f.Name, g, f);
+                    if(!result) EditorGUILayout.LabelField(f.Name);
+                }
             }
-            this.SeperateLine(1, Color.black);
+            
+            EditorGUILayout.Space(3);
+            this.SeperateLine(1, new Color(.1f, .1f, .1f, 1));
             
             if(cg != null)
             {
