@@ -59,8 +59,7 @@ namespace Prota.Unity
                     r.xMin -= 20 + depth * pixelPerDepth;
                     r.xMax = r.xMin + r.height;
                     GUI.color = new Color(1, 1, 1, 0.4f);
-                    var cr = CommonResource.inst;
-                    GUI.DrawTexture(r, cr["line_vertical_16_2"] as Texture2D);
+                    GUI.DrawTexture(r, ResourcesDatabase.inst["Common"]["line_vertical_16_2"] as Texture2D);
                     
                 }
                 

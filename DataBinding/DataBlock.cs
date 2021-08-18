@@ -53,6 +53,23 @@ namespace Prota.Data
             }
         }
         
+        public DataBinding this[Type type]
+        {
+            get
+            {
+                Sync();
+                foreach(var d in bindings)
+                {
+                    if(d.Value.GetType() == type) return d.Value;
+                }
+                return null;
+            }
+        }
+        
+        public DataBinding GetAny<T>() => this[typeof(T)];
+        
+        public DataBinding Get<T>(string name) where T : DataBinding => this[name] as T;
+        
         
         public IEnumerator<DataBinding> GetEnumerator()
         {

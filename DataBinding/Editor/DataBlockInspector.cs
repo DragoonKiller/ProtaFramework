@@ -15,14 +15,7 @@ namespace Prota.Data
         
         static DataBlockInspector()
         {
-            foreach(var t in typeof(DataBinding).GetNestedTypes())
-            {
-                if(typeof(DataBinding).IsAssignableFrom(t))
-                {
-                    bindingTypeCache.Add(t);
-                }
-            }
-            
+            bindingTypeCache = DataBinding.types.Select(x => x.Value).ToList();
             bindingTypeCache.Sort((a, b) => a.Name.CompareTo(b.Name));
         }
         
@@ -220,7 +213,7 @@ namespace Prota.Data
             ss.Reset();
             
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("<color=#FFC0A0>" + pname + "</color> <color=#A0C0FF>(" + type + ")</color>", nameStyle, GUILayout.MinWidth(100));
+            EditorGUILayout.LabelField("<color=#F0D890>" + pname + "</color> <color=#A0C0FF>(" + type + ")</color>", nameStyle, GUILayout.MinWidth(100));
             if(GUILayout.Button("x", GUILayout.Width(20))) removal = true;
             EditorGUILayout.EndHorizontal();
             
@@ -331,7 +324,7 @@ namespace Prota.Data
                 var g = new DataBinding.Sprite();
                 g.Bind(pname, dataBlock);
                 EditorGUILayout.ObjectField("target", g.target, typeof(UnityEngine.SpriteRenderer), true);
-                EditorGUILayout.ObjectField("sprite", g.sprite, typeof(UnityEngine.Sprite), true);
+                EditorGUILayout.ObjectField("sprite", g.sprite, typeof(UnityEngine.Object), true);
             }
             else
             {

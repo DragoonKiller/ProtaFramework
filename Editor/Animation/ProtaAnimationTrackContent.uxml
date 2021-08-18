@@ -1,0 +1,22 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement name="Template">
+        <ui:VisualElement style="flex-direction: row; flex-shrink: 0; flex-grow: 1; max-height: 18px; min-height: 18px; background-color: rgb(41, 41, 41);">
+            <ui:Label text="1" display-tooltip-when-elided="true" name="Id" enable-rich-text="false" style="-unity-text-align: middle-left; font-size: 14px;" />
+            <ui:VisualElement style="flex-shrink: 1; flex-grow: 0; max-width: 2px; min-width: 2px; background-color: rgb(13, 16, 26);" />
+            <ui:Label text="类型名称" display-tooltip-when-elided="true" name="Type" enable-rich-text="false" style="-unity-text-align: middle-left; font-size: 12px; min-width: 200px; max-width: 400px; color: rgba(152, 178, 229, 255);" />
+            <ui:VisualElement style="flex-shrink: 1; flex-grow: 0; max-width: 2px; min-width: 2px; background-color: rgb(13, 16, 26);" />
+            <ui:TextField name="TrackName" picking-mode="Ignore" text="Track名称" style="max-width: 400px; min-width: 400px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); -unity-background-image-tint-color: rgb(255, 255, 255); background-color: rgba(26, 26, 26, 0);" />
+            <ui:VisualElement style="flex-shrink: 0; flex-grow: 1; flex-direction: column;" />
+            <ui:Button text="x" display-tooltip-when-elided="true" name="Delete" style="background-color: rgb(43, 43, 43);" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Track" style="flex-direction: row-reverse;">
+            <ui:VisualElement name="TrackLine" style="flex-shrink: 0; flex-grow: 1;">
+                <ui:VisualElement name="TrackPanel" style="flex-shrink: 0; flex-grow: 1; min-width: 1px; min-height: 1px; background-color: rgb(43, 43, 43);">
+                    <ui:VisualElement name="TimeStamp" style="max-width: 1px; min-width: 1px; width: 1px; flex-shrink: 0; flex-grow: 1; background-color: rgb(65, 76, 82); left: 55px;" />
+                    <ui:VisualElement name="TrackContent" style="position: absolute; height: 192px; width: 1099px; left: -255px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="DataPanel" style="height: 200px; max-height: 400px; min-height: 200px; max-width: 200px; min-width: 300px; width: 964px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

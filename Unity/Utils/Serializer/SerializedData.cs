@@ -174,9 +174,10 @@ namespace Prota.Unity
             data[lenPos] = len;
         }
         
-        [ThreadStatic] static StringBuilder cachedSb = new StringBuilder();
+        [ThreadStatic] static StringBuilder cachedSb;
         public string String()
         {
+            if(cachedSb == null) cachedSb = new StringBuilder();
             cachedSb.Clear();
             var len = data[current++];
             for(int i = 0; i < len; i++)
