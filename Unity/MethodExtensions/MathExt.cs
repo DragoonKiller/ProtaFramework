@@ -36,8 +36,14 @@ namespace Prota.Unity
         public static float Max(this float a, float b) => Mathf.Max(a, b);
         public static float Min(this float a, float b) => Mathf.Min(a, b);
         
+        public static float Sign(this float x) => Mathf.Sign(x);
+        public static float Exp(this float x) => Mathf.Exp(x);
+        public static float Pow(this float x, float y) => Mathf.Pow(x, y);
+        public static float Floor(this float x) => Mathf.Floor(x);
+        public static float Ceil(this float x) => Mathf.Ceil(x);
         
-        
+        public static int FloorToInt(this float x) => Mathf.FloorToInt(x);
+        public static int CeilToInt(this float x) => Mathf.CeilToInt(x);
         
         
         public static float XMap(this float x, float a, float b) => (x - a) / (b - a);

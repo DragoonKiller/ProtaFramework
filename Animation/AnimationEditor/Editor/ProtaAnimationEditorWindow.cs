@@ -42,8 +42,9 @@ namespace Prota.Editor
         {
             LoadRoot();
             SetupAddTrack();
+            SetupTimeline();
             SetupTimelineHeader();
-            SetupTracks();
+            SetupAllTracksRoot();
         }
         
         public void OnDisable()
@@ -64,10 +65,7 @@ namespace Prota.Editor
             foreach(var i in onDestory) i.Value();
         }
         
-        void Update()
-        {
-            StepFrame();
-        }
+        
         
         // ============================================================================================================
         // 添加 Track
@@ -90,72 +88,282 @@ namespace Prota.Editor
             var track = Activator.CreateInstance(trackType) as ProtaAnimationTrack;
             animation.tracks.Add(track);
             track.name = name + "Track";
-            SyncTracks();
+            SetupTracks();
         }
         
+        
+        
         // ============================================================================================================
-        // 播放
+        // 事件
         // ============================================================================================================
         
-        ProtaAnimation animation;
         
-        bool playing;
+        Action onUpdate;
+        void Update() => onUpdate?.Invoke();
         
-        float time;
+        
+        // ============================================================================================================
+        // 播放和题头
+        // ============================================================================================================
+        
+        FloatField time;
+        Button startButton;
+        Button recordButton;
+        Button resetButton;
+        FloatField duration;
+        FloatField timeFrom;
+        FloatField timeTo;
+        ObjectField target;
+        ProtaAnimation animation => target?.value as ProtaAnimation;
+        
+        
+        
         
         double recordTime;
         
-        FloatField currentTime;
+        bool _playing;
+        bool playing
+        {
+            get => _playing;
+            set
+            {
+                if(_playing == value) return;
+                _playing = value;
+                
+                if(value)
+                {
+                    startButton.text = "停止";
+                    recordTime = EditorApplication.timeSinceStartup;
+                }
+                else
+                {
+                    startButton.text = "开始";
+                }
+            }
+        }
+        
+        
         
         void SetupTimelineHeader()
         {
-            var target = root.Q<ObjectField>("Target");
+            target = root.Q<ObjectField>("Target");
             target.objectType = typeof(ProtaAnimation);
-            target.RegisterCallback<ChangeEvent<UnityEngine.Object>>(a => {
-                animation = a.newValue as ProtaAnimation;
-                ResetTime();
-                SyncTracks();
+            target.RegisterCallback<ChangeEvent<UnityEngine.Object>>((EventCallback<ChangeEvent<UnityEngine.Object>>)(e => {
+                var anim = e.newValue as ProtaAnimation;
+                SetupTracks();
+                duration.value = anim.duration;
+                timeFrom.value = 0;
+                timeTo.value = timeFrom.value + anim.duration;
+                UpdateTimelineDisplay();
+            }));
+            
+            time = root.Q<FloatField>("CurrentTime");
+            time.RegisterValueChangedCallback(e => {
+                if(!(timeFrom.value <= time.value && time.value <= timeTo.value))
+                {
+                    time.value = time.value.Max(timeFrom.value).Min(timeTo.value);
+                    return;
+                }
+                UpdateStamp();
             });
             
-            var startButton = root.Q<Button>("StartButton");
-            startButton.RegisterCallback<ClickEvent>(a => {
+            startButton = root.Q<Button>("StartButton");
+            startButton.RegisterCallback<ClickEvent>(e => {
                 playing = !playing;
-                if(playing) startButton.text = "停止";
-                else startButton.text = "开始";
-                if(playing) recordTime = EditorApplication.timeSinceStartup;
-                startButton.MarkDirtyRepaint();
             });
             
-            var resetButton = root.Q<Button>("ResetButton");
-            resetButton.RegisterCallback<ClickEvent>(ResetTime);
+            resetButton = root.Q<Button>("ResetButton");
+            resetButton.RegisterCallback<ClickEvent>(e => {
+                time.value = 0;
+            });
             
-            var recordButton = root.Q<Button>("RecordButton");
-            recordButton.RegisterCallback<ClickEvent>(a => {
+            recordButton = root.Q<Button>("RecordButton");
+            recordButton.RegisterCallback<ClickEvent>(e => {
                 Debug.Log("TODO");
             });
             
+            duration = root.Q<FloatField>("Duration");
+            duration.RegisterValueChangedCallback(e => {
+                timeTo.value = timeTo.value.Min(e.newValue);
+                if(animation) animation.duration = e.newValue;
+                time.value = time.value.Min(duration.value);
+                time.value = time.value;
+            });
+            
+            timeFrom = root.Q<FloatField>("TimeFrom");
+            timeFrom.RegisterValueChangedCallback(e => {
+                timeTo.value = timeTo.value.Max(e.newValue + 1e-4f);
+                time.value = time.value;
+            });
+            
+            timeTo = root.Q<FloatField>("TimeTo");
+            timeTo.RegisterValueChangedCallback((EventCallback<ChangeEvent<float>>)(e => {
+                timeTo.value = Unity.MethodExtensions.Max(timeTo.value, this.timeFrom.value + 1e-4f);
+                time.value = time.value;
+            }));
+            
+            onUpdate += () => {
+                if(!playing) return;
+                var ccTime = EditorApplication.timeSinceStartup;
+                time.value = (float)(ccTime - recordTime);
+            };
+            
             // 完全初始化...
-            currentTime = root.Q<FloatField>("CurrentTime");
-            time = 0;
-            currentTime.value = time;
+            time.value = 0;
         }
         
+        // ============================================================================================================
+        // 时间轴
+        // ============================================================================================================
         
-        void StepFrame()
+        VisualElement timeline;
+        VisualElement timelineMarkRoot;
+        VisualElement timeStamp;
+        
+        void SetupTimeline()
         {
-            if(!playing) return;
-            var ccTime = EditorApplication.timeSinceStartup;
-            time = (float)(ccTime - recordTime);
-            currentTime.value = time;
+            const float scrollScale = 0.1f;
+            
+            bool inField = false;
+            bool pressing = false;
+            
+            timeline = root.Q("Timeline");
+            timeStamp = root.Q("TimeStamp");
+            
+            var originalColor = timeline.resolvedStyle.backgroundColor;
+            var activeColor = originalColor + new Color(0.05f, 0.05f, 0.05f, 0f);
+            
+            timeline.RegisterCallback<MouseEnterEvent>(e => {
+                inField = true;
+                timeline.style.backgroundColor = activeColor;
+            });
+            
+            timeline.RegisterCallback<MouseLeaveEvent>(e => {
+                inField = false;
+                pressing = false;
+                timeline.style.backgroundColor = originalColor;
+            });
+            
+            timeline.RegisterCallback<MouseDownEvent>(e => {
+                if(e.button != 0) return;
+                pressing = true;
+                
+            });
+            
+            timeline.RegisterCallback<MouseUpEvent>(e => {
+                if(e.button != 0) return;
+                pressing = false;
+            });
+            
+            timeline.RegisterCallback<MouseMoveEvent>(e => {
+                if(!inField || !pressing) return;
+                var rate = e.localMousePosition.x / timeline.resolvedStyle.width;
+                time.value = rate.XMap(0, 1, timeFrom.value, timeTo.value);
+                UpdateTimelineDisplay();
+            });
+            
+            timeline.RegisterCallback<WheelEvent>((EventCallback<WheelEvent>)(e => {
+                if(!inField) return;
+                var scaleFactor = (e.delta.y * scrollScale).Exp();
+                var cur = e.localMousePosition.x.XMap(0, timeline.resolvedStyle.width, timeFrom.value, timeTo.value);
+                var distL = cur - timeFrom.value;
+                var distR = timeTo.value - cur;
+                distL *= scaleFactor;
+                distR *= scaleFactor;
+                timeFrom.value = cur - distL;
+                timeTo.value = cur + distR;
+                UpdateTimelineDisplay();
+            }));
         }
         
-        void ResetTime(ClickEvent e) => ResetTime();
-        void ResetTime()
+        void UpdateTimelineDisplay()
         {
-            recordTime = EditorApplication.timeSinceStartup;
-            time = 0;
-            currentTime.value = 0;
+            UpdateStamp();
+            ResetAllMarks();
         }
+        
+        void UpdateStamp()
+        {
+            var pos = time.value.XMap(timeFrom.value, timeTo.value, 0, timeline.resolvedStyle.width);
+            
+            var pp = timeStamp.style.left;
+            pp.value = new Length(pos - timeStamp.resolvedStyle.width * 0.5f, LengthUnit.Pixel);
+            timeStamp.style.left = pp;
+        }
+        
+        
+        
+        readonly List<VisualElement> marks = new List<VisualElement>();
+        void ResetAllMarks()
+        {
+            if(timelineMarkRoot == null)
+            {
+                timelineMarkRoot = new VisualElement();
+                timelineMarkRoot.style.flexGrow = 1;
+                timelineMarkRoot.style.flexShrink = 0;
+                timeline.Add(timelineMarkRoot);
+                timelineMarkRoot.SendToBack();
+            }
+            
+            foreach(var mark in marks) timelineMarkRoot.Remove(mark);
+            marks.Clear();
+            
+            VisualElement NewNormalMark()
+            {
+                var x = new VisualElement();
+                x.style.flexShrink = 0;
+                x.style.flexGrow = 1;
+                x.style.position = Position.Absolute;
+                x.style.maxHeight = new StyleLength(StyleKeyword.None);
+                x.style.minHeight = new StyleLength(StyleKeyword.None);
+                x.style.height = timeline.resolvedStyle.height;
+                x.style.width = 1;
+                x.style.maxWidth = 1;
+                x.style.minWidth = 1;
+                x.pickingMode = PickingMode.Ignore;
+                return x;
+            }
+            
+            // 时间标记.
+            for(var i = timeFrom.value.CeilToInt(); i <= timeTo.value.FloorToInt(); i++)
+            {
+                if(i < 0 || i >= duration.value) continue;
+                var pos = ((float)i).XMap(timeFrom.value, timeTo.value, 0, timeline.resolvedStyle.width);
+                var x = NewNormalMark();
+                x.style.left = pos;
+                x.style.backgroundColor = new Color(.05f, .05f, .05f, 1);
+                marks.Add(x);
+                timelineMarkRoot.Add(x);
+            }
+            
+            // 开始和结束时间标记.
+            if(timeFrom.value <= 0)
+            {
+                var x = NewNormalMark();
+                var pos = (0f).XMap(timeFrom.value, timeTo.value, 0, timeline.resolvedStyle.width);
+                x.style.width = 3;
+                x.style.minWidth = 3;
+                x.style.maxWidth = 3;
+                x.style.left = pos - x.style.width.value.value / 2;
+                x.style.backgroundColor = new Color(1, 0.4f, 0.4f, 1);
+                marks.Add(x);
+                timelineMarkRoot.Add(x);
+            }
+            if(duration.value <= timeTo.value)
+            {
+                var x = NewNormalMark();
+                var pos = duration.value.XMap(timeFrom.value, timeTo.value, 0, timeline.resolvedStyle.width);
+                x.style.width = 3;
+                x.style.minWidth = 3;
+                x.style.maxWidth = 3;
+                x.style.left = pos - x.style.width.value.value / 2;
+                x.style.left = pos;
+                x.style.backgroundColor = new Color(1, 0.4f, 0.4f, 1);
+                marks.Add(x);
+                timelineMarkRoot.Add(x);
+            }
+        }
+        
         
         // ============================================================================================================
         // Track 生成和维护
@@ -168,15 +376,14 @@ namespace Prota.Editor
         
         List<ProtaAnimationTrackEditor> trackEditors = new List<ProtaAnimationTrackEditor>();
         
-        void SetupTracks()
+        void SetupAllTracksRoot()
         {
             trackRoot = root.Q<ScrollView>("Tracks");
             trackRoot.Clear();
-            SyncTracks();
         }
         
         // 重新绑定各个 track 到编辑器上.
-        void SyncTracks()
+        void SetupTracks()
         {
             if(animation == null) return;
             
@@ -200,21 +407,22 @@ namespace Prota.Editor
                 trackName.value = track.name;
                 trackName.RegisterValueChangedCallback(a => track.name = a.newValue);
                 var deleteButton = trackContents.Last().root.Q<Button>("Delete");
-                deleteButton.RegisterCallback<ClickEvent>(a => {
+                deleteButton.RegisterCallback<ClickEvent>((EventCallback<ClickEvent>)(e => {
                     animation.tracks.RemoveAt(i);
-                    SyncTracks();
-                });
+                    this.SetupTracks();
+                }));
             }
-            UpdateAllTracks();
+            
+            
+            ApplyTimeToTracks();
             trackRoot.MarkDirtyRepaint();
         }
         
-        // 更新每个 track 的表演.
-        void UpdateAllTracks()
+        void ApplyTimeToTracks()
         {
             for(int i = 0; i < trackEditors.Count; i++)
             {
-                trackEditors[i].time = time;
+                trackEditors[i].time = time.value;
                 trackEditors[i].UpdateTrackContent(trackContents[i]);
             }
         }

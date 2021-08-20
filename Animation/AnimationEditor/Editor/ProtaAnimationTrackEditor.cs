@@ -11,6 +11,11 @@ namespace Prota.Editor
         public abstract void UpdateTrackContent(ProtaAnimationTrackContent content);
         
         
+        public virtual void UpdateTime(float time)
+        {
+            
+        }
+        
         protected class TrackEditorAttribute : Attribute
         {
             public Type trackType;

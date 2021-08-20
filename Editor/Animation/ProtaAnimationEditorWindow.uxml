@@ -1,5 +1,4 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
-    <ui:Template name="ProtaAnimationTrackContent" src="ProtaAnimationTrackContent.uxml" />
     <uie:Toolbar name="OpBar">
         <ui:TextField picking-mode="Ignore" name="AddTrackName" binding-path="AddTrackName" style="min-width: 300px;" />
         <ui:Button text="添加 track" display-tooltip-when-elided="true" name="AddTrack" style="flex-direction: row;" />
@@ -9,19 +8,26 @@
         <ui:Button text="开始" display-tooltip-when-elided="true" name="StartButton" style="-unity-text-align: middle-left;" />
         <ui:Button text="重置" display-tooltip-when-elided="true" name="ResetButton" style="-unity-text-align: middle-left;" />
         <ui:Button text="录制" display-tooltip-when-elided="true" name="RecordButton" style="-unity-text-align: middle-left;" />
-        <ui:VisualElement style="min-width: 2px; max-width: 2px; flex-direction: row;" />
-        <ui:VisualElement style="min-width: 2px; max-width: 2px; flex-direction: row;" />
+        <ui:VisualElement picking-mode="Ignore" style="min-width: 2px; max-width: 2px; flex-direction: row; background-color: rgb(10, 10, 10);" />
+        <ui:VisualElement picking-mode="Ignore" style="min-width: 2px; max-width: 2px; flex-direction: row;" />
         <ui:Label text="当前时间" display-tooltip-when-elided="true" style="-unity-text-align: middle-left; min-width: 2px; flex-direction: row;" />
         <uie:FloatField value="42.2" name="CurrentTime" style="-unity-text-align: middle-left; min-width: 100px; max-width: 100px; width: 100px;" />
-        <ui:VisualElement style="min-width: 2px; max-width: 2px; flex-direction: row;" />
-        <ui:VisualElement style="min-width: 5px; max-width: 5px; flex-direction: row;" />
-        <ui:Label text="帧率" display-tooltip-when-elided="true" style="-unity-text-align: middle-left;" />
-        <ui:TextField picking-mode="Ignore" value="filler text" text="30" name="FPS" style="min-width: 50px; max-width: 50px; width: 50px;" />
+        <ui:VisualElement picking-mode="Ignore" style="min-width: 2px; max-width: 2px; flex-direction: row; background-color: rgb(10, 10, 10);" />
+        <ui:VisualElement picking-mode="Ignore" style="min-width: 5px; max-width: 5px; flex-direction: row;" />
+        <ui:Label text="持续时间" display-tooltip-when-elided="true" style="-unity-text-align: middle-left;" />
+        <uie:FloatField value="42.2" name="Duration" style="-unity-text-align: middle-left; min-width: 100px; max-width: 100px; width: 100px;" />
+        <ui:VisualElement picking-mode="Ignore" style="min-width: 2px; max-width: 2px; flex-direction: row; background-color: rgb(10, 10, 10);" />
+        <ui:VisualElement picking-mode="Ignore" style="min-width: 5px; max-width: 5px; flex-direction: row;" />
+        <ui:Label text="当前时间范围" display-tooltip-when-elided="true" style="-unity-text-align: middle-left;" />
+        <uie:FloatField value="42.2" name="TimeFrom" style="-unity-text-align: middle-left; min-width: 80px; max-width: 80px; width: 80px;" />
+        <ui:Label text="-" display-tooltip-when-elided="true" style="-unity-text-align: middle-left;" />
+        <uie:FloatField value="42.2" name="TimeTo" style="-unity-text-align: middle-left; min-width: 80px; max-width: 80px; width: 80px;" />
     </uie:Toolbar>
-    <ui:VisualElement name="TimelinePanel" style="flex-shrink: 0; flex-grow: 0; max-height: 20px; min-height: 20px; height:20px; flex-direction: row;">
-        <ui:VisualElement name="TimeStamp" style="position: absolute; " />
+    <ui:VisualElement name="TimelinePanel" style="flex-shrink: 0; flex-grow: 1; max-height: 24px; min-height: 24px; height: 24px; flex-direction: row; background-color: rgb(58, 58, 58);">
+        <ui:VisualElement picking-mode="Ignore" style="flex-shrink: 0; flex-grow: 1; min-width: 400px; max-width: 400px; width: 400px;" />
+        <ui:VisualElement name="Timeline" style="flex-shrink: 0; flex-grow: 1; background-color: rgb(53, 53, 53);">
+            <ui:VisualElement name="TimeStamp" picking-mode="Ignore" style="position: absolute; flex-shrink: 0; flex-grow: 1; max-width: 3px; min-width: 6px; width: 6px; height: 24px; background-color: rgb(31, 92, 140);" />
+        </ui:VisualElement>
     </ui:VisualElement>
-    <ui:ScrollView name="Tracks">
-        <ui:Instance template="ProtaAnimationTrackContent" name="ProtaAnimationTrackContent" />
-    </ui:ScrollView>
+    <ui:ScrollView name="Tracks" style="flex-shrink: 0; flex-grow: 1;" />
 </ui:UXML>

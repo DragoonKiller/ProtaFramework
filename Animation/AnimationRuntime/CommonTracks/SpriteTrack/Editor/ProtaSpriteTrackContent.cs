@@ -12,7 +12,7 @@ namespace Prota.Editor
         {
             public override void UpdateTrackContent(ProtaAnimationTrackContent content)
             {
-                Debug.Log("TODO");
+                
             }
         }
     }
