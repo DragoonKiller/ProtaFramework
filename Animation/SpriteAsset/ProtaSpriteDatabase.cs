@@ -49,7 +49,8 @@ namespace Prota.Animation
                     cache = new Dictionary<string, ProtaSpriteCollection>();
                     foreach(var i in records) cache.Add(i.name, i.collection);
                 }
-                return cache[name];
+                if(cache.TryGetValue(name, out var result)) return result;
+                return null;
             }
         }
         

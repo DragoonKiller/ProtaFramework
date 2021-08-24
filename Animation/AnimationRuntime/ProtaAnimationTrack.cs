@@ -10,22 +10,32 @@ namespace Prota.Animation
     /// 运行时 Track 的基础类型.
     /// </summary>
     [Serializable]
-    public abstract partial class ProtaAnimationTrack
+    public partial class ProtaAnimationTrack
     {
         
         [SerializeField]
         public string name = "";
         
+        [SerializeField]
+        public ProtaAnimationTrackAsset asset = new ProtaAnimationTrackAsset();
+        
+        [NonSerialized]
+        bool deserialized;
+        
         public string type => this.GetType().Name;
         
-        public abstract void Apply(DataBlock anim, float t);
+        public void Apply(DataBlock anim, float t)
+        {
+            if(!deserialized) Deserialize();
+        }
         
-        public abstract void Serialize(ProtaAnimationTrackAsset s);
+        protected virtual void OnApply(DataBlock anim, float t) { }
         
-        public abstract void Deserialize(ProtaAnimationTrackAsset s);
+        public virtual void Serialize() { }
         
-        
-        
+        public virtual void Deserialize() { }
+
+
         public static IReadOnlyDictionary<string, Type> types => _types;
         static Dictionary<string, Type> _types = new Dictionary<string, Type>(); 
         
@@ -37,6 +47,5 @@ namespace Prota.Animation
                 _types.Add(i.Name, i);
             }
         }
-        
     }
 }

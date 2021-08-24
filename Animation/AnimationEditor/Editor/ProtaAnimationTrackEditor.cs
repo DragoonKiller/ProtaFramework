@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Prota.Animation;
 
 namespace Prota.Editor
 {
@@ -8,13 +9,9 @@ namespace Prota.Editor
         
         public float time;
         
+        public ProtaAnimationTrack track;
+        
         public abstract void UpdateTrackContent(ProtaAnimationTrackContent content);
-        
-        
-        public virtual void UpdateTime(float time)
-        {
-            
-        }
         
         protected class TrackEditorAttribute : Attribute
         {

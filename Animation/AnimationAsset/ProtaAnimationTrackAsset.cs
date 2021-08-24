@@ -15,7 +15,7 @@ namespace Prota.Animation
         public string type;
         
         [SerializeField]
-        public SerializedData data;
+        public SerializedData data = new SerializedData();
         
         
         object ICloneable.Clone() => this.Clone();

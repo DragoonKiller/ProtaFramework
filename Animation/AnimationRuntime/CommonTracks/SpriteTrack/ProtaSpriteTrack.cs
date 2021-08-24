@@ -36,36 +36,37 @@ namespace Prota.Animation
             [SerializeField]
             public int lastFrame = 0;
             
-            public override void Apply(Data.DataBlock data, float t)
+            protected override void OnApply(Data.DataBlock data, float t)
             {
                 var target = data["sprite"] as DataBinding.Sprite;
                 
             }
 
-            public override void Deserialize(ProtaAnimationTrackAsset s)
+            public override void Deserialize()
             {
-                s.name = name;
-                s.data.Push(sprites.name);
-                s.data.Push(assign.Count);
-                for(int i = 0; i < assign.Count; i++)
-                {
-                    var v = assign[i];
-                    s.data.Push(v.time);
-                    s.data.Push(v.assetId);
-                }
-            }
-
-            public override void Serialize(ProtaAnimationTrackAsset s)
-            {
-                name = s.data.String();
-                sprites = Resources.Load<ProtaSpriteDatabase>("ProtaFramework/ProtaSpriteDatabase")[s.data.String()];
-                var assignCnt = s.data.Int();
+                name = asset.name;
+                var spriteName = asset.data.String();
+                var resources = Resources.Load<ProtaSpriteDatabase>("ProtaFramework/ProtaSpriteDatabase");
+                sprites = resources[spriteName];
+                var assignCnt = asset.data.Int();
                 assign.Clear();
                 for(int i = 0; i < assignCnt; i++)
                 {
-                    var time = s.data.Float();
-                    var assetId = s.data.String();
+                    var time = asset.data.Float();
+                    var assetId = asset.data.String();
                     assign.Add(new SpriteAssign(time, assetId));
+                }
+            }
+
+            public override void Serialize()
+            {
+                asset.data.Push(sprites?.name);
+                asset.data.Push(assign.Count);
+                for(int i = 0; i < assign.Count; i++)
+                {
+                    var v = assign[i];
+                    asset.data.Push(v.time);
+                    asset.data.Push(v.assetId);
                 }
             }
         }

@@ -40,11 +40,15 @@ namespace Prota.Editor
         
         public void CreateGUI()
         {
-            LoadRoot();
-            SetupAddTrack();
-            SetupTimeline();
-            SetupTimelineHeader();
-            SetupAllTracksRoot();
+            try
+            {
+                LoadRoot();
+                SetupAddTrack();
+                SetupTimeline();
+                SetupTimelineHeader();
+                SetupAllTracksRoot();
+            }
+            catch(Exception e) { Debug.LogException(e); }
         }
         
         public void OnDisable()
@@ -87,6 +91,7 @@ namespace Prota.Editor
             if(!ProtaAnimationTrack.types.TryGetValue(name, out var trackType)) return;
             var track = Activator.CreateInstance(trackType) as ProtaAnimationTrack;
             animation.tracks.Add(track);
+            EditorUtility.SetDirty(animation);
             track.name = name + "Track";
             SetupTracks();
         }
@@ -107,6 +112,8 @@ namespace Prota.Editor
         // ============================================================================================================
         
         FloatField time;
+        Button readButton;
+        Button saveButton;
         Button startButton;
         Button recordButton;
         Button resetButton;
@@ -114,6 +121,7 @@ namespace Prota.Editor
         FloatField timeFrom;
         FloatField timeTo;
         ObjectField target;
+        ObjectField asset;
         ProtaAnimation animation => target?.value as ProtaAnimation;
         
         
@@ -148,14 +156,23 @@ namespace Prota.Editor
         {
             target = root.Q<ObjectField>("Target");
             target.objectType = typeof(ProtaAnimation);
-            target.RegisterCallback<ChangeEvent<UnityEngine.Object>>((EventCallback<ChangeEvent<UnityEngine.Object>>)(e => {
+            target.RegisterValueChangedCallback(e => {
                 var anim = e.newValue as ProtaAnimation;
+                if(anim == null)
+                {
+                    // 什么都不做.
+                }
+                else
+                {
+                    duration.value = anim.duration;
+                    timeFrom.value = 0;
+                    timeTo.value = timeFrom.value + anim.duration;
+                }
                 SetupTracks();
-                duration.value = anim.duration;
-                timeFrom.value = 0;
-                timeTo.value = timeFrom.value + anim.duration;
-                UpdateTimelineDisplay();
-            }));
+                UpdateTimeStamp();
+                UpdateMarks();
+                UpdateTrackTime();
+            });
             
             time = root.Q<FloatField>("CurrentTime");
             time.RegisterValueChangedCallback(e => {
@@ -164,7 +181,8 @@ namespace Prota.Editor
                     time.value = time.value.Max(timeFrom.value).Min(timeTo.value);
                     return;
                 }
-                UpdateStamp();
+                UpdateTimeStamp();
+                UpdateTrackTime();
             });
             
             startButton = root.Q<Button>("StartButton");
@@ -194,12 +212,16 @@ namespace Prota.Editor
             timeFrom.RegisterValueChangedCallback(e => {
                 timeTo.value = timeTo.value.Max(e.newValue + 1e-4f);
                 time.value = time.value;
+                UpdateTimeStamp();
+                UpdateTrackTimeStamp();
             });
             
             timeTo = root.Q<FloatField>("TimeTo");
             timeTo.RegisterValueChangedCallback((EventCallback<ChangeEvent<float>>)(e => {
                 timeTo.value = Unity.MethodExtensions.Max(timeTo.value, this.timeFrom.value + 1e-4f);
                 time.value = time.value;
+                UpdateTimeStamp();
+                UpdateTrackTimeStamp();
             }));
             
             onUpdate += () => {
@@ -222,7 +244,7 @@ namespace Prota.Editor
         
         void SetupTimeline()
         {
-            const float scrollScale = 0.1f;
+            const float scrollScale = 0.05f;
             
             bool inField = false;
             bool pressing = false;
@@ -232,6 +254,19 @@ namespace Prota.Editor
             
             var originalColor = timeline.resolvedStyle.backgroundColor;
             var activeColor = originalColor + new Color(0.05f, 0.05f, 0.05f, 0f);
+            
+            void SetTime(IMouseEvent e)
+            {
+                var rate = e.localMousePosition.x / timeline.resolvedStyle.width;
+                time.value = rate.XMap(0, 1, timeFrom.value, timeTo.value);
+                UpdateTimeStamp();
+                UpdateMarks();
+                UpdateTrackTime();
+            }
+            
+            timeline.RegisterCallback<GeometryChangedEvent>(e => {
+                UpdateTrackContentLayout();
+            });
             
             timeline.RegisterCallback<MouseEnterEvent>(e => {
                 inField = true;
@@ -247,7 +282,7 @@ namespace Prota.Editor
             timeline.RegisterCallback<MouseDownEvent>(e => {
                 if(e.button != 0) return;
                 pressing = true;
-                
+                SetTime(e);
             });
             
             timeline.RegisterCallback<MouseUpEvent>(e => {
@@ -257,9 +292,7 @@ namespace Prota.Editor
             
             timeline.RegisterCallback<MouseMoveEvent>(e => {
                 if(!inField || !pressing) return;
-                var rate = e.localMousePosition.x / timeline.resolvedStyle.width;
-                time.value = rate.XMap(0, 1, timeFrom.value, timeTo.value);
-                UpdateTimelineDisplay();
+                SetTime(e);
             });
             
             timeline.RegisterCallback<WheelEvent>((EventCallback<WheelEvent>)(e => {
@@ -272,17 +305,15 @@ namespace Prota.Editor
                 distR *= scaleFactor;
                 timeFrom.value = cur - distL;
                 timeTo.value = cur + distR;
-                UpdateTimelineDisplay();
+                if(time.value < timeFrom.value) time.value = timeFrom.value;
+                if(time.value > timeTo.value) time.value = timeTo.value;
+                UpdateTimeStamp();
+                UpdateMarks();
+                UpdateTrackTimeStamp();
             }));
         }
         
-        void UpdateTimelineDisplay()
-        {
-            UpdateStamp();
-            ResetAllMarks();
-        }
-        
-        void UpdateStamp()
+        void UpdateTimeStamp()
         {
             var pos = time.value.XMap(timeFrom.value, timeTo.value, 0, timeline.resolvedStyle.width);
             
@@ -290,11 +321,8 @@ namespace Prota.Editor
             pp.value = new Length(pos - timeStamp.resolvedStyle.width * 0.5f, LengthUnit.Pixel);
             timeStamp.style.left = pp;
         }
-        
-        
-        
         readonly List<VisualElement> marks = new List<VisualElement>();
-        void ResetAllMarks()
+        void UpdateMarks()
         {
             if(timelineMarkRoot == null)
             {
@@ -337,14 +365,14 @@ namespace Prota.Editor
             }
             
             // 开始和结束时间标记.
-            if(timeFrom.value <= 0)
+            if(timeFrom.value <= 1e-6f)
             {
                 var x = NewNormalMark();
                 var pos = (0f).XMap(timeFrom.value, timeTo.value, 0, timeline.resolvedStyle.width);
                 x.style.width = 3;
                 x.style.minWidth = 3;
                 x.style.maxWidth = 3;
-                x.style.left = pos - x.style.width.value.value / 2;
+                x.style.left = pos;
                 x.style.backgroundColor = new Color(1, 0.4f, 0.4f, 1);
                 marks.Add(x);
                 timelineMarkRoot.Add(x);
@@ -356,7 +384,7 @@ namespace Prota.Editor
                 x.style.width = 3;
                 x.style.minWidth = 3;
                 x.style.maxWidth = 3;
-                x.style.left = pos - x.style.width.value.value / 2;
+                x.style.left = pos - x.style.width.value.value;
                 x.style.left = pos;
                 x.style.backgroundColor = new Color(1, 0.4f, 0.4f, 1);
                 marks.Add(x);
@@ -387,6 +415,13 @@ namespace Prota.Editor
         {
             if(animation == null) return;
             
+            var oriCnt = trackContents.Count;
+            var originalState = new List<bool>();
+            for(int i = 0; i < oriCnt; i++)
+            {
+                originalState.Add(trackContents[i].folded);
+            }
+            
             trackRoot.Clear();
             trackContents.Clear();
             trackEditors.Clear();
@@ -399,23 +434,51 @@ namespace Prota.Editor
                 trackRoot.Add(trackContent.root);
                 trackContents.Add(trackContent);
                 trackEditors.Add(Activator.CreateInstance(ProtaAnimationTrackEditor.types[track.GetType()]) as ProtaAnimationTrackEditor);
-                var idLabel = trackContents.Last().root.Q<Label>("Id");
-                idLabel.text = i.ToString();
-                var typeLabel = trackContents.Last().root.Q<Label>("Type");
-                typeLabel.text = track.GetType().Name;
-                var trackName = trackContents.Last().root.Q<TextField>("TrackName");
-                trackName.value = track.name;
-                trackName.RegisterValueChangedCallback(a => track.name = a.newValue);
-                var deleteButton = trackContents.Last().root.Q<Button>("Delete");
+                trackContent.id.text = i.ToString();
+                trackContent.type.text = track.GetType().Name;
+                trackContent.trackName.value = track.name;
+                trackContent.trackName.RegisterValueChangedCallback(a => track.name = a.newValue);
+                var deleteButton = trackContent.root.Q<Button>("Delete");
                 deleteButton.RegisterCallback<ClickEvent>((EventCallback<ClickEvent>)(e => {
                     animation.tracks.RemoveAt(i);
-                    this.SetupTracks();
+                    SetupTracks();
                 }));
+                if(i < oriCnt) trackContent.folded = originalState[i];
             }
             
             
+            UpdateTrackContentLayout();
             ApplyTimeToTracks();
             trackRoot.MarkDirtyRepaint();
+            UpdateTrackTime();
+        }
+        
+        void UpdateTrackContentLayout()
+        {
+            var space = root.Q("TimelineSpace");
+            foreach(var content in trackContents)
+            {
+                content.dataPanel.style.maxWidth = space.resolvedStyle.maxWidth.value;
+                content.dataPanel.style.minWidth = space.resolvedStyle.minWidth.value;
+                content.dataPanel.style.width = space.resolvedStyle.width;
+                content.dataPanel.MarkDirtyRepaint();
+            }
+        }
+        
+        void UpdateTrackTime()
+        {
+            UpdateTrackTimeStamp();
+            ApplyTimeToTracks();
+        }
+        
+        void UpdateTrackTimeStamp()
+        {
+            var pos = time.value.XMap(timeFrom.value, timeTo.value, 0, timeline.resolvedStyle.width);
+            for(int i = 0; i < trackContents.Count; i++)
+            {
+                var content = trackContents[i];
+                content.SetTimePos(pos);
+            }
         }
         
         void ApplyTimeToTracks()
@@ -423,6 +486,7 @@ namespace Prota.Editor
             for(int i = 0; i < trackEditors.Count; i++)
             {
                 trackEditors[i].time = time.value;
+                trackEditors[i].track = animation.tracks[i];
                 trackEditors[i].UpdateTrackContent(trackContents[i]);
             }
         }

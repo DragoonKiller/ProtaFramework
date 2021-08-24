@@ -12,9 +12,15 @@ namespace Prota.Unity
         [SerializeField]
         public List<int> data = new List<int>();
         
+        [SerializeField]
+        public List<UnityEngine.Object> objects = new List<UnityEngine.Object>();
+        
         
         [NonSerialized]
         int current = 0;
+        
+        [NonSerialized]
+        int oCurrent = 0;
         
         object ICloneable.Clone() => this.Clone();
         
@@ -28,12 +34,14 @@ namespace Prota.Unity
         public void Clear()
         {
             data.Clear();
+            objects.Clear();
             Reset();
         }
         
         public void Reset()
         {
             current = 0;
+            oCurrent =0;
         }
         
         
@@ -66,6 +74,15 @@ namespace Prota.Unity
         }
         
         
+        public void Push(UnityEngine.Object t)
+        {
+            objects.Add(t);
+        }
+        
+        public UnityEngine.Object Object()
+        {
+            return objects[oCurrent++];
+        }
         
         
         
@@ -166,10 +183,13 @@ namespace Prota.Unity
             int len = 0;
             var lenPos = data.Count;
             data.Add(0);
-            foreach(var c in s)
+            if(s != null)
             {
-                data.Add(c);
-                len++;
+                foreach(var c in s)
+                {
+                    data.Add(c);
+                    len++;
+                }
             }
             data[lenPos] = len;
         }

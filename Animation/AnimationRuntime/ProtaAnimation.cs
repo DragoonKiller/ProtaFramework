@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Prota.Unity;
 using Prota.Data;
+using System.Collections;
 
 namespace Prota.Animation
 {
@@ -11,6 +12,8 @@ namespace Prota.Animation
         Replace,
         Append,
     }
+    
+    
     
     
     
@@ -44,6 +47,7 @@ namespace Prota.Animation
         
         
         public DataBlock dataBlock => this.GetComponent<DataBlock>();
+        
         
         
         public void Set(float t)
@@ -91,8 +95,9 @@ namespace Prota.Animation
             if(mode == UseAnimationAssetMode.Replace) tracks.Clear();
             foreach(var trackAsset in asset.tracks)
             {
-                var track = Activator.CreateInstance(ProtaAnimationTrack.types[trackAsset.name]) as ProtaAnimationTrack;
-                track.Deserialize(trackAsset);
+                trackAsset.data.Reset();
+                var track = Activator.CreateInstance(ProtaAnimationTrack.types[trackAsset.type]) as ProtaAnimationTrack;
+                track.Deserialize();
                 tracks.Add(track);
             }
         }

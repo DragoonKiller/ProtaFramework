@@ -1,7 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <ui:VisualElement name="Template">
         <ui:VisualElement style="flex-direction: row; flex-shrink: 0; flex-grow: 1; max-height: 18px; min-height: 18px; background-color: rgb(41, 41, 41);">
-            <ui:Label text="1" display-tooltip-when-elided="true" name="Id" enable-rich-text="false" style="-unity-text-align: middle-left; font-size: 14px;" />
+            <ui:Label text="1" display-tooltip-when-elided="true" name="Id" enable-rich-text="false" style="-unity-text-align: middle-left; font-size: 14px; flex-shrink: 0; flex-grow: 0; width:30" />
             <ui:VisualElement style="flex-shrink: 1; flex-grow: 0; max-width: 2px; min-width: 2px; background-color: rgb(13, 16, 26);" />
             <ui:Label text="类型名称" display-tooltip-when-elided="true" name="Type" enable-rich-text="false" style="-unity-text-align: middle-left; font-size: 12px; min-width: 200px; max-width: 400px; color: rgba(152, 178, 229, 255);" />
             <ui:VisualElement style="flex-shrink: 1; flex-grow: 0; max-width: 2px; min-width: 2px; background-color: rgb(13, 16, 26);" />
