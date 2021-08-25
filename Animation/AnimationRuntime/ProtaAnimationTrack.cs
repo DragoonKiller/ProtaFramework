@@ -26,9 +26,24 @@ namespace Prota.Animation
         
         public virtual void Apply(DataBlock anim, float t) { }
         
-        public virtual void Serialize(ProtaAnimationTrackAsset a) => throw new NotImplementedException();
+        public void Serialize(ProtaAnimationTrackAsset a)
+        {
+            a.data.Reset();
+            a.name = name;
+            a.type = this.GetType().Name;
+            OnSerialize(a);
+        }
         
-        public virtual void Deserialize(ProtaAnimationTrackAsset a) => throw new NotImplementedException();
+        public void Deserialize(ProtaAnimationTrackAsset a)
+        {
+            a.data.Reset();
+            name = a.name;
+            this.OnDeserialize(a);
+        }
+        
+        protected virtual void OnSerialize(ProtaAnimationTrackAsset a) { }
+        protected virtual void OnDeserialize(ProtaAnimationTrackAsset a) { }
+
 
 
         public static IReadOnlyDictionary<string, Type> types => _types;

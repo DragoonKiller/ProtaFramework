@@ -42,7 +42,7 @@ namespace Prota.Animation
                 
             }
 
-            public override void Deserialize(ProtaAnimationTrackAsset asset)
+            protected override void OnDeserialize(ProtaAnimationTrackAsset asset)
             {
                 name = asset.name;
                 var spriteName = asset.data.String();
@@ -58,7 +58,7 @@ namespace Prota.Animation
                 }
             }
 
-            public override void Serialize(ProtaAnimationTrackAsset asset)
+            protected override void OnSerialize(ProtaAnimationTrackAsset asset)
             {
                 asset.data.Push(sprites?.name);
                 asset.data.Push(assign.Count);

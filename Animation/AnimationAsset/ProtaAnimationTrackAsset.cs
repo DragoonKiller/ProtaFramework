@@ -34,6 +34,7 @@ namespace Prota.Animation
             var trackType = ProtaAnimationTrack.types[type];
             var track = Activator.CreateInstance(trackType) as ProtaAnimationTrack;
             track.name = name;
+            data.Reset();
             track.Deserialize(this);
             return track;
         }

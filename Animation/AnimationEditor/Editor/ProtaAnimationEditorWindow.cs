@@ -10,6 +10,9 @@ using Prota.Unity;
 
 namespace Prota.Editor
 {
+    
+    
+    
 
     public class ProtaAnimationEditorWindow : EditorWindow
     {
@@ -28,6 +31,7 @@ namespace Prota.Editor
         }
         
         
+        static Storage storage = new Storage();
         
         
         VisualElement root;
@@ -47,6 +51,7 @@ namespace Prota.Editor
                 SetupTimeline();
                 SetupTimelineHeader();
                 SetupAllTracksRoot();
+                InitializeValue();
             }
             catch(Exception e) { Debug.LogException(e); }
         }
@@ -69,6 +74,12 @@ namespace Prota.Editor
             foreach(var i in onDestory) i.Value();
         }
         
+        
+        void InitializeValue()
+        {
+            time.value = 0;
+            if(storage.anim != null) target.value = storage.anim;
+        }
         
         
         // ============================================================================================================
@@ -163,10 +174,11 @@ namespace Prota.Editor
                 var anim = e.newValue as ProtaAnimation;
                 if(anim == null)
                 {
-                    target.viewDataKey = null;
+                    
                 }
                 else
                 {
+                    storage.anim = anim;
                     anim.Reset();
                     duration.value = anim.duration;
                     timeFrom.value = 0;
@@ -176,7 +188,6 @@ namespace Prota.Editor
                         asset.value = anim.asset;
                         anim.UseAsset();
                     }
-                    target.viewDataKey = anim.GetInstanceID().ToString();
                 }
                 SetupTracks();
                 UpdateTimeStamp();
@@ -263,18 +274,6 @@ namespace Prota.Editor
                 time.value = (float)(ccTime - recordTime);
             };
             
-            // 完全初始化...
-            time.value = 0;
-            
-            if(int.TryParse(target.viewDataKey, out var v))
-            {
-                target.value = EditorUtility.InstanceIDToObject(v);
-            }
-            
-            if(int.TryParse(asset.viewDataKey, out v))
-            {
-                asset.value = EditorUtility.InstanceIDToObject(v);
-            }
         }
         
         // ============================================================================================================
@@ -338,7 +337,7 @@ namespace Prota.Editor
                 SetTime(e);
             });
             
-            timeline.RegisterCallback<WheelEvent>((EventCallback<WheelEvent>)(e => {
+            timeline.RegisterCallback<WheelEvent>(e => {
                 if(!inField) return;
                 var scaleFactor = (e.delta.y * scrollScale).Exp();
                 var cur = e.localMousePosition.x.XMap(0, timeline.resolvedStyle.width, timeFrom.value, timeTo.value);
@@ -348,16 +347,17 @@ namespace Prota.Editor
                 distR *= scaleFactor;
                 timeFrom.value = cur - distL;
                 timeTo.value = cur + distR;
-                if(time.value < timeFrom.value) time.value = timeFrom.value;
-                if(time.value > timeTo.value) time.value = timeTo.value;
-                UpdateTimeStamp();
                 UpdateMarks();
+                UpdateTimeStamp();
                 UpdateTrackTimeStamp();
-            }));
+            });
         }
         
         void UpdateTimeStamp()
         {
+            if(time.value < timeFrom.value) time.value = timeFrom.value;
+            if(time.value > timeTo.value) time.value = timeTo.value;
+            
             var pos = time.value.XMap(timeFrom.value, timeTo.value, 0, timeline.resolvedStyle.width);
             
             var pp = timeStamp.style.left;
@@ -454,8 +454,10 @@ namespace Prota.Editor
         }
         
         // 重新绑定各个 track 到编辑器上.
-        void SetupTracks()
+        void SetupTracks(ProtaAnimation anim = null)
         {
+            if(anim == null) anim = this.animation;
+            
             var oriCnt = trackContents.Count;
             var originalState = new List<bool>();
             for(int i = 0; i < oriCnt; i++)
@@ -463,17 +465,16 @@ namespace Prota.Editor
                 originalState.Add(trackContents[i].folded);
             }
             
-            
             foreach(var content in trackContents) trackRoot.Remove(content.root);
             trackRoot.Clear();
             trackContents.Clear();
             trackEditors.Clear();
             
-            if(animation == null) return;
+            if(anim == null) return;
             
-            for(int i = 0; i < animation.runtimeTracks.Count; i++)
+            for(int i = 0; i < anim.runtimeTracks.Count; i++)
             {
-                var track = animation.runtimeTracks[i];
+                var track = anim.runtimeTracks[i];
                 var trackContentRes = ResourcesDatabase.inst["Animation"]["ProtaAnimationTrackContent"] as VisualTreeAsset;
                 var trackContent = new ProtaAnimationTrackContent(trackContentRes.CloneTree());
                 trackRoot.Add(trackContent.root);
@@ -487,7 +488,7 @@ namespace Prota.Editor
                 trackContent.trackName.RegisterValueChangedCallback(a => track.name = a.newValue);
                 var deleteButton = trackContent.root.Q<Button>("Delete");
                 deleteButton.RegisterCallback<ClickEvent>((EventCallback<ClickEvent>)(e => {
-                    animation.runtimeTracks.RemoveAt(i);
+                    anim.runtimeTracks.RemoveAt(i);
                     SetupTracks();
                 }));
                 if(i < oriCnt) trackContent.folded = originalState[i];
@@ -539,6 +540,28 @@ namespace Prota.Editor
         }
         
         
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        [Serializable]
+        class Storage
+        {
+            public ProtaAnimation anim;
+            
+        }
         
     }   
     
