@@ -14,9 +14,6 @@ namespace Prota.Animation
     }
     
     
-    
-    
-    
     [RequireComponent(typeof(Data.DataBlock))]
     [SerializeField]
     public class ProtaAnimation : ProtaScript
@@ -41,9 +38,13 @@ namespace Prota.Animation
         [SerializeField]
         public bool loop;
         
+        
+        [Header("资源")]
+        public ProtaAnimationAsset asset;
+        
+        
         [Header("轨道")]
-        [SerializeField]
-        public List<ProtaAnimationTrack> tracks = new List<ProtaAnimationTrack>();
+        public List<ProtaAnimationTrack> runtimeTracks = new List<ProtaAnimationTrack>();
         
         
         public DataBlock dataBlock => this.GetComponent<DataBlock>();
@@ -53,7 +54,7 @@ namespace Prota.Animation
         public void Set(float t)
         {
             if(t >= duration + 1e-6f) t = t % duration;
-            foreach(var track in tracks) track.Apply(dataBlock, t);
+            foreach(var track in runtimeTracks) track.Apply(dataBlock, t);
         }
         
         void Awake()
@@ -83,28 +84,38 @@ namespace Prota.Animation
             Set(time);
         }
         
-        public void Deserialize(string assetName, UseAnimationAssetMode mode = UseAnimationAssetMode.Replace)
+        public void UseAsset(ProtaAnimationAsset asset = null, UseAnimationAssetMode mode = UseAnimationAssetMode.Replace)
         {
-            var asset = ProtaSpriteDatabase.instance[assetName];
-            Debug.Assert(asset != null);
-            Deserialize(assetName, mode);
-        }
-        
-        public void Deserialize(ProtaAnimationAsset asset, UseAnimationAssetMode mode = UseAnimationAssetMode.Replace)
-        {
-            if(mode == UseAnimationAssetMode.Replace) tracks.Clear();
+            if(asset == null) asset = this.asset;
+            if(asset == null)
+            {
+                Debug.LogWarning("给定 Animation 没有装载 Asset");
+                return;
+            }
+            
+            if(mode == UseAnimationAssetMode.Replace) runtimeTracks.Clear();
             foreach(var trackAsset in asset.tracks)
             {
-                trackAsset.data.Reset();
-                var track = Activator.CreateInstance(ProtaAnimationTrack.types[trackAsset.type]) as ProtaAnimationTrack;
-                track.Deserialize();
-                tracks.Add(track);
+                runtimeTracks.Add(trackAsset.Instantiate());
             }
         }
         
-        public void Serialize(ProtaAnimationAsset asset)
+        public void SaveAsset(ProtaAnimationAsset asset = null)
         {
-            foreach(var track in tracks) asset.Add(track);
+            if(asset == null) asset = this.asset;
+            if(asset == null)
+            {
+                Debug.LogError("没有需要保存的 asset!");
+                return;
+            }
+            
+            asset.Clear();
+            foreach(var track in runtimeTracks) asset.Add(track);
+        }
+        
+        public void Reset()
+        {
+            runtimeTracks.Clear();
         }
     }
 }

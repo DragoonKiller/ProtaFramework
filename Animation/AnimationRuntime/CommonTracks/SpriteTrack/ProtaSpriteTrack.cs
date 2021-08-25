@@ -36,13 +36,13 @@ namespace Prota.Animation
             [SerializeField]
             public int lastFrame = 0;
             
-            protected override void OnApply(Data.DataBlock data, float t)
+            public override void Apply(Data.DataBlock data, float t)
             {
                 var target = data["sprite"] as DataBinding.Sprite;
                 
             }
 
-            public override void Deserialize()
+            public override void Deserialize(ProtaAnimationTrackAsset asset)
             {
                 name = asset.name;
                 var spriteName = asset.data.String();
@@ -58,7 +58,7 @@ namespace Prota.Animation
                 }
             }
 
-            public override void Serialize()
+            public override void Serialize(ProtaAnimationTrackAsset asset)
             {
                 asset.data.Push(sprites?.name);
                 asset.data.Push(assign.Count);

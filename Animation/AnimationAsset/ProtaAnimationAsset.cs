@@ -18,14 +18,11 @@ namespace Prota.Animation
         
         public void Add(ProtaAnimationTrack track)
         {
-            var asset = new ProtaAnimationTrackAsset();
-            asset.type = track.GetType().Name;
-            asset.name = track.name;
-            track.Serialize();
-            tracks.Add(asset);
+            tracks.Add(ProtaAnimationTrackAsset.Save(track));
         }
         
         public void Remove(ProtaAnimationTrackAsset asset) => tracks.Remove(asset);
+        
         
         [MenuItem("Assets/ProtaFramework/动画/动画资源")]
         static void CreateAsset()

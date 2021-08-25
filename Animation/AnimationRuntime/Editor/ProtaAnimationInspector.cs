@@ -60,13 +60,13 @@ namespace Prota.Animation
         
         void ListTrack()
         {
-            if(anim.tracks.Count == 0)
+            if(anim.runtimeTracks.Count == 0)
             {
                 EditorGUILayout.LabelField("没有正在执行的 track.");
                 return;
             }
             
-            foreach(var t in anim.tracks)
+            foreach(var t in anim.runtimeTracks)
             {
                 this.SetColor(new Color(0.5f, 0.6f, 1f, 1f));
                 EditorGUILayout.LabelField("<color=#F0D890>" + t.name + "</color> <color=#A0C0FF>(" + t.GetType().Name + ")</color>",  nameStyle);
@@ -101,7 +101,7 @@ namespace Prota.Animation
                 if(GUILayout.Button(tt.Name))
                 {
                     var track = Activator.CreateInstance(tt) as ProtaAnimationTrack;
-                    anim.tracks.Add(track);
+                    anim.runtimeTracks.Add(track);
                 }
             }
             EditorGUILayout.EndScrollView();

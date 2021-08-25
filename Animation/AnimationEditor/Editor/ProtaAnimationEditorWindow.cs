@@ -80,9 +80,12 @@ namespace Prota.Editor
         void SetupAddTrack()
         {
             var name = root.Q<TextField>("AddTrackName");
-            name.RegisterValueChangedCallback(a => addTrackName = a.newValue);
+            name.RegisterValueChangedCallback(e => {
+                name.viewDataKey = e.newValue;
+                addTrackName = e.newValue;
+            });
             var button = root.Q<Button>("AddTrack");
-            button.RegisterCallback<ClickEvent>(a => AddTrack(addTrackName));
+            button.RegisterCallback<ClickEvent>(e => AddTrack(addTrackName));
         }
         
         void AddTrack(string name)
@@ -90,7 +93,7 @@ namespace Prota.Editor
             if(string.IsNullOrWhiteSpace(name)) return;
             if(!ProtaAnimationTrack.types.TryGetValue(name, out var trackType)) return;
             var track = Activator.CreateInstance(trackType) as ProtaAnimationTrack;
-            animation.tracks.Add(track);
+            animation.runtimeTracks.Add(track);
             EditorUtility.SetDirty(animation);
             track.name = name + "Track";
             SetupTracks();
@@ -160,19 +163,43 @@ namespace Prota.Editor
                 var anim = e.newValue as ProtaAnimation;
                 if(anim == null)
                 {
-                    // 什么都不做.
+                    target.viewDataKey = null;
                 }
                 else
                 {
+                    anim.Reset();
                     duration.value = anim.duration;
                     timeFrom.value = 0;
                     timeTo.value = timeFrom.value + anim.duration;
+                    if(anim.asset != null)
+                    {
+                        asset.value = anim.asset;
+                        anim.UseAsset();
+                    }
+                    target.viewDataKey = anim.GetInstanceID().ToString();
                 }
                 SetupTracks();
                 UpdateTimeStamp();
                 UpdateMarks();
                 UpdateTrackTime();
             });
+            
+            asset = root.Q<ObjectField>("Asset");
+            asset.objectType = typeof(ProtaAnimationAsset);
+            asset.RegisterValueChangedCallback(e => {
+                animation.asset = e.newValue as ProtaAnimationAsset;
+                var activate = e.newValue != null;
+                asset.viewDataKey = e.newValue?.GetInstanceID().ToString();
+                readButton.SetEnabled(activate);
+                saveButton.SetEnabled(activate); 
+                EditorUtility.SetDirty(animation);
+            });
+            
+            readButton = root.Q<Button>("ReadButton");
+            readButton.RegisterCallback<ClickEvent>(e => animation.UseAsset());
+            
+            saveButton = root.Q<Button>("SaveButton");
+            saveButton.RegisterCallback<ClickEvent>(e => animation.SaveAsset());
             
             time = root.Q<FloatField>("CurrentTime");
             time.RegisterValueChangedCallback(e => {
@@ -184,6 +211,8 @@ namespace Prota.Editor
                 UpdateTimeStamp();
                 UpdateTrackTime();
             });
+            
+            
             
             startButton = root.Q<Button>("StartButton");
             startButton.RegisterCallback<ClickEvent>(e => {
@@ -203,7 +232,11 @@ namespace Prota.Editor
             duration = root.Q<FloatField>("Duration");
             duration.RegisterValueChangedCallback(e => {
                 timeTo.value = timeTo.value.Min(e.newValue);
-                if(animation) animation.duration = e.newValue;
+                if(animation)
+                {
+                    animation.duration = e.newValue;
+                    EditorUtility.SetDirty(animation);
+                }
                 time.value = time.value.Min(duration.value);
                 time.value = time.value;
             });
@@ -232,6 +265,16 @@ namespace Prota.Editor
             
             // 完全初始化...
             time.value = 0;
+            
+            if(int.TryParse(target.viewDataKey, out var v))
+            {
+                target.value = EditorUtility.InstanceIDToObject(v);
+            }
+            
+            if(int.TryParse(asset.viewDataKey, out v))
+            {
+                asset.value = EditorUtility.InstanceIDToObject(v);
+            }
         }
         
         // ============================================================================================================
@@ -413,8 +456,6 @@ namespace Prota.Editor
         // 重新绑定各个 track 到编辑器上.
         void SetupTracks()
         {
-            if(animation == null) return;
-            
             var oriCnt = trackContents.Count;
             var originalState = new List<bool>();
             for(int i = 0; i < oriCnt; i++)
@@ -422,25 +463,31 @@ namespace Prota.Editor
                 originalState.Add(trackContents[i].folded);
             }
             
+            
+            foreach(var content in trackContents) trackRoot.Remove(content.root);
             trackRoot.Clear();
             trackContents.Clear();
             trackEditors.Clear();
             
-            for(int i = 0; i < animation.tracks.Count; i++)
+            if(animation == null) return;
+            
+            for(int i = 0; i < animation.runtimeTracks.Count; i++)
             {
-                var track = animation.tracks[i];
+                var track = animation.runtimeTracks[i];
                 var trackContentRes = ResourcesDatabase.inst["Animation"]["ProtaAnimationTrackContent"] as VisualTreeAsset;
                 var trackContent = new ProtaAnimationTrackContent(trackContentRes.CloneTree());
                 trackRoot.Add(trackContent.root);
                 trackContents.Add(trackContent);
-                trackEditors.Add(Activator.CreateInstance(ProtaAnimationTrackEditor.types[track.GetType()]) as ProtaAnimationTrackEditor);
+                var editorType = ProtaAnimationTrackEditor.types[track.GetType()];
+                var trackEditor = Activator.CreateInstance(editorType) as ProtaAnimationTrackEditor;
+                trackEditors.Add(trackEditor);
                 trackContent.id.text = i.ToString();
                 trackContent.type.text = track.GetType().Name;
                 trackContent.trackName.value = track.name;
                 trackContent.trackName.RegisterValueChangedCallback(a => track.name = a.newValue);
                 var deleteButton = trackContent.root.Q<Button>("Delete");
                 deleteButton.RegisterCallback<ClickEvent>((EventCallback<ClickEvent>)(e => {
-                    animation.tracks.RemoveAt(i);
+                    animation.runtimeTracks.RemoveAt(i);
                     SetupTracks();
                 }));
                 if(i < oriCnt) trackContent.folded = originalState[i];
@@ -486,7 +533,7 @@ namespace Prota.Editor
             for(int i = 0; i < trackEditors.Count; i++)
             {
                 trackEditors[i].time = time.value;
-                trackEditors[i].track = animation.tracks[i];
+                trackEditors[i].track = animation.runtimeTracks[i];
                 trackEditors[i].UpdateTrackContent(trackContents[i]);
             }
         }

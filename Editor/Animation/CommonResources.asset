@@ -15,7 +15,7 @@ MonoBehaviour:
   resourcesName: Animation
   records:
   - name: ProtaAnimationComponentContent
-    target: {fileID: 9197481963319205126, guid: 015256d6435c9f54fa7c34b5bf4feeae, type: 3}
+    target: {fileID: 9197481963319205126, guid: a20fd1e616f142945b0abaf6ebb1edb1, type: 3}
   - name: ProtaAnimationEditorWindow
     target: {fileID: 9197481963319205126, guid: 16b5969ba47933041b6a6dae387ab6dd, type: 3}
   - name: ProtaAnimationTrackContent

@@ -27,5 +27,27 @@ namespace Prota.Animation
             res.data = data.Clone();
             return res;
         }
+        
+        public ProtaAnimationTrack Instantiate()
+        {
+            if(string.IsNullOrWhiteSpace(type)) return null;
+            var trackType = ProtaAnimationTrack.types[type];
+            var track = Activator.CreateInstance(trackType) as ProtaAnimationTrack;
+            track.name = name;
+            track.Deserialize(this);
+            return track;
+        }
+        
+        public T Instantiate<T>() where T: ProtaAnimationTrack => Instantiate() as T;
+        
+        public static ProtaAnimationTrackAsset Save(ProtaAnimationTrack track)
+        {
+            var asset = new ProtaAnimationTrackAsset();
+            asset.type = track.GetType().Name;
+            asset.name = track.name;
+            asset.data.Reset();
+            track.Serialize(asset);
+            return asset;
+        }
     }
 }

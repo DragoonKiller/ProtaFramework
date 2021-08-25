@@ -6,6 +6,9 @@
     <uie:Toolbar name="HeaderBar">
         <ui:VisualElement style="flex-direction: row;">
             <uie:ObjectField name="Target" style="max-width: 300px; flex-direction: row; min-width: 300px; width: 300px;" />
+            <ui:Button text="读取" display-tooltip-when-elided="true" name="ReadButton" style="-unity-text-align: middle-left;" />
+            <ui:Button text="保存" display-tooltip-when-elided="true" name="SaveButton" style="-unity-text-align: middle-left;" />
+            <uie:ObjectField name="Asset" style="max-width: 300px; flex-direction: row; min-width: 300px; width: 300px;" />
         </ui:VisualElement>
     </uie:Toolbar>
     <uie:Toolbar name="HeaderBar">
@@ -35,5 +38,5 @@
             <ui:VisualElement name="TimeStamp" picking-mode="Ignore" style="position: absolute; flex-shrink: 0; flex-grow: 1; max-width: 3px; min-width: 6px; width: 6px; height: 24px; background-color: rgb(31, 92, 140);" />
         </ui:VisualElement>
     </ui:VisualElement>
-    <ui:ScrollView name="Tracks" style="flex-shrink: 0; flex-grow: 1;" />
+    <ui:ScrollView name="Tracks" horizontal-scroller-visibility="Hidden" vertical-scroller-visibility="AlwaysVisible" style="flex-shrink: 0; flex-grow: 1;" />
 </ui:UXML>

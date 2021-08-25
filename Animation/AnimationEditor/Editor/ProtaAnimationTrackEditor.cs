@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Prota.Animation;
+using UnityEditor;
 
 namespace Prota.Editor
 {
+    [InitializeOnLoad]
     public abstract partial class ProtaAnimationTrackEditor
     {
         
@@ -42,6 +45,8 @@ namespace Prota.Editor
                     }
                 }
             }
+            
+            UnityEngine.Debug.Log("可用的Track编辑器: " + types.Select(x => x.Key.Name).Aggregate("", (a, x) => a + " " + x));
         }
     }
 }
