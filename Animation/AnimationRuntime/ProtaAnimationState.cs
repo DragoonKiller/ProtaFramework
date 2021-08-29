@@ -15,11 +15,13 @@ namespace Prota.Data
             
             public override void Deserialize(SerializedData s)
             {
+                s.Reset();
                 time = s.Float();
             }
 
             public override void Serialize(SerializedData s)
             {
+                s.Clear();
                 s.Push(time);
                 
             }

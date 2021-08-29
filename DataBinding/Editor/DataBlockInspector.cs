@@ -195,6 +195,10 @@ namespace Prota.Data
         
         bool TypedBindingEditor(SerializedProperty t, out bool removal)
         {
+            // TODO:!
+            removal = false;
+            return false;
+            
             EditorGUILayout.Space(2);
             
             removal = false;
@@ -204,12 +208,12 @@ namespace Prota.Data
             var changed = false;
             var type = t.FindPropertyRelative("type").stringValue;
             var ss = new SerializedData();
-            var dataProp = t.FindPropertyRelative("data").FindPropertyRelative("data");
             var cg = null as DataBinding;
-            for(int i = 0; i < dataProp.arraySize; i++)
-            {
-                ss.Push(dataProp.GetArrayElementAtIndex(i).intValue); // 都是 int.
-            }
+            // var dataProp = t.FindPropertyRelative("data").FindPropertyRelative("data");
+            // for(int i = 0; i < dataProp.arraySize; i++)
+            // {
+            //     ss.Push(dataProp.GetArrayElementAtIndex(i).intValue); // 都是 int.
+            // }
             ss.Reset();
             
             EditorGUILayout.BeginHorizontal();
@@ -342,20 +346,20 @@ namespace Prota.Data
             
             EditorGUILayout.Space(3);
             this.SeperateLine(1, new Color(.1f, .1f, .1f, 1));
-            
-            if(cg != null)
-            {
-                changed = true;
-                ss.Clear();
-                cg.Serialize(ss);
-                dataProp.arraySize = ss.data.Count;
-                for(int i = 0; i < ss.data.Count; i++)
-                {
-                    dataProp.GetArrayElementAtIndex(i).intValue = ss.data[i];
-                }
-                dataBlock.MakeDirty();
-            }
-            
+            // 
+            // if(cg != null)
+            // {
+            //     changed = true;
+            //     ss.Clear();
+            //     cg.Serialize(ss);
+            //     dataProp.arraySize = ss.data.Count;
+            //     for(int i = 0; i < ss.data.Count; i++)
+            //     {
+            //         dataProp.GetArrayElementAtIndex(i).intValue = ss.data[i];
+            //     }
+            //     dataBlock.MakeDirty();
+            // }
+            // 
             return changed;
         }
         

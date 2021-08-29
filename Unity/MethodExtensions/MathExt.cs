@@ -28,6 +28,7 @@ namespace Prota.Unity
         public static Vector4 ToVec4(this Color c) => new Vector4(c.r, c.g, c.b, c.a);
         
         public static Vector4 ToVec4(this Quaternion q) => new Vector4(q.x, q.y, q.z, q.w);
+        public static Color ToColor(this Vector4 x) => new Color(x.x, x.y, x.z, x.w);
         
         public static Quaternion ToQuaternion(this Vector4 q) => new Quaternion(q.x, q.y, q.z, q.w); 
         

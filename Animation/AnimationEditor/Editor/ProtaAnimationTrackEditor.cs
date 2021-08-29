@@ -12,9 +12,28 @@ namespace Prota.Editor
         
         public float time;
         
+        public float timeFrom;
+        
+        public float timeTo;
+        
+        public float displayWidth;
+        
+        public ProtaAnimation animation;
+        
         public ProtaAnimationTrack track;
         
-        public abstract void UpdateTrackContent(ProtaAnimationTrackContent content);
+        public ProtaAnimationTrackContent content;
+        
+        public abstract void UpdateTrackContent();
+        
+        public void PrepareLayout()
+        {
+            content.trackContent.style.width = content.trackContent.style.minWidth = content.trackContent.style.maxWidth = content.trackPanel.resolvedStyle.width;
+            content.trackContent.style.height = content.trackContent.style.minHeight = content.trackContent.style.maxHeight = content.trackPanel.resolvedStyle.height;
+            content.trackContent.style.left = 0;
+            content.trackContent.style.top = 0;
+        }
+        
         
         protected class TrackEditorAttribute : Attribute
         {

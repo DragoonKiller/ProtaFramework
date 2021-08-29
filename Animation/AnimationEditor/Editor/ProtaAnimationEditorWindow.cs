@@ -86,17 +86,11 @@ namespace Prota.Editor
         // 添加 Track
         // ============================================================================================================
         
-        string addTrackName;
-        
         void SetupAddTrack()
         {
             var name = root.Q<TextField>("AddTrackName");
-            name.RegisterValueChangedCallback(e => {
-                name.viewDataKey = e.newValue;
-                addTrackName = e.newValue;
-            });
             var button = root.Q<Button>("AddTrack");
-            button.RegisterCallback<ClickEvent>(e => AddTrack(addTrackName));
+            button.RegisterCallback<ClickEvent>(e => AddTrack(name.value));
         }
         
         void AddTrack(string name)
@@ -221,6 +215,7 @@ namespace Prota.Editor
                 }
                 UpdateTimeStamp();
                 UpdateTrackTime();
+                UpdateTrackContents();
             });
             
             
@@ -258,6 +253,7 @@ namespace Prota.Editor
                 time.value = time.value;
                 UpdateTimeStamp();
                 UpdateTrackTimeStamp();
+                UpdateTrackContents();
             });
             
             timeTo = root.Q<FloatField>("TimeTo");
@@ -266,6 +262,7 @@ namespace Prota.Editor
                 time.value = time.value;
                 UpdateTimeStamp();
                 UpdateTrackTimeStamp();
+                UpdateTrackContents();
             }));
             
             onUpdate += () => {
@@ -496,7 +493,7 @@ namespace Prota.Editor
             
             
             UpdateTrackContentLayout();
-            ApplyTimeToTracks();
+            UpdateTrackContents();
             trackRoot.MarkDirtyRepaint();
             UpdateTrackTime();
         }
@@ -516,7 +513,7 @@ namespace Prota.Editor
         void UpdateTrackTime()
         {
             UpdateTrackTimeStamp();
-            ApplyTimeToTracks();
+            UpdateTrackContents();
         }
         
         void UpdateTrackTimeStamp()
@@ -529,13 +526,19 @@ namespace Prota.Editor
             }
         }
         
-        void ApplyTimeToTracks()
+        void UpdateTrackContents()
         {
             for(int i = 0; i < trackEditors.Count; i++)
             {
                 trackEditors[i].time = time.value;
+                trackEditors[i].timeFrom = timeFrom.value;
+                trackEditors[i].timeTo = timeTo.value;
                 trackEditors[i].track = animation.runtimeTracks[i];
-                trackEditors[i].UpdateTrackContent(trackContents[i]);
+                trackEditors[i].content = trackContents[i];
+                trackEditors[i].animation = animation;
+                trackEditors[i].displayWidth = timeline.resolvedStyle.width;
+                trackEditors[i].PrepareLayout();
+                trackEditors[i].UpdateTrackContent();
             }
         }
         

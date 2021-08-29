@@ -29,5 +29,16 @@ namespace Prota.Unity
         
         public static T Last<T>(this List<T> l, T v) => l[l.Count - 1] = v;
         
+        
+        public static bool TryGetValue<T>(this List<T> l, int i, out T x)
+        {
+            if(0 <= i && i < l.Count)
+            {
+                x = l[i];
+                return true;
+            }
+            x = default;
+            return false;
+        }
     }
 }

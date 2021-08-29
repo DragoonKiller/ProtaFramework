@@ -46,15 +46,10 @@ namespace Prota.Animation
         [Header("轨道")]
         public List<ProtaAnimationTrack> runtimeTracks = new List<ProtaAnimationTrack>();
         
-        
-        public DataBlock dataBlock => this.GetComponent<DataBlock>();
-        
-        
-        
         public void Set(float t)
         {
             if(t >= duration + 1e-6f) t = t % duration;
-            foreach(var track in runtimeTracks) track.Apply(dataBlock, t);
+            foreach(var track in runtimeTracks) track.Apply(this.gameObject, t);
         }
         
         void Awake()
