@@ -4,6 +4,7 @@ using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 using Prota.Animation;
 using System;
+using Prota.Unity;
 
 namespace Prota.Editor
 {
@@ -22,31 +23,13 @@ namespace Prota.Editor
         public VisualElement trackContent { get; private set; }
         public VisualElement dataPanel { get; private set; }
         
+        public Action onRefresh;
+        
         public Action onSetTime;
         
         public Action onSetRange;
         
-        
-        bool _folded = false;
-        public bool folded
-        {
-            get => _folded;
-            set
-            {
-                if(_folded != value)
-                {
-                    if(_folded)
-                    {
-                        root.Remove(track);
-                    }
-                    else
-                    {
-                        root.Add(track);
-                    }
-                }
-                _folded = value;
-            }
-        }
+        public bool folded;
         
         static readonly Color hoverColor = new Color(.1f, .15f, .3f, 1);
         static Color stdColor;
@@ -62,8 +45,12 @@ namespace Prota.Editor
             trackLine = r.Q("TrackLine");
             trackPanel = r.Q("TrackPanel");
             timeStamp = r.Q("TimeStamp");
-            trackContent = r.Q("TrackContent");
+            trackContent = r.Q("TrackContent").SetFixedSize().SetAbsolute();
             dataPanel = r.Q("DataPanel");
+            
+            trackPanel.RegisterCallback<GeometryChangedEvent>(e => {
+                trackContent.SetWidth(trackPanel.resolvedStyle.width).SetHeight(trackPanel.resolvedStyle.height);
+            });
             
             stdColor = type.style.backgroundColor.value;
             type.RegisterCallback<MouseEnterEvent>(e => {
@@ -74,9 +61,13 @@ namespace Prota.Editor
             });
             type.RegisterCallback<ClickEvent>(e => {
                 folded = !folded;
+                track.SetVisible(!folded);
+                onRefresh?.Invoke();
             });
             
-            root.Remove(track);
+            folded = true;
+            track.SetVisible(false);
+            onRefresh?.Invoke();
         }
         
         public ProtaAnimationTrackContent SetRange(int lpx, int rpx)

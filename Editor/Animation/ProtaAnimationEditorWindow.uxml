@@ -31,12 +31,14 @@
             <ui:Label text="-" display-tooltip-when-elided="true" style="-unity-text-align: middle-left;" />
             <uie:FloatField value="42.2" name="TimeTo" style="-unity-text-align: middle-left; min-width: 80px; max-width: 80px; width: 80px;" />
         </ui:VisualElement>
+        <ui:Button text="重置" display-tooltip-when-elided="true" name="ResetTimeButton" />
     </uie:Toolbar>
     <ui:VisualElement name="TimelinePanel" style="flex-shrink: 0; flex-grow: 1; max-height: 24px; min-height: 24px; height: 24px; flex-direction: row; background-color: rgb(58, 58, 58);">
         <ui:VisualElement picking-mode="Ignore" name="TimelineSpace" style="flex-shrink: 0; flex-grow: 1; min-width: 400px; max-width: 400px; width: 400px;" />
         <ui:VisualElement name="Timeline" style="flex-shrink: 0; flex-grow: 1; background-color: rgb(53, 53, 53);">
             <ui:VisualElement name="TimeStamp" picking-mode="Ignore" style="position: absolute; flex-shrink: 0; flex-grow: 1; max-width: 3px; min-width: 6px; width: 6px; height: 24px; background-color: rgb(31, 92, 140);" />
         </ui:VisualElement>
+        <ui:VisualElement style="width: 18px; max-width: 18px; min-width: 18px;" />
     </ui:VisualElement>
     <ui:ScrollView name="Tracks" horizontal-scroller-visibility="Hidden" vertical-scroller-visibility="AlwaysVisible" focusable="true" touch-scroll-type="Clamped" style="flex-shrink: 1; flex-grow: 0;" />
 </ui:UXML>

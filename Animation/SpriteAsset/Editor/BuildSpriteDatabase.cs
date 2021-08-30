@@ -29,7 +29,13 @@ namespace Prota.Animation
         public static void UpdateSpriteDatabase()
         {
             var collections = AssetDatabase.FindAssets("t:ProtaSpriteCollection");
-            var db = database;
+            var dbs = AssetDatabase.FindAssets("t:ProtaSpriteDatabase");
+            if(dbs.Count() != 1)
+            {
+                Debug.LogError("找到的 SpriteDatabase 数量: " + dbs.Count());
+                return;
+            }
+            var db = AssetDatabase.LoadAssetAtPath<ProtaSpriteDatabase>(AssetDatabase.GUIDToAssetPath(dbs.First()));
             db.Clear();
             foreach(var c in collections)
             {

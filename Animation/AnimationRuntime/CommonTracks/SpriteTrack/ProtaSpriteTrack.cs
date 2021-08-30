@@ -16,7 +16,7 @@ namespace Prota.Animation
             /// 在某个时间点记录某个 Sprite.
             /// </summary>
             [Serializable]
-            public struct SpriteAssign
+            public class SpriteRecord
             {
                 [SerializeField]
                 float _time;
@@ -29,22 +29,20 @@ namespace Prota.Animation
                 
                 public string assetId => _assetId;
                 
-                public SpriteAssign(float time, string assetId) => (this._time, this._assetId) = (time, assetId);
+                public SpriteRecord(float time, string assetId) => (this._time, this._assetId) = (time, assetId);
             }
             
             public ProtaSpriteCollection spriteAsset;
             
             [SerializeField]
-            public List<SpriteAssign> assign = new List<SpriteAssign>();
+            public List<SpriteRecord> records = new List<SpriteRecord>();
             
-            [SerializeField]
-            public int lastFrame = 0;
             
             public override void Apply(GameObject target, float t)
             {
                 if(!target.TryGetComponent<SpriteRenderer>(out var spriteRenderer)) return;
                 var resAssign = GetAssignAtTime(t);
-                if(t < resAssign.time)
+                if(resAssign == null)
                 {
                     Debug.LogWarning("时间" + t + "没有对应的Sprite.");
                     return;
@@ -52,30 +50,35 @@ namespace Prota.Animation
                 spriteRenderer.sprite = spriteAsset[resAssign.assetId];
             }
             
+            
+            
             public void AddAssign(float t, string name)
             {
                 var index = GetAssignIndexAtTime(t);
-                if(index >= assign.Count)
+                if(index >= records.Count)
                 {
-                    assign.Add(new SpriteAssign(t, name));
+                    records.Add(new SpriteRecord(t, name));
                     return;
                 }
-                if(t < assign[index].time) index += 1;
-                assign.Insert(index + 1, new SpriteAssign(t, name));
+                records.Insert(index + 1, new SpriteRecord(t, name));
             }
             
             public bool RemoveAssign(float t)
             {
                 var index = GetAssignIndexAtTime(t);
-                if(t < assign[index].time) return false;
-                assign.RemoveAt(index);
+                if(index < 0) return false;
+                records.RemoveAt(index);
                 return true;
             }
             
-            public SpriteAssign GetAssignAtTime(float t) => assign[GetAssignIndexAtTime(t)];
+            public SpriteRecord GetAssignAtTime(float t)
+            {
+                if(records.TryGetValue(GetAssignIndexAtTime(t), out var res)) return res;
+                return null;
+            }
             
-            // 找到最靠近 t 的, 在 t 之前的 assign.
-            // 如果没有会返回第一个. 通过
+            // 找到最靠近 t 的, 在 t 之前(或相等)的 assign.
+            // 如果没有, 会返回 -1.
             public int GetAssignIndexAtTime(float t)
             {
                 // 二分查找.
@@ -83,9 +86,10 @@ namespace Prota.Animation
                 while(r - l <= 1)
                 {
                     var mid = (l + r) / 2;
-                    if(assign[mid].time <= t) r = mid;
+                    if(records[mid].time <= t) r = mid;
                     else l = mid + 1;
                 }
+                if(t < records[l].time) return -1;
                 return l;
             }
             
@@ -97,22 +101,22 @@ namespace Prota.Animation
                 var resources = Resources.Load<ProtaSpriteDatabase>("ProtaFramework/ProtaSpriteDatabase");
                 spriteAsset = resources[spriteName];
                 var assignCnt = asset.data.Int();
-                assign.Clear();
+                records.Clear();
                 for(int i = 0; i < assignCnt; i++)
                 {
                     var time = asset.data.Float();
                     var assetId = asset.data.String();
-                    assign.Add(new SpriteAssign(time, assetId));
+                    records.Add(new SpriteRecord(time, assetId));
                 }
             }
 
             protected override void OnSerialize(ProtaAnimationTrackAsset asset)
             {
                 asset.data.Push(spriteAsset?.name);
-                asset.data.Push(assign.Count);
-                for(int i = 0; i < assign.Count; i++)
+                asset.data.Push(records.Count);
+                for(int i = 0; i < records.Count; i++)
                 {
-                    var v = assign[i];
+                    var v = records[i];
                     asset.data.Push(v.time);
                     asset.data.Push(v.assetId);
                 }

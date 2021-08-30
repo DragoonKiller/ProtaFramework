@@ -102,6 +102,7 @@ namespace Prota.Editor
             EditorUtility.SetDirty(animation);
             track.name = name + "Track";
             SetupTracks();
+            UpdateAll();
         }
         
         
@@ -114,6 +115,15 @@ namespace Prota.Editor
         Action onUpdate;
         void Update() => onUpdate?.Invoke();
         
+        void UpdateAll()
+        {
+            UpdateMarks();
+            UpdateTimeStamp();
+            UpdateTrackTimeStamp();
+            UpdateDataPanelWidth();
+            UpdateTrackContents();
+        }
+        
         
         // ============================================================================================================
         // 播放和题头
@@ -125,6 +135,7 @@ namespace Prota.Editor
         Button startButton;
         Button recordButton;
         Button resetButton;
+        Button resetTimeButton;
         FloatField duration;
         FloatField timeFrom;
         FloatField timeTo;
@@ -184,9 +195,7 @@ namespace Prota.Editor
                     }
                 }
                 SetupTracks();
-                UpdateTimeStamp();
-                UpdateMarks();
-                UpdateTrackTime();
+                UpdateAll();
             });
             
             asset = root.Q<ObjectField>("Asset");
@@ -201,10 +210,16 @@ namespace Prota.Editor
             });
             
             readButton = root.Q<Button>("ReadButton");
-            readButton.RegisterCallback<ClickEvent>(e => animation.UseAsset());
+            readButton.RegisterCallback<ClickEvent>(e => {
+                animation.UseAsset();
+                EditorUtility.SetDirty(animation);
+            });
             
             saveButton = root.Q<Button>("SaveButton");
-            saveButton.RegisterCallback<ClickEvent>(e => animation.SaveAsset());
+            saveButton.RegisterCallback<ClickEvent>(e => {
+                animation.SaveAsset();
+                EditorUtility.SetDirty(animation.asset);
+            });
             
             time = root.Q<FloatField>("CurrentTime");
             time.RegisterValueChangedCallback(e => {
@@ -213,9 +228,7 @@ namespace Prota.Editor
                     time.value = time.value.Max(timeFrom.value).Min(timeTo.value);
                     return;
                 }
-                UpdateTimeStamp();
-                UpdateTrackTime();
-                UpdateTrackContents();
+                UpdateAll();
             });
             
             
@@ -235,6 +248,12 @@ namespace Prota.Editor
                 Debug.Log("TODO");
             });
             
+            resetTimeButton = root.Q<Button>("ResetTimeButton");
+            resetTimeButton.RegisterCallback<ClickEvent>(e => {
+                timeFrom.value = 0;
+                timeTo.value = animation.duration;
+            });
+            
             duration = root.Q<FloatField>("Duration");
             duration.RegisterValueChangedCallback(e => {
                 timeTo.value = timeTo.value.Min(e.newValue);
@@ -251,18 +270,14 @@ namespace Prota.Editor
             timeFrom.RegisterValueChangedCallback(e => {
                 timeTo.value = timeTo.value.Max(e.newValue + 1e-4f);
                 time.value = time.value;
-                UpdateTimeStamp();
-                UpdateTrackTimeStamp();
-                UpdateTrackContents();
+                UpdateAll();
             });
             
             timeTo = root.Q<FloatField>("TimeTo");
             timeTo.RegisterValueChangedCallback((EventCallback<ChangeEvent<float>>)(e => {
                 timeTo.value = Unity.MethodExtensions.Max(timeTo.value, this.timeFrom.value + 1e-4f);
                 time.value = time.value;
-                UpdateTimeStamp();
-                UpdateTrackTimeStamp();
-                UpdateTrackContents();
+                UpdateAll();
             }));
             
             onUpdate += () => {
@@ -298,13 +313,11 @@ namespace Prota.Editor
             {
                 var rate = e.localMousePosition.x / timeline.resolvedStyle.width;
                 time.value = rate.XMap(0, 1, timeFrom.value, timeTo.value);
-                UpdateTimeStamp();
-                UpdateMarks();
-                UpdateTrackTime();
+                UpdateAll();
             }
             
             timeline.RegisterCallback<GeometryChangedEvent>(e => {
-                UpdateTrackContentLayout();
+                UpdateAll();
             });
             
             timeline.RegisterCallback<MouseEnterEvent>(e => {
@@ -344,9 +357,7 @@ namespace Prota.Editor
                 distR *= scaleFactor;
                 timeFrom.value = cur - distL;
                 timeTo.value = cur + distR;
-                UpdateMarks();
-                UpdateTimeStamp();
-                UpdateTrackTimeStamp();
+                UpdateAll();
             });
         }
         
@@ -444,6 +455,8 @@ namespace Prota.Editor
         
         List<ProtaAnimationTrackEditor> trackEditors = new List<ProtaAnimationTrackEditor>();
         
+        bool trackUpdateCallbackRegistered = false;
+        
         void SetupAllTracksRoot()
         {
             trackRoot = root.Q<ScrollView>("Tracks");
@@ -487,18 +500,15 @@ namespace Prota.Editor
                 deleteButton.RegisterCallback<ClickEvent>((EventCallback<ClickEvent>)(e => {
                     anim.runtimeTracks.RemoveAt(i);
                     SetupTracks();
+                    UpdateAll();
                 }));
                 if(i < oriCnt) trackContent.folded = originalState[i];
             }
             
-            
-            UpdateTrackContentLayout();
-            UpdateTrackContents();
-            trackRoot.MarkDirtyRepaint();
-            UpdateTrackTime();
+            UpdateDataPanelWidth();
         }
         
-        void UpdateTrackContentLayout()
+        void UpdateDataPanelWidth()
         {
             var space = root.Q("TimelineSpace");
             foreach(var content in trackContents)
@@ -506,14 +516,7 @@ namespace Prota.Editor
                 content.dataPanel.style.maxWidth = space.resolvedStyle.maxWidth.value;
                 content.dataPanel.style.minWidth = space.resolvedStyle.minWidth.value;
                 content.dataPanel.style.width = space.resolvedStyle.width;
-                content.dataPanel.MarkDirtyRepaint();
             }
-        }
-        
-        void UpdateTrackTime()
-        {
-            UpdateTrackTimeStamp();
-            UpdateTrackContents();
         }
         
         void UpdateTrackTimeStamp()
