@@ -55,11 +55,10 @@ namespace Prota.Animation
             public void AddAssign(float t, string name)
             {
                 var index = GetAssignIndexAtTime(t);
-                if(index >= records.Count)
-                {
-                    records.Add(new SpriteRecord(t, name));
-                    return;
-                }
+                Debug.Log("在时间 " + t + " 插入 : " + index);
+                if(records.TryGetValue(index, out var av)) Debug.Log("index " + av.time);
+                if(records.TryGetValue(index + 1, out av)) Debug.Log("index " + av.time);
+                
                 records.Insert(index + 1, new SpriteRecord(t, name));
             }
             
@@ -81,9 +80,11 @@ namespace Prota.Animation
             // 如果没有, 会返回 -1.
             public int GetAssignIndexAtTime(float t)
             {
+                if(records.Count == 0) return -1;
+                
                 // 二分查找.
-                int l = 0, r = spriteAsset.sprites.Count - 1;
-                while(r - l <= 1)
+                int l = 0, r = records.Count - 1;
+                while(l != r)
                 {
                     var mid = (l + r) / 2;
                     if(records[mid].time <= t) r = mid;

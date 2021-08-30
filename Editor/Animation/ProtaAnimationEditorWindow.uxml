@@ -14,22 +14,25 @@
     <uie:Toolbar name="HeaderBar" style="flex-shirk: 0; flex-grow: 1;">
         <ui:VisualElement style="flex-direction: row;">
             <ui:Button text="开始" display-tooltip-when-elided="true" name="StartButton" style="-unity-text-align: middle-left;" />
-            <ui:Button text="重置" display-tooltip-when-elided="true" name="ResetButton" style="-unity-text-align: middle-left;" />
+            <ui:Label text="循环" display-tooltip-when-elided="true" style="-unity-text-align: middle-left;" />
+            <ui:Toggle name="Loop" style="width: auto; margin-left: 0; margin-right: 0; margin-top: 3px;" />
+            <ui:Label text="重置" display-tooltip-when-elided="true" style="margin-left: 5px; -unity-text-align: middle-left;" />
+            <ui:Toggle name="Reset" style="margin-left: 0; margin-right: 0; margin-top: 3px;" />
             <ui:Button text="录制" display-tooltip-when-elided="true" name="RecordButton" style="-unity-text-align: middle-left;" />
             <ui:VisualElement picking-mode="Ignore" style="min-width: 2px; max-width: 2px; flex-direction: row; background-color: rgb(10, 10, 10);" />
             <ui:VisualElement picking-mode="Ignore" style="min-width: 2px; max-width: 2px; flex-direction: row;" />
             <ui:Label text="当前时间" display-tooltip-when-elided="true" style="-unity-text-align: middle-left; min-width: 2px; flex-direction: row;" />
-            <uie:FloatField value="42.2" name="CurrentTime" style="-unity-text-align: middle-left; min-width: 100px; max-width: 100px; width: 100px;" />
+            <uie:FloatField value="0.000" name="CurrentTime" style="-unity-text-align: middle-left; min-width: 100px; max-width: 100px; width: 100px;" />
             <ui:VisualElement picking-mode="Ignore" style="min-width: 2px; max-width: 2px; flex-direction: row; background-color: rgb(10, 10, 10);" />
             <ui:VisualElement picking-mode="Ignore" style="min-width: 5px; max-width: 5px; flex-direction: row;" />
             <ui:Label text="持续时间" display-tooltip-when-elided="true" style="-unity-text-align: middle-left;" />
-            <uie:FloatField value="42.2" name="Duration" style="-unity-text-align: middle-left; min-width: 100px; max-width: 100px; width: 100px;" />
+            <uie:FloatField value="1.000" name="Duration" style="-unity-text-align: middle-left; min-width: 100px; max-width: 100px; width: 100px;" />
             <ui:VisualElement picking-mode="Ignore" style="min-width: 2px; max-width: 2px; flex-direction: row; background-color: rgb(10, 10, 10);" />
             <ui:VisualElement picking-mode="Ignore" style="min-width: 5px; max-width: 5px; flex-direction: row;" />
             <ui:Label text="当前时间范围" display-tooltip-when-elided="true" style="-unity-text-align: middle-left;" />
-            <uie:FloatField value="42.2" name="TimeFrom" style="-unity-text-align: middle-left; min-width: 80px; max-width: 80px; width: 80px;" />
+            <uie:FloatField value="0.000" name="TimeFrom" style="-unity-text-align: middle-left; min-width: 80px; max-width: 80px; width: 80px;" />
             <ui:Label text="-" display-tooltip-when-elided="true" style="-unity-text-align: middle-left;" />
-            <uie:FloatField value="42.2" name="TimeTo" style="-unity-text-align: middle-left; min-width: 80px; max-width: 80px; width: 80px;" />
+            <uie:FloatField value="1.000" name="TimeTo" style="-unity-text-align: middle-left; min-width: 80px; max-width: 80px; width: 80px;" />
         </ui:VisualElement>
         <ui:Button text="重置" display-tooltip-when-elided="true" name="ResetTimeButton" />
     </uie:Toolbar>

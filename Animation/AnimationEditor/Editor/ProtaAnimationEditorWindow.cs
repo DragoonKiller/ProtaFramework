@@ -112,8 +112,14 @@ namespace Prota.Editor
         // ============================================================================================================
         
         
-        Action onUpdate;
-        void Update() => onUpdate?.Invoke();
+        Action<double> onUpdate;
+        double recordTime;
+        void Update()
+        {
+            var dt = EditorApplication.timeSinceStartup - recordTime;
+            recordTime = EditorApplication.timeSinceStartup;
+            onUpdate?.Invoke(dt);
+        }
         
         void UpdateAll()
         {
@@ -133,8 +139,8 @@ namespace Prota.Editor
         Button readButton;
         Button saveButton;
         Button startButton;
-        Button recordButton;
-        Button resetButton;
+        Toggle loop;
+        Toggle reset;
         Button resetTimeButton;
         FloatField duration;
         FloatField timeFrom;
@@ -146,7 +152,6 @@ namespace Prota.Editor
         
         
         
-        double recordTime;
         
         bool _playing;
         bool playing
@@ -156,16 +161,8 @@ namespace Prota.Editor
             {
                 if(_playing == value) return;
                 _playing = value;
-                
-                if(value)
-                {
-                    startButton.text = "停止";
-                    recordTime = EditorApplication.timeSinceStartup;
-                }
-                else
-                {
-                    startButton.text = "开始";
-                }
+                if(value) startButton.text = "停止";
+                else startButton.text = "开始";
             }
         }
         
@@ -232,21 +229,15 @@ namespace Prota.Editor
             });
             
             
-            
             startButton = root.Q<Button>("StartButton");
             startButton.RegisterCallback<ClickEvent>(e => {
                 playing = !playing;
+                if(reset.value) time.value = 0;
             });
             
-            resetButton = root.Q<Button>("ResetButton");
-            resetButton.RegisterCallback<ClickEvent>(e => {
-                time.value = 0;
-            });
+            loop = root.Q<Toggle>("Loop");
             
-            recordButton = root.Q<Button>("RecordButton");
-            recordButton.RegisterCallback<ClickEvent>(e => {
-                Debug.Log("TODO");
-            });
+            reset = root.Q<Toggle>("Reset");
             
             resetTimeButton = root.Q<Button>("ResetTimeButton");
             resetTimeButton.RegisterCallback<ClickEvent>(e => {
@@ -263,7 +254,6 @@ namespace Prota.Editor
                     EditorUtility.SetDirty(animation);
                 }
                 time.value = time.value.Min(duration.value);
-                time.value = time.value;
             });
             
             timeFrom = root.Q<FloatField>("TimeFrom");
@@ -280,10 +270,13 @@ namespace Prota.Editor
                 UpdateAll();
             }));
             
-            onUpdate += () => {
+            onUpdate += (dt) => {
                 if(!playing) return;
-                var ccTime = EditorApplication.timeSinceStartup;
-                time.value = (float)(ccTime - recordTime);
+                if(animation == null || !animation) return;
+                var now = time.value + dt;
+                if(loop.value) now %= animation.duration;
+                else if(now > animation.duration) playing = false;
+                time.value = (float)now;
             };
             
         }
