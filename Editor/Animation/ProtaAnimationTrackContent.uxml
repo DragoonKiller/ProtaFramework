@@ -16,7 +16,7 @@
                     <ui:VisualElement name="TrackContent" style="position: absolute; height: auto; width: auto; left: -255px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="DataPanel" style="height: 200px; max-height: 400px; min-height: 200px; max-width: 200px; min-width: 300px; width: 964px;" />
+            <ui:VisualElement name="DataPanel" style="height: 300px; max-height: 600px; min-height: 300px; max-width: 200px; min-width: 300px; width: 300px; flex-shrink: 0;" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

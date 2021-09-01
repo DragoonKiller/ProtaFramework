@@ -47,6 +47,7 @@ namespace Prota.Editor
             try
             {
                 LoadRoot();
+                RegisterKeyboardInteractions();
                 SetupAddTrack();
                 SetupTimeline();
                 SetupTimelineHeader();
@@ -130,6 +131,15 @@ namespace Prota.Editor
             UpdateTrackContents();
         }
         
+        void RegisterKeyboardInteractions()
+        {
+            root.RegisterCallback<KeyDownEvent>(e => {
+                if(e.keyCode == KeyCode.F1)
+                {
+                    playing = !playing;
+                }
+            });
+        }
         
         // ============================================================================================================
         // 播放和题头
@@ -226,6 +236,7 @@ namespace Prota.Editor
                     return;
                 }
                 UpdateAll();
+                Apply();
             });
             
             
@@ -539,7 +550,11 @@ namespace Prota.Editor
         }
         
         
-        
+        void Apply()
+        {
+            if(animation == null || !animation) return;
+            animation.Set(time.value);
+        }
         
         
         

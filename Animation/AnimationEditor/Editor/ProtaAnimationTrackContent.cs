@@ -16,12 +16,12 @@ namespace Prota.Editor
         public Label id { get; private set; }
         public Label type { get; private set; }
         public TextField trackName { get; private set; }
-        public VisualElement track { get; private set; }
-        public VisualElement trackLine { get; private set; }
+        public VisualElement track { get; private set; }                // 整个底部 track 面板.
+        public VisualElement trackLine { get; private set; }            // 
         public VisualElement trackPanel { get; private set; }
         public VisualElement timeStamp { get; private set; }
         public VisualElement trackContent { get; private set; }
-        public VisualElement dataPanel { get; private set; }
+        public VisualElement dataPanel { get; private set; }            // 数据面板. 通过这里设置的高度定义高度.
         
         public Action onRefresh;
         

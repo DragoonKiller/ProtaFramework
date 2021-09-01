@@ -44,7 +44,7 @@ namespace Prota.Animation
                 var resAssign = GetAssignAtTime(t);
                 if(resAssign == null)
                 {
-                    Debug.LogWarning("时间" + t + "没有对应的Sprite.");
+                    // Debug.LogWarning("时间" + t + "没有对应的Sprite.");
                     return;
                 }
                 spriteRenderer.sprite = spriteAsset[resAssign.assetId];
@@ -86,9 +86,9 @@ namespace Prota.Animation
                 int l = 0, r = records.Count - 1;
                 while(l != r)
                 {
-                    var mid = (l + r) / 2;
-                    if(records[mid].time <= t) r = mid;
-                    else l = mid + 1;
+                    var mid = (l + r + 1) / 2;
+                    if(t < records[mid].time) r = mid - 1;
+                    else l = mid;
                 }
                 if(t < records[l].time) return -1;
                 return l;
