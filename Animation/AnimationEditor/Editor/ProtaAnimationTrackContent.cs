@@ -46,7 +46,7 @@ namespace Prota.Editor
             trackPanel = r.Q("TrackPanel");
             timeStamp = r.Q("TimeStamp");
             trackContent = r.Q("TrackContent").SetFixedSize().SetAbsolute();
-            dataPanel = r.Q("DataPanel");
+            dataPanel = r.Q("DataPanel").SetColor(new Color(.227f, .227f, .227f, 1));
             
             trackPanel.RegisterCallback<GeometryChangedEvent>(e => {
                 trackContent.SetWidth(trackPanel.resolvedStyle.width).SetHeight(trackPanel.resolvedStyle.height);

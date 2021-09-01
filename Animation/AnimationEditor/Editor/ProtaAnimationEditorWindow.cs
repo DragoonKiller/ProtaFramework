@@ -133,7 +133,7 @@ namespace Prota.Editor
         
         void RegisterKeyboardInteractions()
         {
-            root.RegisterCallback<KeyDownEvent>(e => {
+            this.rootVisualElement.RegisterCallback<KeyDownEvent>(e => {
                 if(e.keyCode == KeyCode.F1)
                 {
                     playing = !playing;
@@ -247,6 +247,7 @@ namespace Prota.Editor
             });
             
             loop = root.Q<Toggle>("Loop");
+            loop.value = true;
             
             reset = root.Q<Toggle>("Reset");
             
@@ -394,27 +395,36 @@ namespace Prota.Editor
             VisualElement NewNormalMark()
             {
                 var x = new VisualElement();
-                x.style.flexShrink = 0;
-                x.style.flexGrow = 1;
-                x.style.position = Position.Absolute;
+                x.SetGrow().SetAbsolute().SetWidth(1).SetHeight(timeline.resolvedStyle.height).SetNoInteraction();
                 x.style.maxHeight = new StyleLength(StyleKeyword.None);
                 x.style.minHeight = new StyleLength(StyleKeyword.None);
-                x.style.height = timeline.resolvedStyle.height;
-                x.style.width = 1;
-                x.style.maxWidth = 1;
-                x.style.minWidth = 1;
-                x.pickingMode = PickingMode.Ignore;
                 return x;
             }
             
+            var step = 1f;
+            if(duration.value <= .5f) step = 0.01f;
+            if(duration.value <= 1) step = 0.1f;
+            else if(duration.value <= 5) step = .5f;
+            else if(duration.value <= 20) step = 1f;
+            else if(duration.value <= 100) step = 2f;
+            else step = 5f;
+            
             // 时间标记.
-            for(var i = timeFrom.value.CeilToInt(); i <= timeTo.value.FloorToInt(); i++)
+            for(var _i = (timeFrom.value / step).CeilToInt(); _i <= (timeTo.value / step).FloorToInt(); _i++)
             {
+                var i = _i * step;
                 if(i < 0 || i >= duration.value) continue;
+                
                 var pos = ((float)i).XMap(timeFrom.value, timeTo.value, 0, timeline.resolvedStyle.width);
                 var x = NewNormalMark();
                 x.style.left = pos;
-                x.style.backgroundColor = new Color(.05f, .05f, .05f, 1);
+                x.SetColor(new Color(.05f, .05f, .05f, 1));
+                
+                var t = new Label() { text = i.ToString("0.00") }.SetParent(x);
+                t.SetNoInteraction().SetAbsolute().SetHeight(18).SetTextColor(new Color(.4f, .4f, .8f, 1));
+                t.style.unityTextAlign = TextAnchor.UpperLeft;
+                t.style.left = 2;
+                
                 marks.Add(x);
                 timelineMarkRoot.Add(x);
             }
@@ -424,9 +434,7 @@ namespace Prota.Editor
             {
                 var x = NewNormalMark();
                 var pos = (0f).XMap(timeFrom.value, timeTo.value, 0, timeline.resolvedStyle.width);
-                x.style.width = 3;
-                x.style.minWidth = 3;
-                x.style.maxWidth = 3;
+                x.SetWidth(3);
                 x.style.left = pos;
                 x.style.backgroundColor = new Color(1, 0.4f, 0.4f, 1);
                 marks.Add(x);
@@ -436,9 +444,7 @@ namespace Prota.Editor
             {
                 var x = NewNormalMark();
                 var pos = duration.value.XMap(timeFrom.value, timeTo.value, 0, timeline.resolvedStyle.width);
-                x.style.width = 3;
-                x.style.minWidth = 3;
-                x.style.maxWidth = 3;
+                x.SetWidth(3);
                 x.style.left = pos - x.style.width.value.value;
                 x.style.left = pos;
                 x.style.backgroundColor = new Color(1, 0.4f, 0.4f, 1);

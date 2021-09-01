@@ -43,6 +43,28 @@ namespace Prota.Unity
         public static float Floor(this float x) => Mathf.Floor(x);
         public static float Ceil(this float x) => Mathf.Ceil(x);
         
+        public static float Mod(this float x, float y) => x - Mathf.Floor(x / y) * y;
+        
+        public static int Mod(this int x, int y) => x - x / y * y;
+        
+        public static float Div(this float x, float y)
+        {
+            return (x - x.Mod(y)) / y;
+        }
+        
+        public static int Div(this int x, int y)
+        {
+            return (x - x.Mod(y)) / y;
+        }
+        
+        public static bool Within(this int x, int a, int b) => a <= x && x <= b;
+        
+        public static bool WithinExclusive(this int x, int a, int b) => a < x && x < b;
+        
+        public static bool Within(this float x, float a, float b) => a <= x && x <= b;
+        
+        public static bool WithinExclusive(this float x, float a, float b) => a < x && x < b;
+        
         public static int FloorToInt(this float x) => Mathf.FloorToInt(x);
         public static int CeilToInt(this float x) => Mathf.CeilToInt(x);
         

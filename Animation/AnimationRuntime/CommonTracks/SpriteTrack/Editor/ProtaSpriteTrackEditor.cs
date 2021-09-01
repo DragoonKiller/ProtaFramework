@@ -4,6 +4,7 @@ using Prota.Animation;
 using UnityEngine;
 using System.Collections.Generic;
 using Prota.Unity;
+using System.Linq;
 
 namespace Prota.Editor
 {
@@ -12,6 +13,9 @@ namespace Prota.Editor
         [TrackEditor(typeof(ProtaAnimationTrack.Sprite))]
         public class ProtaSpriteTrackEditor : ProtaAnimationTrackEditor
         {
+            const int spriteSize = 60;
+            
+            
             bool setup = false;
             ObjectField spriteCollection;
             ProtaAnimationTrack.Sprite spriteTrack;
@@ -40,10 +44,17 @@ namespace Prota.Editor
             
             
             
+            DragState dragSprite = new DragState();
+            int currentDragging = -1;
+            
             List<VisualElement> spriteScrollList = new List<VisualElement>();
             
             VisualElement spriteTimeline;
             List<VisualElement> spriteTag = new List<VisualElement>();
+            
+            
+            VisualElement timeTagRoot;
+            List<VisualElement> tiemTag = new List<VisualElement>();
             
             
             
@@ -97,11 +108,12 @@ namespace Prota.Editor
                         fixedFramerate = new Toggle() { name = "FixedFramerate", text = "" }.SetParent(options);
                         fixedFramerate.value = false;
                         fixedFramerate.RegisterValueChangedCallback(e => {
-                            framerate.value = Mathf.Max(1, framerate.value);
+                            if(e.previousValue == false) framerate.value = 30;
+                            else framerate.value = Mathf.Max(1, framerate.value);
                             UpdateAll();
                         });
                         
-                        framerate = new IntegerField(){ name = "Framerate" }.SetParent(options).SetWidth(40);
+                        framerate = new IntegerField(){ name = "Framerate" }.SetParent(options).SetWidth(spriteSize);
                         framerate.value = 1;
                         framerate.RegisterValueChangedCallback(e => {
                             framerate.value = Mathf.Max(1, framerate.value);
@@ -136,17 +148,47 @@ namespace Prota.Editor
                 
                 
                 
+                // Sprite Timeline
+                {
+                    spriteTimeline = new VisualElement().SetParent(content.trackContent);
+                    spriteTimeline.SetHeight(spriteSize).AutoWidth().SetGrow();
+                    dragSprite.Register(spriteTimeline);
+                    void GetIndex()
+                    {
+                        currentDragging = spriteTag.FindIndex(x => {
+                            var (from, to) = (x.style.left.value.value, x.style.width.value.value);
+                            to += from;
+                            return dragSprite.now.x.Within(from, to);
+                        });
+                    }
+                    dragSprite.canDrag = () => {
+                        GetIndex();
+                        return currentDragging != -1;
+                    };
+                    dragSprite.onDragBegin += () => {
+                        GetIndex();
+                        UpdateAll();
+                    };
+                    dragSprite.onDrag += UpdateAll;
+                    dragSprite.onDragEnd += () => {
+                        var originAssign = spriteTrack.records[currentDragging];
+                        spriteTrack.AddAssign(GetSpriteDisplayTime(currentDragging), originAssign.assetId);
+                        spriteTrack.RemoveAssign(originAssign.time);
+                        currentDragging = -1;
+                        UpdateAll();
+                    };
+                    
+                }
                 
+                new VisualElement().AsHorizontalSeperator(2, new Color(.2f, .2f, .2f, 1)).SetParent(content.trackContent);
                 
-                spriteTimeline = new VisualElement();
-                spriteTimeline.SetHeight(40).AutoWidth().SetGrow();
-                content.trackContent.Add(spriteTimeline);
-                spriteTimeline.MarkDirtyRepaint();
+                // Time Tag
+                {
+                    var timeTagRoot = new VisualElement().SetParent(content.trackContent);
+                    timeTagRoot.SetHeight(spriteSize).SetColor(Color.black.A(0)).SetGrow();
+                }
                 
-                var sep = new VisualElement().AsHorizontalSeperator(2, new Color(.2f, .2f, .2f, 1));
-                content.trackContent.Add(sep);
-                sep.MarkDirtyRepaint();
-                
+                new VisualElement().AsHorizontalSeperator(2, new Color(.2f, .2f, .2f, 1)).SetParent(content.trackContent);
             }
             
             
@@ -166,7 +208,7 @@ namespace Prota.Editor
                         x.style.flexDirection = FlexDirection.Row;
                         
                         var nameField = new TextField() { name = "Name" };
-                        nameField.SetWidth(40).SetNoInteraction();
+                        nameField.SetWidth(spriteSize).SetNoInteraction();
                         x.Add(nameField);
                         
                         var insertButton = new Button() { name = "InsertButton", text = "插入" };
@@ -210,15 +252,18 @@ namespace Prota.Editor
                         x = new VisualElement() { name = "Sprite " + i };
                         x.SetHeight(spriteTimeline.style.height).SetAbsolute().SetGrow();
                         
-                        var spriteImage = new VisualElement() { name = "SpriteImage" };
-                        spriteImage.SetGrow().SetFixedSize().SetHeight(spriteTimeline.style.height).SetAbsolute();
+                        var spriteImage = new VisualElement() { name = "SpriteImage" }.SetParent(x);
+                        spriteImage.SetFixedSize().SetHeight(spriteTimeline.style.height).SetAbsolute();
                         spriteImage.style.backgroundColor = new Color(.8f, .8f, .8f, 1f);
-                        x.Add(spriteImage);
                         
-                        var stamp = new VisualElement() { name = "Stamp" };
+                        var stamp = new VisualElement() { name = "Stamp" }.SetParent(x);
                         stamp.style.backgroundColor = new Color(.8f, .4f, .4f, 1f);
                         stamp.SetFixedSize().SetAbsolute().SetWidth(2).SetHeight(spriteTimeline.style.height);
-                        x.Add(stamp);
+                        
+                        var timeLabel = new Label() { name = "TimeLabel", text = "undefined" }.SetParent(x);
+                        timeLabel.SetAbsolute().SetHeight(18).SetFixedSize();
+                        timeLabel.style.unityTextAlign = TextAnchor.UpperLeft;
+                        timeLabel.style.top = spriteTimeline.style.height.value.value + 2;
                         
                         spriteTimeline.Add(x);
                         spriteTag.Add(x);
@@ -227,11 +272,22 @@ namespace Prota.Editor
                     var assign = spriteTrack.records[i];
                     var sprite = spriteTrack.spriteAsset[assign.assetId];
                     x.SetWidth(spriteTimeline.style.height.value.value * sprite.rect.width / sprite.rect.height);
-                    x.style.left = assign.time.XMap(timeFrom, timeTo, 0, displayWidth);
+                    var time = GetSpriteDisplayTime(i);
+                    x.style.left = time.XMap(timeFrom, timeTo, 0, displayWidth);
                     
                     var xSpriteImage = x.Q("SpriteImage");
                     x.Q("SpriteImage").style.backgroundImage = new StyleBackground(sprite);
                     xSpriteImage.SetWidth(x.style.width);
+                    var xTimeLabel = x.Q<Label>("TimeLabel");
+                    if(fixedFramerate.value)
+                    {
+                        xTimeLabel.text = Mathf.Floor(time * framerate.value).ToString();
+                    }
+                    else
+                    {
+                        xTimeLabel.text = time.ToString("0.00");
+                    }
+                    
                     
                     // Sprite 按照顺序放到最后.
                     x.BringToFront();
@@ -244,6 +300,12 @@ namespace Prota.Editor
                 }
                 
                 content.timeStamp.BringToFront();
+                
+                
+                
+                // 时间戳.
+                
+                
                 
                 
                 
@@ -260,6 +322,16 @@ namespace Prota.Editor
                 UpdateContent();
                 UpdateTrack();
                 UpdateScene();
+            }
+            
+            
+            
+            float GetSpriteDisplayTime(int i)
+            {
+                var time = spriteTrack.records[i].time;
+                if(currentDragging == i) time += dragSprite.delta.x / displayWidth * (timeTo - timeFrom);
+                if(fixedFramerate.value) time = Mathf.Floor(time * framerate.value) / framerate.value;
+                return time;
             }
         }
     }

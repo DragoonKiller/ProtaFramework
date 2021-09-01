@@ -138,6 +138,12 @@ namespace Prota.Unity
             return x;
         }
         
+        public static T SetTextColor<T>(this T x, Color a) where T: Label
+        {
+            x.style.color = a;
+            return x;
+        }
+        
         public static T HoverLeaveColor<T>(this T x, Color a, Color b) where T: VisualElement
         {
             x.RegisterCallback<MouseEnterEvent>(e => x.style.backgroundColor = a);
