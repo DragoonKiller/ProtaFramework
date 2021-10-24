@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 
 using System.Collections.Generic;
+using System.Text;
 
 namespace Prota.Unity
 {
@@ -49,6 +50,18 @@ namespace Prota.Unity
                 d++;
             }
             return d;
+        }
+        
+        public static string GetNamePath(this Transform t)
+        {
+            var sb = new StringBuilder();
+            while(t != null)
+            {
+                sb.Append("/");
+                sb.Append(t.gameObject.name);
+                t = t.parent;
+            }
+            return sb.ToString();
         }
         
         public static T GetOrCreate<T>(this Transform t) where T : Component

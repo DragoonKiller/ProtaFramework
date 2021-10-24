@@ -14,30 +14,32 @@ namespace Prota.Data
     {
         public DataCore core;
         
-        void Awake()
-        {
-            OnTransformParentChanged();
-        }
+        void Awake() => DetachAndAttach();
         
-        void OnDestroy()
+        void OnDestroy() => Detach();
+        
+        void OnTransformParentChanged() => DetachAndAttach();
+        
+        public void DetachAndAttach()
         {
             Detach();
+            CheckAndAttach();
         }
         
-        void OnTransformParentChanged()
+        // 可以重复调用.
+        public void CheckAndAttach()
         {
-            Detach();
-            
             var t = this.transform.parent;
-            while(t != null && !t.TryGetComponent<DataCore>(out _)) t = t.parent;
-            if(t != null && t.TryGetComponent<DataCore>(out var core))
+            while(t != null && (!t.TryGetComponent<DataCore>(out var c) || !c || c.destroying)) t = t.parent;
+            if(t != null && t.TryGetComponent<DataCore>(out var core) && !(!core || core.destroying))
             {
                 this.core = core;
                 if(!core.data.Contains(this)) core.data.Add(this);
             }
         }
         
-        void Detach()
+        
+        public void Detach()
         {
             if(core != null)
             {

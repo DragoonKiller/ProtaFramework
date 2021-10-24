@@ -13,6 +13,8 @@ namespace Prota.Unity
             var r = g.AddComponent<T>();
             return r;
         }
+        
+        public static string GetNamePath(this GameObject g) => g.transform.GetNamePath();
     }
     
 }
