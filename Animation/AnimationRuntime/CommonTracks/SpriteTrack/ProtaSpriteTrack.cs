@@ -34,20 +34,22 @@ namespace Prota.Animation
             
             public ProtaSpriteCollection spriteAsset;
             
+            public string targetName;
+            
             [SerializeField]
             public List<SpriteRecord> records = new List<SpriteRecord>();
             
             
-            public override void Apply(GameObject target, float t)
+            public override void Apply(DataCore target, float t)
             {
-                if(!target.TryGetComponent<SpriteRenderer>(out var spriteRenderer)) return;
+                if(!target.Get<DataBindings2D>(targetName, out var bindings)) return;
                 var resAssign = GetAssignAtTime(t);
                 if(resAssign == null)
                 {
                     // Debug.LogWarning("时间" + t + "没有对应的Sprite.");
                     return;
                 }
-                spriteRenderer.sprite = spriteAsset[resAssign.assetId];
+                bindings.sprite = spriteAsset[resAssign.assetId];
             }
             
             

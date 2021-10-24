@@ -50,5 +50,12 @@ namespace Prota.Unity
             }
             return d;
         }
+        
+        public static T GetOrCreate<T>(this Transform t) where T : Component
+        {
+            if(t.TryGetComponent<T>(out var res)) return res;
+            var r = t.gameObject.AddComponent<T>();
+            return r;
+        }
     }
 }

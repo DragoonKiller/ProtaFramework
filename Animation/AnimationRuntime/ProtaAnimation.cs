@@ -14,7 +14,7 @@ namespace Prota.Animation
     }
     
     
-    [RequireComponent(typeof(Data.DataBlock))]
+    [RequireComponent(typeof(DataCore))]        // Track 会从这个 DataCore 读取/赋值数据.
     [SerializeField]
     public class ProtaAnimation : ProtaScript
     {
@@ -49,7 +49,7 @@ namespace Prota.Animation
         public void Set(float t)
         {
             if(t >= duration + 1e-6f) t = t % duration;
-            foreach(var track in runtimeTracks) track.Apply(this.gameObject, t);
+            foreach(var track in runtimeTracks) track.Apply(this.GetComponent<DataCore>(), t);
         }
         
         void Awake()

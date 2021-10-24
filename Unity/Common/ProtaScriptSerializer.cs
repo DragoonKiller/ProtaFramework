@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using UnityEngine;
-using Prota.Animation;
 using System.Reflection;
 using System.Collections.Generic;
 

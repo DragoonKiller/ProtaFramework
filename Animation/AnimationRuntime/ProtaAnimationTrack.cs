@@ -24,7 +24,7 @@ namespace Prota.Animation
         
         public string type => this.GetType().Name;
         
-        public virtual void Apply(GameObject anim, float t) { }
+        public virtual void Apply(DataCore anim, float t) { }
         
         public void Serialize(ProtaAnimationTrackAsset a)
         {

@@ -3,8 +3,6 @@ using UnityEditor;
 using System;
 using System.Collections.Generic;
 
-using Prota.CommonResources;
-
 namespace Prota.Unity
 {
     [InitializeOnLoad]
@@ -59,8 +57,7 @@ namespace Prota.Unity
                     r.xMin -= 20 + depth * pixelPerDepth;
                     r.xMax = r.xMin + r.height;
                     GUI.color = new Color(1, 1, 1, 0.4f);
-                    GUI.DrawTexture(r, ResourcesDatabase.inst["Common"]["line_vertical_16_2"] as Texture2D);
-                    
+                    GUI.DrawTexture(r, Resources.Load<Texture2D>("ProtaFramework/line_vertical_16_2"));
                 }
                 
             }

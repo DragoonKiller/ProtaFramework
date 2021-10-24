@@ -5,26 +5,15 @@ using Prota.Animation;
 
 namespace Prota.Data
 {
-    public partial class DataBinding
+    [RequireComponent(typeof(SpriteRenderer))]
+    public class Animation : DataBlock
     {
-        public class Animation : DataBinding
+        public SpriteRenderer spriteRenderer => this.GetComponent<SpriteRenderer>();
+        
+        public Sprite sprite
         {
-            public float time;
-            
-            public ProtaAnimation anim => source.GetComponent<ProtaAnimation>();
-            
-            public override void Deserialize(SerializedData s)
-            {
-                s.Reset();
-                time = s.Float();
-            }
-
-            public override void Serialize(SerializedData s)
-            {
-                s.Clear();
-                s.Push(time);
-                
-            }
+            get => spriteRenderer.sprite;
+            set => spriteRenderer.sprite = value;
         }
     }
 }
