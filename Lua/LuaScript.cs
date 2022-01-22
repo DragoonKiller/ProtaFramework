@@ -9,7 +9,7 @@ namespace Prota.Lua
     {
         public TextAsset script = null;
         
-        LuaTable instance;  // 实例对象.
+        public LuaTable instance;  // 实例对象.
         
         LuaTable[] selfArg;
         
@@ -93,6 +93,7 @@ namespace Prota.Lua
             luaOnDestroy = null;
             luaOnEnable = null;
             luaOnDisable = null;
+            selfArg = null;
         }
         
         

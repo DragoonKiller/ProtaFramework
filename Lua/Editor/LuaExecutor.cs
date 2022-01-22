@@ -45,6 +45,16 @@ namespace Prota.Lua
                         })
                 );
             }
+            
+            rootVisualElement.Add(new Button() { text = "测试" }
+                .OnClick(e => {
+                    var t = LuaCore.instance.env.NewTable();
+                    t.SetInPath("val", 1);
+                    t.SetInPath("gg", LuaCore.instance.env.NewTable());
+                    Debug.Assert(t.GetInPath<object>("val").GetType() == typeof(long));
+                    Debug.Assert(t.GetInPath<object>("gg").GetType() == typeof(XLua.LuaTable));
+                })
+            );
         }
         
         void OnDisable()
