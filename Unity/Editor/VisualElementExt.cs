@@ -193,6 +193,12 @@ namespace Prota.Unity
             return x;
         }
         
+        public static T AddChild<T>(this T x, VisualElement y) where T: VisualElement
+        {
+            x.Add(y);
+            return x;
+        }
+        
         public static T SetHorizontalLayout<T>(this T x, bool reversed = false) where T: VisualElement
         {
             x.style.flexDirection = reversed ? FlexDirection.RowReverse : FlexDirection.Row;
@@ -210,6 +216,18 @@ namespace Prota.Unity
             x.style.paddingRight = r;
             x.style.paddingBottom = b;
             x.style.paddingTop = t;
+            return x;
+        }
+        
+        public static T OnClick<T>(this T x, EventCallback<ClickEvent> f) where T: VisualElement
+        {
+            x.RegisterCallback<ClickEvent>(f);
+            return x;
+        }
+        
+        public static T OnValueChange<T, G>(this T x, EventCallback<ChangeEvent<G>> f) where T: VisualElement, INotifyValueChanged<G>
+        {
+            x.RegisterValueChangedCallback<G>(f);
             return x;
         }
     }

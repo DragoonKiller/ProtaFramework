@@ -16,6 +16,7 @@ namespace Prota.Data
         public new Collider2D collider => this.GetComponent<Collider2D>();
         public BoxCollider2D boxCollider => this.GetComponent<BoxCollider2D>();
         public CapsuleCollider2D capsuleCollider => this.GetComponent<CapsuleCollider2D>();
+        public CircleCollider2D circleCollider => this.GetComponent<CircleCollider2D>();
         
     }
     

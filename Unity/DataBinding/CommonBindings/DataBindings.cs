@@ -14,6 +14,7 @@ namespace Prota.Data
         public MeshCollider meshCollider => this.GetComponent<MeshCollider>();
         public BoxCollider boxCollider => this.GetComponent<BoxCollider>();
         public CapsuleCollider capsuleCollider => this.GetComponent<CapsuleCollider>();
+        public SphereCollider sphereCollider => this.GetComponent<SphereCollider>();
         
     }
     

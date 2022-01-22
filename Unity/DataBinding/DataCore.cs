@@ -13,9 +13,16 @@ namespace Prota.Data
     // DataBlock 保证自己添加/删除/挪动位置的时候维持自身和任意一个 DataCore 的绑定.
     // DataCore 删除时, 会重新刷一遍它底下的所有 DataBlock, 让它们重新进行绑定.
     // DataCore 添加时, 会找到它的父级的 DataCore, 让父级 DataCore 重新刷所有子级绑定.
+    //          注意 DataCore 不会主动刷新数据. 一般来说, 直接在上级创建一个 DataCore 并不会关连到任何 DataBlock
+    //          因为 DataBlock 都有对应的绑定 DataCore 了. 在它下边添加 DataBlock 是 ok 的.
     // DataCore 移动时, 子集和自己所有脚本会刷新. 父级不用管.
     
+    /// <summary>
+    /// 数据集中访问接口.
+    /// 相当于 ECS 中的 Entity.
+    /// </summary>
     [ExecuteInEditMode]
+    [DisallowMultipleComponent]
     public class DataCore : MonoBehaviour
     {
         [SerializeField]
