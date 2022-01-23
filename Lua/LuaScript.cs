@@ -7,7 +7,7 @@ namespace Prota.Lua
 {
     public class LuaScript : MonoBehaviour
     {
-        public LuaScriptAsset script = null;
+        public string luaPath;
         
         public LuaTable instance;  // 实例对象.
         
@@ -21,7 +21,9 @@ namespace Prota.Lua
         LuaFunction luaAwake;
         void Awake()
         {
-            instance = LuaCore.instance.GetInstanceOfScript(script);
+            if(!LuaCore.IsValidPath(luaPath)) return;
+            
+            instance = LuaCore.instance.GetInstanceOfScript(luaPath);
             selfArg = new LuaTable[] { instance };
             
             instance.SetInPath("gameObject", this.gameObject);
@@ -101,5 +103,10 @@ namespace Prota.Lua
         // ========================================================================================
         // ========================================================================================
         
+        
+        public static bool ObjectIsNull(UnityEngine.Object t)
+        {
+            return t == null;
+        }
     }
 }

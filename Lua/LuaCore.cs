@@ -3,23 +3,24 @@ using UnityEditor;
 using XLua;
 using System.Collections.Generic;
 using System;
+using System.IO;
 
 namespace Prota.Lua
 {
     public class LuaCore : MonoBehaviour
     {
+        public const string luaSourcePath = "./LuaScripts";
+        
         public static LuaCore instance = null;
-        
-        public List<LuaScriptAsset> loadOnInit = new List<LuaScriptAsset>();
-        
         
         public class LoadedScript
         {
-            public LuaScriptAsset asset;
+            public string path;
             public LuaTable scriptMeta;
         }
         
-        public Dictionary<LuaScriptAsset, LoadedScript> loaded = new Dictionary<LuaScriptAsset, LoadedScript>();
+        [NonSerialized]
+        public Dictionary<string, LoadedScript> loaded = new Dictionary<string, LoadedScript>();
         
         LuaEnv _env;
         
@@ -47,8 +48,7 @@ namespace Prota.Lua
         
         void Awake()
         {
-            // 使用 lua 脚本调用 DontDestroyOnLoad.
-            // GameObject.DontDestroyOnLoad(this.gameObject);
+            
         }
         
         void Update()
@@ -64,18 +64,33 @@ namespace Prota.Lua
         {
             Debug.Log("LuaEnv 开始初始化!");
             
-            foreach(var i in loadOnInit)
-            {
-                Debug.Log("LuaEnv 初始化加载: " + i.name);
+            env.AddLoader((ref string s) => {
                 try
                 {
-                    l.DoString(i.asset.text);
+                    var f = File.ReadAllBytes(Path.Combine(luaSourcePath, s + ".lua"));
+                    return f;
                 }
                 catch(Exception e)
                 {
-                    Debug.LogException(e);
+                    Debug.LogError(e);
+                    return new byte[0];
                 }
+            });
+            
+            foreach(var directory in Directory.EnumerateDirectories(luaSourcePath, "*", SearchOption.TopDirectoryOnly))
+            {
+                var d = new DirectoryInfo(directory);
+                var fs = d.GetFiles("Init.lua");
+                if(fs == null || fs.Length == 0)
+                {
+                    Debug.LogWarning("目录 " + directory + " 不包含 Init.lua 文件");
+                    continue;
+                }
+                
+                Load(Path.Combine(directory, "Init.lua"));
             }
+            
+            // TODO: 这里收集加密/压缩过后的文件.
             
             Debug.Log("LuaEnv 创建完毕!");
         }
@@ -89,41 +104,52 @@ namespace Prota.Lua
         }
         
         
-        public LuaTable GetInstanceOfScript(LuaScriptAsset asset)
+        public LuaTable GetInstanceOfScript(string path)
         {
             var t = env.NewTable();
-            var loaded = Load(asset);
+            var loaded = Load(Path.Combine(LuaCore.luaSourcePath, path + ".lua"));
             t.SetMetaTable(loaded.scriptMeta);
             return t;
         }
         
-        LoadedScript Load(LuaScriptAsset asset)
+        LoadedScript Load(string path)
         {
-            if(loaded.TryGetValue(asset, out var res)) return res;
+            if(loaded.TryGetValue(path, out var res)) return res;
             
             // 脚本在一般情况下返回一个 table 表示这个类.
             // 脚本在非一般情况下返回 nil.
             // 否则都不合法.
-            var ret = env.DoString(asset.asset.text, asset.name);
+            var source = GetSource(path);
+            var ret = env.DoString(source, path);
             LuaTable table = null;
-            if(ret.Length >= 1 && ret[0] != null) table = (LuaTable)ret[0];
+            if(ret != null && ret.Length >= 1 && ret[0] != null) table = (LuaTable)ret[0];
             
             // 即使不是"类"的脚本也会有一个 metatable, 如果没有返回值那么里面什么都没有.
             var metaTable = env.NewTable();
             metaTable.SetInPath<LuaBase>("__index", table);
             
             res = new LoadedScript();
-            res.asset = asset;
             res.scriptMeta = metaTable;
             return res;
         }
         
-        void Reload(LuaScriptAsset asset)
+        string GetSource(string path)
         {
-            loaded.Remove(asset);
-            Load(asset);
+            return File.ReadAllText(path);
         }
         
+        void Reload(string path)
+        {
+            loaded.Remove(path);
+            Load(path);
+        }
+        
+        public static bool IsValidPath(string path)
+        {
+            if(string.IsNullOrEmpty(path)) return false;
+            var s = new FileInfo(path);
+            return s.Exists;
+        }
     }
     
     
