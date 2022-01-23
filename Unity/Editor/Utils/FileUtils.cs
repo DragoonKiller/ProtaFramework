@@ -21,7 +21,8 @@ namespace Prota.Unity
             var fpParent = Path.GetFullPath(parent);
             var fpSub = Path.GetFullPath(sub);
             if(fpSub.StartsWith(fpParent)) return fpSub.Substring(fpParent.Length + 1);
-            throw new System.Exception("给定路径不是包含关系.");
+            // throw new System.Exception("给定路径不是包含关系.");
+            return null;
         }
     }
 }

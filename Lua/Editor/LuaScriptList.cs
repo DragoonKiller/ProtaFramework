@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using Prota.Unity;
+using System.Linq;
 
 namespace Prota.Lua
 {
@@ -21,7 +22,7 @@ namespace Prota.Lua
             public string path;
         }
         
-        public string scriptRootPath = "Assets/Scripts";
+        string scriptRootPath => new FileInfo(AssetDatabase.GetAssetPath(this)).Directory.FullName;
         
         public List<Entry> entries = new List<Entry>();
         
@@ -32,6 +33,9 @@ namespace Prota.Lua
         {
             path = path.Replace("\\", "/");
             var name = GetNameFromPath(path);
+            if(name == null) return;
+            var entry = entries.FindIndex(x => x.name == name);
+            if(entry >= 0) return;
             entries.Add(new Entry{ name = name, path = path });
             EditorUtility.SetDirty(this);
         }
@@ -39,6 +43,7 @@ namespace Prota.Lua
         public void Remove(string path)
         {
             var name = GetNameFromPath(path);
+            if(name == null) return;
             entries.RemoveAll(x => x.name == name);
             if(accessCache.ContainsKey(name)) accessCache.Remove(name);
             EditorUtility.SetDirty(this);
@@ -73,6 +78,7 @@ namespace Prota.Lua
             var p = Path.GetFullPath(path).ToLower();
             // Debug.Log(myPath + " " + p);
             p = Utils.GetRelativePath(myPath, p);
+            if(p == null) return null;
             // Debug.Log(p);
             if(p.EndsWith(".lua")) p = p.Substring(0, p.Length - ".lua".Length);
             if(p.EndsWith(".lua.txt")) p = p.Substring(0, p.Length - ".lua.txt".Length);

@@ -10,16 +10,16 @@ namespace Prota.Lua
     {
         public static LuaCore instance = null;
         
-        public List<TextAsset> loadOnInit = new List<TextAsset>();
+        public List<LuaScriptAsset> loadOnInit = new List<LuaScriptAsset>();
         
         
         public class LoadedScript
         {
-            public TextAsset asset;
+            public LuaScriptAsset asset;
             public LuaTable scriptMeta;
         }
         
-        public Dictionary<TextAsset, LoadedScript> loaded = new Dictionary<TextAsset, LoadedScript>();
+        public Dictionary<LuaScriptAsset, LoadedScript> loaded = new Dictionary<LuaScriptAsset, LoadedScript>();
         
         LuaEnv _env;
         
@@ -69,7 +69,7 @@ namespace Prota.Lua
                 Debug.Log("LuaEnv 初始化加载: " + i.name);
                 try
                 {
-                    l.DoString(i.text);
+                    l.DoString(i.asset.text);
                 }
                 catch(Exception e)
                 {
@@ -89,7 +89,7 @@ namespace Prota.Lua
         }
         
         
-        public LuaTable GetInstanceOfScript(TextAsset asset)
+        public LuaTable GetInstanceOfScript(LuaScriptAsset asset)
         {
             var t = env.NewTable();
             var loaded = Load(asset);
@@ -97,14 +97,14 @@ namespace Prota.Lua
             return t;
         }
         
-        LoadedScript Load(TextAsset asset)
+        LoadedScript Load(LuaScriptAsset asset)
         {
             if(loaded.TryGetValue(asset, out var res)) return res;
             
             // 脚本在一般情况下返回一个 table 表示这个类.
             // 脚本在非一般情况下返回 nil.
             // 否则都不合法.
-            var ret = env.DoString(asset.text, asset.name);
+            var ret = env.DoString(asset.asset.text, asset.name);
             LuaTable table = null;
             if(ret.Length >= 1 && ret[0] != null) table = (LuaTable)ret[0];
             

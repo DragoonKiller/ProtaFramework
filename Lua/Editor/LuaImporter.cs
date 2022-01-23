@@ -14,10 +14,14 @@ namespace Prota.Lua
         {
             var path = ctx.assetPath;
             var content = File.ReadAllText(path);
-            var t = new LuaScriptAsset(content);
+            var t = new TextAsset(content);
             t.name = ctx.assetPath;
             ctx.AddObjectToAsset("Content", t);
-            ctx.SetMainObject(t);
+            var s = ScriptableObject.CreateInstance<LuaScriptAsset>();
+            s.path = ctx.assetPath;
+            s.asset = t;
+            ctx.AddObjectToAsset("Config", s);
+            ctx.SetMainObject(s);
         }
     }
     
@@ -25,22 +29,26 @@ namespace Prota.Lua
     {
         static void OnPostprocessAllAssets(string[] imported, string[] deleted, string[] moved, string[] movedFrom)
         {
-            var assetGUIDs = AssetDatabase.FindAssets("t:LuaScriptList");
-            if(assetGUIDs == null || assetGUIDs.Length == 0) return;
-            var path = AssetDatabase.GUIDToAssetPath(assetGUIDs[0]);
-            var g = AssetDatabase.LoadAssetAtPath<LuaScriptList>(path);
-            if(g == null) return;
+            var assetGuids = AssetDatabase.FindAssets("t:LuaScriptList");
+            if(assetGuids == null || assetGuids.Length == 0) return;
             
-            foreach(var s in deleted.Concat(movedFrom))
+            foreach(var assetGuid in assetGuids)
             {
-                if(!s.EndsWith(".lua")) continue;
-                g.Remove(s);
-            }
-            
-            foreach(var s in imported.Concat(moved))
-            {
-                if(!s.EndsWith(".lua")) continue;
-                g.Add(s);
+                var path = AssetDatabase.GUIDToAssetPath(assetGuid);
+                var g = AssetDatabase.LoadAssetAtPath<LuaScriptList>(path);
+                if(g == null) continue;
+                
+                foreach(var s in deleted.Concat(movedFrom))
+                {
+                    if(!s.EndsWith(".lua")) continue;
+                    g.Remove(s);
+                }
+                
+                foreach(var s in imported.Concat(moved))
+                {
+                    if(!s.EndsWith(".lua")) continue;
+                    g.Add(s);
+                }
             }
         }
     }

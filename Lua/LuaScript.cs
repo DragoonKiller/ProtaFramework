@@ -7,7 +7,7 @@ namespace Prota.Lua
 {
     public class LuaScript : MonoBehaviour
     {
-        public TextAsset script = null;
+        public LuaScriptAsset script = null;
         
         public LuaTable instance;  // 实例对象.
         
