@@ -107,7 +107,7 @@ namespace Prota.Lua
         public LuaTable GetInstanceOfScript(string path)
         {
             var t = env.NewTable();
-            var loaded = Load(Path.Combine(LuaCore.luaSourcePath, path + ".lua"));
+            var loaded = Load(PathToSourcePath(path));
             t.SetMetaTable(loaded.scriptMeta);
             return t;
         }
@@ -147,8 +147,13 @@ namespace Prota.Lua
         public static bool IsValidPath(string path)
         {
             if(string.IsNullOrEmpty(path)) return false;
-            var s = new FileInfo(path);
+            var s = new FileInfo(PathToSourcePath(path));
             return s.Exists;
+        }
+        
+        public static string PathToSourcePath(string path)
+        {
+            return Path.Combine(LuaCore.luaSourcePath, path + ".lua");
         }
     }
     

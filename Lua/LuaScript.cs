@@ -10,6 +10,8 @@ namespace Prota.Lua
         public string luaPath;
         
         public LuaTable instance;  // 实例对象.
+                
+        public string loadedFilePath { get; private set; }
         
         LuaTable[] selfArg;
         
@@ -24,6 +26,7 @@ namespace Prota.Lua
             if(!LuaCore.IsValidPath(luaPath)) return;
             
             instance = LuaCore.instance.GetInstanceOfScript(luaPath);
+            loadedFilePath = luaPath;
             selfArg = new LuaTable[] { instance };
             
             instance.SetInPath("gameObject", this.gameObject);

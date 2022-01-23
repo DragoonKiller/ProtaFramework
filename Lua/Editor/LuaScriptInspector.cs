@@ -20,6 +20,8 @@ namespace Prota.Lua
         
         Label tag;
         
+        Label loadedTag;
+        
         VisualElement fileList;
         
         SerializedProperty luaPathProperty => serializedObject.FindProperty("luaPath");
@@ -46,6 +48,8 @@ namespace Prota.Lua
             );
             
             root.AddChild(fileList = new VisualElement() { });
+            
+            root.AddChild(loadedTag = new Label() { });
             
             root.AddChild(luaInspector = new LuaElementInspector(0, "self", () => {
                 var obj = serializedObject.targetObject as LuaScript;
@@ -78,7 +82,25 @@ namespace Prota.Lua
         void RefreshAll()
         {
             RefreshText();
+            RefreshLoaded();
+            RefreshTag();
             RefreshFilter();
+        }
+        
+        void RefreshLoaded()
+        {
+            if(!string.IsNullOrEmpty(script.loadedFilePath))
+            {
+                loadedTag.SetVisible(true);
+                tag.SetVisible(false);
+                loadedTag.text = "已加载: " + script.loadedFilePath;
+            }
+            else
+            {
+                tag.SetVisible(true);
+                loadedTag.SetVisible(false);
+            }
+            
         }
         
         void RefreshText()
@@ -86,35 +108,42 @@ namespace Prota.Lua
             pathText.value = script.luaPath;
         }
         
-        static char[] delimiter = new char[]{ '/' };
-        void RefreshFilter()
+        void RefreshTag()
         {
-            var nowStr = Path.Combine(LuaCore.luaSourcePath, pathText.value);
-            nowStr = nowStr.Replace("\\", "/");
-            FileInfo f = null;
-            try
-            {
-                f = new FileInfo(nowStr + ".lua");
-            }
-            catch(Exception)
+            if(!LuaCore.IsValidPath(script.luaPath))
             {
                 tag.SetTextColor(new Color(.8f, .3f, .3f, 1));
                 return;
             }
             
-            var success = false;
+            var f = new FileInfo(LuaCore.PathToSourcePath(script.luaPath));
+            
             if(f.Exists)
             {
                 tag.SetTextColor(new Color(.8f, .8f, 1f, 1));
-                success = true;
             }
-            else tag.SetTextColor(new Color(.6f, .6f, .2f, 1));
+            else
+            {
+                tag.SetTextColor(new Color(.6f, .6f, .2f, 1));
+            }
+        }
+        
+        static char[] delimiter = new char[]{ '/' };
+        void RefreshFilter()
+        {
+            if(string.IsNullOrEmpty(script.luaPath))
+            {
+                fileList.SetVisible(false);
+                return;
+            }
+            
+            fileList.SetVisible(true);
             
             var pattern = pathText.value.ToLower();
             
             var i = 0;
             
-            if(!success)
+            if(!LuaCore.IsValidPath(script.luaPath))
             {
                 foreach(var fn in new DirectoryInfo(LuaCore.luaSourcePath).EnumerateFiles("*.lua", SearchOption.AllDirectories))
                 {
