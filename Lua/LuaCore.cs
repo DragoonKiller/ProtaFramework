@@ -155,6 +155,12 @@ namespace Prota.Lua
         {
             return Path.Combine(LuaCore.luaSourcePath, path + ".lua");
         }
+        
+        public static bool ObjectIsNull(object x)
+        {
+            if(x is UnityEngine.Object o) return o == null;
+            return x == null;
+        }
     }
     
     
