@@ -106,8 +106,14 @@ namespace Prota.Lua
         
         public LuaTable GetInstanceOfScript(string path)
         {
-            var t = env.NewTable();
-            var loaded = Load(PathToSourcePath(path));
+            return SetInstanceOfScript(env.NewTable(), path);
+        }
+        
+        public LuaTable SetInstanceOfScript(LuaTable t, string path)
+        {
+            var sourcePath = PathToSourcePath(path);
+            var loaded = Load(sourcePath);
+            if(loaded == null) return null;
             t.SetMetaTable(loaded.scriptMeta);
             return t;
         }
@@ -120,6 +126,7 @@ namespace Prota.Lua
             // 脚本在非一般情况下返回 nil.
             // 否则都不合法.
             var source = GetSource(path);
+            if(source == null) return null;
             var ret = env.DoString(source, path);
             LuaTable table = null;
             if(ret != null && ret.Length >= 1 && ret[0] != null) table = (LuaTable)ret[0];
@@ -129,13 +136,23 @@ namespace Prota.Lua
             metaTable.SetInPath<LuaBase>("__index", table);
             
             res = new LoadedScript();
+            res.path = path;
             res.scriptMeta = metaTable;
+            loaded.Add(res.path, res);
             return res;
         }
         
         string GetSource(string path)
         {
-            return File.ReadAllText(path);
+            try
+            {
+                return File.ReadAllText(path);
+            }
+            catch(Exception e)
+            {
+                Debug.LogException(e);
+            }
+            return null;
         }
         
         void Reload(string path)

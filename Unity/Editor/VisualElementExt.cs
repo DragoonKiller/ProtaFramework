@@ -117,7 +117,8 @@ namespace Prota.Unity
         public static T SetVisible<T>(this T x, bool visible) where T: VisualElement
         {
             if(x.visible != visible) x.visible = visible;
-            x.style.visibility = visible ? new StyleEnum<Visibility>(){ keyword = StyleKeyword.Null } : Visibility.Hidden;
+            x.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            x.style.visibility = visible ? Visibility.Visible : Visibility.Hidden;
             return x;
         }
         

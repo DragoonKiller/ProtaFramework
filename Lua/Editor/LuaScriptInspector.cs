@@ -51,6 +51,8 @@ namespace Prota.Lua
             
             root.AddChild(loadedTag = new Label() { });
             
+            root.AddChild(new VisualElement().AsHorizontalSeperator(2));
+            
             root.AddChild(luaInspector = new LuaElementInspector(0, "self", () => {
                 var obj = serializedObject.targetObject as LuaScript;
                 if(obj == null) return null;
@@ -58,6 +60,16 @@ namespace Prota.Lua
                 return table;
             }));
             
+            root.AddChild(new VisualElement().AsVerticalSeperator(2));
+            
+            root.AddChild(new Button(() => {
+                    var obj = serializedObject.targetObject as LuaScript;
+                    if(obj == null) return;
+                    obj.Reload();
+                }) { text = "重新加载" }
+            );
+            
+            root.AddChild(new VisualElement().AsVerticalSeperator(2));
             
             RefreshAll();
             
@@ -89,11 +101,11 @@ namespace Prota.Lua
         
         void RefreshLoaded()
         {
-            if(!string.IsNullOrEmpty(script.loadedFilePath))
+            if(!string.IsNullOrEmpty(script.loadedPath))
             {
                 loadedTag.SetVisible(true);
                 tag.SetVisible(false);
-                loadedTag.text = "已加载: " + script.loadedFilePath;
+                loadedTag.text = "已加载: " + script.loadedPath;
             }
             else
             {

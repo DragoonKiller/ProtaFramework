@@ -211,6 +211,9 @@ namespace Prota.Lua
                 case double d:
                 return d.ToString(".0000000000");
                 
+                case null:
+                return "null";
+                
                 default:
                 return value.ToString();
             }
