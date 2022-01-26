@@ -12,14 +12,13 @@ namespace Prota.Lua
     {
         public string luaPath;
         
-        public LuaTable instance;   // 实例对象.
+        [NonSerialized]
+        public LuaTable instance;  // 实例对象.
         
-        public string loadedPath { get; private set; } = null;
+        [NonSerialized]
+        public LuaCore.LoadedScript loaded;   // 记录绑定的 metatable.
         
-        LuaTable[] selfArg;
-        
-        public static Dictionary<string, HashSet<LuaScript>> scripts = new Dictionary<string, HashSet<LuaScript>>();
-        
+        object[] selfArg;
         
         // ========================================================================================
         // ========================================================================================
@@ -29,9 +28,9 @@ namespace Prota.Lua
         LuaFunction luaAwake;
         void Awake()
         {
-            CreateData();
-            if(!LuaCore.IsValidPath(luaPath)) return;
-            LoadAndAdd();
+            Load();
+            
+            if(luaAwake != null) luaAwake.Call(selfArg);
         }
         
         
@@ -79,7 +78,7 @@ namespace Prota.Lua
         void OnDestroy()
         {
             if(luaOnDestroy != null) luaOnDestroy.Call(selfArg);
-            UnloadAndRemove();
+            Unload();
         }
         
         
@@ -87,8 +86,11 @@ namespace Prota.Lua
         // ========================================================================================
         // ========================================================================================
         
+        
         void CreateData()
         {
+            if(instance != null) return;
+            
             instance = LuaCore.instance.env.NewTable();
             instance.SetInPath("gameObject", this.gameObject);
             instance.SetInPath("transform", this.transform);
@@ -101,32 +103,11 @@ namespace Prota.Lua
                 creationArgs = null;
             }
             
-            selfArg = new LuaTable[] { instance };
+            selfArg = new object[] { instance };
         }
         
-        void LoadAndAdd()
+        void Unload()
         {
-            var res = LuaCore.instance.SetInstanceOfScript(instance, luaPath);
-            if(res == null)
-            {
-                Debug.LogError("LuaScript 加载失败 " + luaPath);
-                return;
-            }
-            
-            scripts.GetOrCreate(luaPath, out var collection);
-            collection.Add(this);
-            loadedPath = luaPath;
-            
-        }
-        
-        void UnloadAndRemove()
-        {
-            if(loadedPath == null) return;
-            
-            scripts.GetOrCreate(luaPath, out var collection);
-            collection.Remove(this);
-            loadedPath = null;
-            
             luaAwake = null;
             luaStart = null;
             luaUpdate = null;
@@ -135,40 +116,43 @@ namespace Prota.Lua
             luaOnDestroy = null;
             luaOnEnable = null;
             luaOnDisable = null;
-            selfArg = null;
         }
         
+        
         // 只更换 metatable.
-        public void Reload(string path = null)
+        public void Load()
         {
             if(!LuaCore.IsValidPath(luaPath))
             {
-                Debug.LogError("给定路径不合法: " + luaPath);
+                Debug.LogError("路径不合法: " + this.gameObject.name + "\n" + luaPath);
                 return;
             }
             
-            if(path != null)
+            CreateData();
+            
+            var meta = LuaCore.instance.Load(luaPath);
+            if(meta == null)
             {
-                UnloadAndRemove();
-                this.luaPath = path;
-                LoadAndAdd();
+                Debug.LogError("脚本加载失败: " + luaPath);
             }
-            else
-            {
-                if(loadedPath != null)      // 必须有加载才能替换; 否则, 直接加载一个新的即可.
-                {
-                    scripts.GetOrCreate(loadedPath, out var collection);
-                    foreach(var c in collection.ToArray())
-                    {
-                        c.Reload(luaPath);
-                    }
-                }
-                else
-                {
-                    LoadAndAdd();
-                }
-            }
+            
+            if(meta == this.loaded) return; // metadata 完全相同不用重设.
+            
+            this.loaded = meta;
+            
+            instance.SetMetaTable(meta.scriptMeta);
+            
+            luaAwake = instance.GetInPath<LuaFunction>("Awake");
+            luaStart = instance.GetInPath<LuaFunction>("Start");
+            luaUpdate = instance.GetInPath<LuaFunction>("Update");
+            luaFixedUpdate = instance.GetInPath<LuaFunction>("FixedUpdate");
+            luaLateUpdate = instance.GetInPath<LuaFunction>("LateUpdate");
+            luaOnDestroy = instance.GetInPath<LuaFunction>("OnDestroy");
+            luaOnEnable = instance.GetInPath<LuaFunction>("OnDisabled");
+            luaOnDisable = instance.GetInPath<LuaFunction>("OnEnabled");
+            
         }
+        
         
         // ========================================================================================
         // ========================================================================================

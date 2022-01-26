@@ -87,7 +87,7 @@ namespace Prota.Lua
                     continue;
                 }
                 
-                Load(Path.Combine(directory, "Init.lua"));
+                Load(Path.Combine(Path.GetFileName(directory), "Init"));
             }
             
             // TODO: 这里收集加密/压缩过后的文件.
@@ -103,23 +103,10 @@ namespace Prota.Lua
             Debug.Log("虚拟机已清理!");
         }
         
-        
-        public LuaTable GetInstanceOfScript(string path)
+        public LoadedScript Load(string key)
         {
-            return SetInstanceOfScript(env.NewTable(), path);
-        }
-        
-        public LuaTable SetInstanceOfScript(LuaTable t, string path)
-        {
-            var sourcePath = PathToSourcePath(path);
-            var loaded = Load(sourcePath);
-            if(loaded == null) return null;
-            t.SetMetaTable(loaded.scriptMeta);
-            return t;
-        }
-        
-        LoadedScript Load(string path)
-        {
+            var path = PathToSourcePath(key);
+            
             if(loaded.TryGetValue(path, out var res)) return res;
             
             // 脚本在一般情况下返回一个 table 表示这个类.
