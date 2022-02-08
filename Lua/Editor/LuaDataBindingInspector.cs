@@ -17,7 +17,7 @@ namespace Prota.Lua
     [CustomEditor(typeof(LuaDataBinding), false)]
     public class LuaDataBindingInspector : UnityEditor.Editor
     {
-        new LuaDataBinding dataBinding => base.target as LuaDataBinding;
+        LuaDataBinding dataBinding => base.target as LuaDataBinding;
         
         public override VisualElement CreateInspectorGUI()
         {

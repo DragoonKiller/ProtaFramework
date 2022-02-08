@@ -84,6 +84,13 @@ namespace Prota.Lua
         
         void Update()
         {
+            if(LuaCore.instance == null || !LuaCore.instance.envLoaded)
+            {
+                luaInspector?.SetVisible(false);
+                return;
+            }
+
+            luaInspector.SetVisible(true);
             luaInspector?.Update();
         }
         

@@ -178,8 +178,11 @@ namespace Prota.Lua
                 if(!elements.ContainsKey(e.Key)) this.EnsureSubExist(e.Key, e.Value);
             }
             
-            // 递归刷新.
-            foreach(var el in elements) el.Value.Update();
+            // 递归刷新. 只有当前不 fold 才会刷.
+            if(subVisible == true)
+            {
+                foreach(var el in elements) el.Value.Update();
+            }
             
             return;
         }

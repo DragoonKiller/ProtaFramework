@@ -41,7 +41,7 @@ namespace Prota.Lua
                         .OnClick(e => {
                             if(!File.Exists(fname)) return;
                             if(LuaCore.instance == null) return;
-                            LuaCore.instance.env.DoString(File.ReadAllText(fname));
+                            LuaCore.instance.env.DoString(File.ReadAllText(fname), fname);
                         })
                 );
             }

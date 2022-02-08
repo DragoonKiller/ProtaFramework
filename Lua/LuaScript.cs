@@ -89,11 +89,13 @@ namespace Prota.Lua
         
         void CreateData()
         {
-            if(instance != null) return;
-            
-            instance = LuaCore.instance.env.NewTable();
-            instance.SetInPath("gameObject", this.gameObject);
-            instance.SetInPath("transform", this.transform);
+            if(instance == null)
+            {
+                instance = LuaCore.instance.env.NewTable();
+                instance.SetInPath("gameObject", this.gameObject);
+                instance.SetInPath("transform", this.transform);
+                selfArg = new object[] { instance };
+            }
             
             if(creationPath != null)
             {
@@ -103,7 +105,6 @@ namespace Prota.Lua
                 creationArgs = null;
             }
             
-            selfArg = new object[] { instance };
         }
         
         void Unload()
@@ -122,13 +123,13 @@ namespace Prota.Lua
         // 只更换 metatable.
         public void Load()
         {
+            CreateData();
+            
             if(!LuaCore.IsValidPath(luaPath))
             {
                 Debug.LogError("路径不合法: " + this.gameObject.name + "\n" + luaPath);
                 return;
             }
-            
-            CreateData();
             
             var meta = LuaCore.instance.Load(luaPath);
             if(meta == null)
@@ -195,6 +196,44 @@ namespace Prota.Lua
                     return s.instance;
             }
             return null;
+        }
+        
+        
+        [LuaCallCSharp]
+        public static bool ObjectIsNull(object x)
+        {
+            if(x is UnityEngine.Object o) return o == null;
+            return x == null;
+        }
+        
+        [LuaCallCSharp]
+        public static void Activate(object target, bool value = true)
+        {
+            switch(target)
+            {
+                case Behaviour c:
+                c.enabled = value;
+                break;
+                
+                case GameObject g:
+                g.SetActive(value);
+                break;
+                
+                case Transform t:
+                t.gameObject.SetActive(value);
+                break;
+                
+                default:
+                Debug.LogError("Activate类型不正确 " + target.ToString());
+                break;
+            }
+        }
+        
+        [LuaCallCSharp]
+        public static LuaTable GetDataBinding(GameObject g)
+        {
+            var d = g.GetComponent<LuaDataBinding>();
+            return d.GetLuaTable();
         }
     }
 }

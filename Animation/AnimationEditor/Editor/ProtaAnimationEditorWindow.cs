@@ -465,8 +465,6 @@ namespace Prota.Editor
         
         List<ProtaAnimationTrackEditor> trackEditors = new List<ProtaAnimationTrackEditor>();
         
-        bool trackUpdateCallbackRegistered = false;
-        
         void SetupAllTracksRoot()
         {
             trackRoot = root.Q<ScrollView>("Tracks");

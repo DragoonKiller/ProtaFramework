@@ -37,7 +37,7 @@ namespace Prota.Lua
             }
         }
         
-        
+        public bool envLoaded => _env != null;
         
         
         public int debugMemory;
@@ -67,13 +67,15 @@ namespace Prota.Lua
             env.AddLoader((ref string s) => {
                 try
                 {
-                    var f = File.ReadAllBytes(Path.Combine(luaSourcePath, s + ".lua"));
+                    var path = PathToSourcePath(s);
+                    var f = File.ReadAllBytes(path);
+                    s = path;
                     return f;
                 }
                 catch(Exception e)
                 {
                     Debug.LogError(e);
-                    return new byte[0];
+                    return null;
                 }
             });
             
@@ -114,7 +116,8 @@ namespace Prota.Lua
             // 否则都不合法.
             var source = GetSource(path);
             if(source == null) return null;
-            var ret = env.DoString(source, path);
+            var f = env.LoadString(source, key);
+            var ret = f.Call();
             LuaTable table = null;
             if(ret != null && ret.Length >= 1 && ret[0] != null) table = (LuaTable)ret[0];
             
@@ -160,11 +163,6 @@ namespace Prota.Lua
             return Path.Combine(LuaCore.luaSourcePath, path + ".lua");
         }
         
-        public static bool ObjectIsNull(object x)
-        {
-            if(x is UnityEngine.Object o) return o == null;
-            return x == null;
-        }
     }
     
     
