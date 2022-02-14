@@ -2,9 +2,11 @@ using System;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using UnityEngine;
+using XLua;
 
 namespace Prota.Net
 {
+    [LuaCallCSharp]
     public class Server : MonoBehaviour
     {
         NetManager server;

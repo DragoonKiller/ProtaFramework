@@ -2,16 +2,21 @@ using System;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using UnityEngine;
+using XLua;
 
 namespace Prota.Net
 {
+    [LuaCallCSharp]
     public class Client : MonoBehaviour
     {
+        Action<LuaTable> callbacks;
+        
+        
         NetManager client;
         
         void Awake()
         {
-            EventBasedNetListener listener = new EventBasedNetListener();
+            var listener = new EventBasedNetListener();
             client = new NetManager(listener);
             client.Start();
             client.Connect("localhost", 9050, "ProtaClient");
@@ -32,5 +37,19 @@ namespace Prota.Net
         {
             client.Stop();
         }
+        
+        public void AddCallback(Action<LuaTable> callback)
+        {
+            callbacks += callback;
+        }
+        
+        public void RemoveCallback(Action<LuaTable> callback)
+        {
+            callback -= callback;
+        }
+        
+        
+        
+        
     }
 }
