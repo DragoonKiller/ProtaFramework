@@ -45,12 +45,12 @@ namespace Prota.Net
             listener = new EventBasedNetListener();
             client = new NetManager(listener);
             client.Start();
-            peerToServer = client.Connect(gateEndpoint, authorizedKey);
+            ConnectToServer();
             
             info.local = ":" + client.LocalPort;
             
             listener.ConnectionRequestEvent += req => {
-                Log.Info($"{ this } 接收到了建立连接请求 { req.RemoteEndPoint }");
+                Log.Info($"{ this } 接收到了建立连接请求 { req.RemoteEndPoint } 数据: [{ req.Data.GetString() }]");
                 // 客户端可以无脑接收.
                 req.Accept();
             };
@@ -68,12 +68,10 @@ namespace Prota.Net
             };
             
             listener.PeerDisconnectedEvent += (peer, info) => {
-                if(peer.EndPoint.Equals(gateEndpoint))
-                {
-                    Log.Info($"{ this } 断开与服务器的连接: { peer.EndPoint }");
-                    this.info.server = "";
-                    return;
-                }
+                if(!peer.EndPoint.Equals(gateEndpoint)) return;
+                Log.Info($"{ this } 断开与服务器的连接: { peer.EndPoint }");
+                this.info.server = "";
+                return;
             };
             
             listener.NetworkReceiveEvent += (peer, reader, method) => {
@@ -106,6 +104,19 @@ namespace Prota.Net
         protected virtual void OnDestroy()
         {
             client.Stop();
+        }
+        
+        public void ConnectToServer()
+        {
+            DisconnectToServer();
+            peerToServer = client.Connect(gateEndpoint, authorizedKey);
+        }
+        
+        public void DisconnectToServer()
+        {
+            if(peerToServer == null) return;
+            peerToServer.Disconnect();
+            peerToServer = null;
         }
         
         public void SendToServerOrdered(Action<NetDataWriter> f)
