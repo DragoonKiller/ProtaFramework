@@ -94,7 +94,7 @@ namespace Prota.Net
                     info.server = peer.EndPoint.ToString();
                     peerToServer = peer;
                     SendToServer(w => {
-                        w.Put(100);
+                        w.Put(-10);
                         w.Put(this.GetInstanceID());
                         w.Put(this.ToString());
                     });
@@ -188,6 +188,19 @@ namespace Prota.Net
         {
             var target = client.ConnectedPeerList.Find(x => x.EndPoint.Equals(endpoint));
             target?.Disconnect();
+        }
+        
+        // 通过服务器, 建立 p2p 连接.
+        public void ConnectClientByServer(int otherClientId)
+        {
+            var clientInfo = serverConnections.Find(x => x.id == otherClientId);
+            if(string.IsNullOrEmpty(clientInfo.ip)) throw new Exception("serverId not found!");
+            var ipAddress = LiteNetLib.NetUtils.MakeEndPoint(clientInfo.ip, clientInfo.port);
+            SendToServer(w => {
+                w.Put(-101);
+                w.Put(id);
+                w.Put(otherClientId);
+            });
         }
         
         // ============================================================================================================
@@ -285,7 +298,7 @@ namespace Prota.Net
                 }
             });
             
-            // 建立 p2p 连接.
+            // 建立 p2p 连接. 第三步; 连接到目标端点.
             AddCallback(-101, (peer, reader, method) => {
                 var otherEndpoint = reader.GetNetEndPoint();
                 client.Connect(otherEndpoint, "ProtaClient");
