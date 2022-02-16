@@ -17,8 +17,7 @@ namespace Prota.Net
         
         NetPeer peerToHost;
         
-        public List<Action<LuaTable>> callbacks = new List<Action<LuaTable>>();
-        
+        [Header("=== Client ===")]
         public string host;
         
         
@@ -66,16 +65,6 @@ namespace Prota.Net
         // ============================================================================================================
         // ============================================================================================================
         // ============================================================================================================
-        
-        public void AddCallback(Action<LuaTable> callback)
-        {
-            callbacks.Add(callback);
-        }
-        
-        public void RemoveCallback(Action<LuaTable> callback)
-        {
-            callbacks.Remove(callback);
-        }
         
     }
 }
