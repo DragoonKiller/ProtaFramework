@@ -11,61 +11,149 @@ using System.Collections.Generic;
 namespace Prota.Net
 {
     
+    // 引入了 client-host 机制的 ClientBase.
     [LuaCallCSharp]
     public class Client : ClientBase
     {
-        readonly static IPEndPoint gateEndpoint = new IPEndPoint(IPAddress.Parse("106.54.195.7"), 33200);
-        
-        NetPeer peerToHost;
-        
-        [Header("=== Client ===")]
-        public string host;
-        
+        [NonSerialized]
+        public bool isHost;
         
         protected override void Start()
         {
             base.Start();
+        }
+        
+        public readonly List<NetId> subClients = new List<NetId>();
+        
+        public NetId hostId = NetId.None;
+        
+        // ============================================================================================================
+        // Client
+        // ============================================================================================================
+        
+        public void ConnectToHost(NetId id)
+        {
+            Clear();
+            isHost = false;
+            DisconnectAllClient();
             
-            listener.PeerConnectedEvent += peer => {
-                if(peer.EndPoint.Equals(gateEndpoint)) return;
-                Debug.Assert(peerToHost == null || peer.EndPoint.Equals(peerToHost.EndPoint));
-                Log.Info($"{ this } 连接到主机 { peer.EndPoint }");
-                peerToHost = peer;
-                host = peer.EndPoint.ToString();
-            };
+            // 把自己标记为非主机.
+            SendToServer(w => {
+                w.Put(BuiltinMsgId.C2SRequestHost);
+                w.Put(false);
+            });
             
-            listener.PeerDisconnectedEvent += (peer, info) => {
-                if(peer.EndPoint.Equals(gateEndpoint)) return;
-                Log.Info($"{ this } 断开与主机的连接: { peer.EndPoint }");
-                host = "";
-            };
+            var clientInfo = serverConnections.Find(x => x.id == id);
+            AddCallback(BuiltinMsgId.C2CResponseClientConnection, OnHostResponse);
+            if(clientInfo != null)
+            {
+                Log.Info($"尝试连接到主机: { id }[{ clientInfo.endpoint }]");
+                ConnectClientByServer(id);
+                Action<NetPeer> callback = null;
+                callback = peer => {
+                    if(TryGetIdByEndpoint(peer.EndPoint, out var connId) && id == connId)
+                    {
+                        Log.Info($"连接完成, 向主机 { connId }[{ peer.EndPoint }] 发送建立客户端连接的消息");
+                        onConnect -= callback;
+                        SendToPeer(peer, w => {
+                            w.Put(BuiltinMsgId.C2CRequestClientConnection);
+                        });
+                    }
+                };
+                onConnect += callback;
+            }
+            else
+            {
+                Log.Error($"找不到 id = [{ id }] 的连接.");
+            }
         }
         
-        
-        // ============================================================================================================
-        // ============================================================================================================
-        // ============================================================================================================
-        
-        public void ConnectToHost(IPEndPoint endpoint)
+        public void RequestDisconnectToHost()
         {
-            DisconnectToHost();
-            peerToHost = client.Connect(endpoint, "ProtaClient");
+            if(isHost) return;
+            if(!hostId.valid) return;
+            DisconnectTo(hostId);
         }
         
-        public void ConnectToHost(int a1, int a2, int a3, int a4, int port)
+        void OnHostResponse(NetPeer peer, NetDataReader reader, DeliveryMethod method)
         {
-            ConnectToHost(new IPEndPoint(IPAddress.Parse($"{a1}.{a2}.{a3}.{a4}"), port));
+            var success = reader.GetBool();
+            Log.Info($"收到连接的主机的响应: [{ peer.EndPoint }] succcess:{ success }");
+            if(!TryGetIdByEndpoint(peer.EndPoint, out hostId))
+            {
+                Log.Warning($"与主机 [{ peer.EndPoint }] 建立了连接, 但是找不到对应的 id.");
+            }
+            
+            // 什么都不做.
+            // 主机会同步所有状态配表, 这时游戏世界就起来了.
         }
         
-        public void DisconnectToHost()
+        void OnHostDisconnect(NetPeer peer)
         {
-            if(peerToHost != null) client.DisconnectPeer(peerToHost);
-            peerToHost = null;
+            Log.Info($"与主机的连接中断了 [{ peer.EndPoint }]");
+            hostId = NetId.None;
         }
         
         // ============================================================================================================
         // ============================================================================================================
         // ============================================================================================================
+        
+        public void StartHost()
+        {
+            Clear();
+            isHost = true;
+            hostId = myId;
+            SendToServer(w => {
+                w.Put(BuiltinMsgId.C2SRequestHost);
+                w.Put(true);
+            });
+            AddCallback(BuiltinMsgId.C2CRequestClientConnection, OnClinetRequest);
+            onDisconnect += OnClientDisconnect;
+        }
+        
+        public void StopHost()
+        {
+            DisconnectAllClient();
+            SendToServer(w => {
+                w.Put(BuiltinMsgId.C2SRequestHost);
+                w.Put(false);
+            });
+        }
+        
+        void OnClinetRequest(NetPeer peer, NetDataReader reader, DeliveryMethod method)
+        {
+            TryGetIdByEndpoint(peer.EndPoint, out var id);
+            Log.Info($"收到客户端连接主机的请求: { id }[{ peer.EndPoint }]");
+            subClients.Add(id);
+            SendToPeer(peer, w => {
+                w.Put(BuiltinMsgId.C2CResponseClientConnection);
+                w.Put(true);       // 确认成功.
+                // TODO 同步配表.
+            });
+        }
+        
+        void OnClientDisconnect(NetPeer peer)
+        {
+            Log.Info($"与客户端的连接中断了 [{ peer.EndPoint }]");
+            TryGetIdByEndpoint(peer.EndPoint, out var id);
+            // TODO 清理该客户端所持有的数据.
+        }
+        
+        // ============================================================================================================
+        // ============================================================================================================
+        // ============================================================================================================
+        
+        public void Clear()
+        {
+            StopHost();
+            hostId = NetId.None;
+            subClients.Clear();
+            DisconnectAllClient();
+            RemoveCallback(BuiltinMsgId.C2CRequestClientConnection, OnClinetRequest);
+            RemoveCallback(BuiltinMsgId.C2CResponseClientConnection, OnHostResponse);
+            onDisconnect -= OnClientDisconnect;
+            onDisconnect -= OnHostDisconnect;
+        }
         
     }
 }

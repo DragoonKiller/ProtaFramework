@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 using System;
+using System.Collections.Generic;
 
 namespace Prota.Unity
 {
@@ -236,6 +237,16 @@ namespace Prota.Unity
         public static T OnValueChange<T, G>(this T x, EventCallback<ChangeEvent<G>> f) where T: VisualElement, INotifyValueChanged<G>
         {
             x.RegisterValueChangedCallback<G>(f);
+            return x;
+        }
+        
+        public static ListView Setup<T>(this ListView x, List<T> list, Func<VisualElement> makeItem, Action<VisualElement, int> bindItem)
+        {
+            x.itemsSource = list;
+            x.selectionType = SelectionType.Single;
+            x.makeItem = makeItem;
+            x.bindItem = bindItem;
+            x.style.flexGrow = 1.0f;
             return x;
         }
     }

@@ -9,7 +9,6 @@ namespace Prota.Test
         static void Test()
         {
             var a = GameObject.Find("#Game");
-            a.AddComponent<Prota.Net.Host>();
             a.AddComponent<Prota.Net.Client>();
         }
     }

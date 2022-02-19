@@ -70,6 +70,7 @@ namespace Prota.Unity
         public readonly string tableName;
         public readonly int columnId;
         public readonly DataType type;
+        public readonly bool isIndex;
         
         public int Count => dataList.Count;
         
@@ -97,6 +98,7 @@ namespace Prota.Unity
             this.columnName = columnName;
             this.type = type;
             this.columnId = columnId;
+            this.isIndex = isIndex;
             
             if(isIndex)
             {
@@ -121,7 +123,7 @@ namespace Prota.Unity
         
         internal void InvokeRemoveCallbacks(int i, int swap) => removeCallbacks?.Invoke(i, swap);
         
-        internal int IndexOfValue(DataValue value)
+        public int IndexOfValue(DataValue value)
         {
             if(index != null)
             {
@@ -280,7 +282,7 @@ namespace Prota.Unity
         
         public DataColumn Data(int i) => data[i];
         
-        public DataColumn DataByName(string name) => data[GetColumnId(name)];
+        public DataColumn DataByName(string name) => data[ColumnNameToId(name)];
         
         public DataTable(string name, DataSchema schema)
         {
@@ -303,6 +305,13 @@ namespace Prota.Unity
         {
             var s = add.Start();
             f(s);
+            return add.Complete();
+        }
+        
+        public int AddRecord(List<DataValue> values)
+        {
+            var s = add.Start();
+            foreach(var v in values) s.Add(v);
             return add.Complete();
         }
         
@@ -332,10 +341,11 @@ namespace Prota.Unity
             return list;
         }
         
+        public int ColumnNameToId(string name) => schema.nameToEntryId[name];
         
-        public int GetColumnId(string name) => schema.nameToEntryId[name];
+        public string ColumnIdToName(int columnId) => schema[columnId].name;
         
-        public string GetColumnName(int columnId) => schema[columnId].name;
+        
         
         public override string ToString() => $"DataTable[{ name }]";
     }

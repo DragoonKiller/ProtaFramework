@@ -29,85 +29,97 @@ namespace Prota.Net
         public const int C2SRequestP2PConnection = -101;
         public const int S2CResponseP2PConnection = -101;
         
+        
+        // 建立 P2P 连接后, 客户端向主机发送逻辑接入请求.
+        public const int C2CRequestClientConnection = -102;
+        // 主机受到客户端的请求, 回复是否接收成功.
+        public const int C2CResponseClientConnection = -103;
+        
+        
+        // 向服务器声明自己是/不是主机. 服务器通知所有连接.
+        public const int C2SRequestHost = -110;
+        public const int S2CNotifyHost = -110;
+        
         // 数据传输.
         public const int C2CAddRecord = -201;
         public const int C2CRemoveRecord = -202;
         public const int C2CModifyData = -203;
-        public const int C2CRequestModifyData = -204;
         
     }
     
-    
-    [Serializable]
     public struct NetId
     {
-        public long id;
-
+        public readonly long id;
+        
         public NetId(long id)
         {
             this.id = id;
         }
+        
+        public static NetId None => new NetId(0);
+        
+        public bool valid => id != 0;
+
+        public override bool Equals(object obj) => obj is NetId id && this.id == id.id;
+
+        public override int GetHashCode() => id.GetHashCode();
+
+        public override string ToString() => $"NetId[{ id }]";
+
+        public static bool operator==(NetId a, NetId b) => a.id == b.id;
+        public static bool operator!=(NetId a, NetId b) => a.id != b.id;
+        
+        public static implicit operator long(NetId id) => id.id;
+        public static implicit operator NetId(long id) => new NetId(id);
     }
     
+    // 一个能够和服务器建立连接, 且能相互之间建立连接的对象.
     public class ClientBase : MonoBehaviour
     {
         [Serializable]
-        public struct ClientInfo
+        public class ClientInfo
         {
-            public readonly long id;
-            public readonly string ip;
-            public readonly int port;
+            public NetId id;
+            public string ip;
+            public int port;
+            public IPEndPoint endpoint;
+            public bool isHost;
             
-            public readonly IPEndPoint endpoint;
-            
-            public ClientInfo(long id, string ip, int port)
+            public ClientInfo(NetId id, string ip, int port)
             {
                 this.id = id;
                 this.ip = ip;
                 this.port = port;
                 this.endpoint = LiteNetLib.NetUtils.MakeEndPoint(ip, port);
             }
-            
-            public bool valid => !string.IsNullOrEmpty(ip);
-        }
-        
-        [Serializable]
-        public class Info
-        {
-            public string local;
-            public string server;
-            
-            public string myEndpoint;
-            
-            public float pingToServer;
-        
         }
         
         readonly static IPEndPoint gateEndpoint = new IPEndPoint(IPAddress.Parse("106.54.195.7"), 33200);
         
-        protected NetManager client;
+        [NonSerialized]
+        public NetManager client;
         
-        protected NetPeer peerToServer;
+        public NetPeer peerToServer;
         
         protected EventBasedNetListener listener { get; private set; }
         
         protected virtual string authorizedKey => "ProtaClient";
         
-        [Header("=== Base ===")]
-        [SerializeField]
-        public Info info;
-        
-        public long id;
+        public NetId myId;
         
         public IPEndPoint myEndpoint;
         
         public Dictionary<int, List<NetCallback>> callbacks = new Dictionary<int, List<NetCallback>>();
         
-        [SerializeField]
-        public List<string> connectedPeers = new List<string>();
+        [NonSerialized]
+        public List<NetPeer> connectedPeers = new List<NetPeer>();
         
-        [SerializeField]
+        [NonSerialized]
         public List<ClientInfo> serverConnections = new List<ClientInfo>();
+        
+        public event Action<NetPeer> onConnect;
+        
+        public event Action<NetPeer> onDisconnect;
         
         protected virtual void Start()
         {
@@ -115,8 +127,6 @@ namespace Prota.Net
             client = new NetManager(listener);
             client.Start();
             ConnectToServer();
-            
-            info.local = ":" + client.LocalPort;
             
             listener.ConnectionRequestEvent += req => {
                 Log.Info($"{ this } 接收到了建立连接请求 { req.RemoteEndPoint } 数据: [{ req.Data.GetString() }]");
@@ -128,7 +138,6 @@ namespace Prota.Net
                 if(peer.EndPoint.Equals(gateEndpoint))
                 {
                     Log.Info($"{ this } 连接服务器成功 { peer.EndPoint }");
-                    info.server = peer.EndPoint.ToString();
                     peerToServer = peer;
                     SendToServer(w => {
                         w.Put(BuiltinMsgId.C2SReportInfo);
@@ -136,15 +145,27 @@ namespace Prota.Net
                         w.Put(this.ToString());
                     });
                 }
+                else
+                {
+                    Log.Info($"{ this } 建立 p2p 连接 { peer.EndPoint }");
+                }
                 
-                connectedPeers.Add(peer.EndPoint.ToString());
+                connectedPeers.Add(peer);
+                
+                onConnect?.Invoke(peer);
             };
             
             listener.PeerDisconnectedEvent += (peer, info) => {
-                if(!peer.EndPoint.Equals(gateEndpoint)) return;
-                Log.Info($"{ this } 断开与服务器的连接: { peer.EndPoint }");
-                this.info.server = "";
-                connectedPeers.Remove(peer.EndPoint.ToString());
+                onDisconnect?.Invoke(peer);
+                connectedPeers.Remove(peer);
+                if(peer.EndPoint.Equals(gateEndpoint))
+                {
+                    Log.Info($"{ this } 断开与服务器的连接: { peer.EndPoint }");
+                }
+                else
+                {
+                    Log.Info($"{ this } 断开与客户端的连接: { peer.EndPoint }");
+                }
                 return;
             };
             
@@ -171,7 +192,6 @@ namespace Prota.Net
         protected virtual void Update()
         {
             client.PollEvents();
-            info.pingToServer = peerToServer?.Ping ?? -1;
         }
         
         protected virtual void OnDestroy()
@@ -196,7 +216,15 @@ namespace Prota.Net
             peerToServer = null;
         }
         
-        public void ConnectTo(IPEndPoint endpoint)
+        public void DisconnectAllClient()
+        {
+            foreach(var peer in connectedPeers)
+            {
+                if(peer != peerToServer) peer.Disconnect();
+            }
+        }
+        
+        protected void ConnectTo(IPEndPoint endpoint)
         {
             client.Connect(endpoint, authorizedKey);
         }
@@ -218,10 +246,15 @@ namespace Prota.Net
         {
             if(!RequireClinetInfo(key, out var clientInfo)) return;
             if(!RequirePeer(clientInfo.endpoint, out var target)) return;
+            if(!key.valid)
+            {
+                Log.Error("找到的 key 是 0?");
+                return;
+            }
             target.Disconnect();
         }
         
-        public void DisconnectTo(IPEndPoint endpoint)
+        protected void DisconnectTo(IPEndPoint endpoint)
         {
             var target = client.ConnectedPeerList.Find(x => x.EndPoint.Equals(endpoint));
             target?.Disconnect();
@@ -231,24 +264,25 @@ namespace Prota.Net
         public void ConnectClientByServer(NetId key)
         {
             if(!RequireClinetInfo(key, out var clientInfo)) return;
+            Log.Info($"[内网穿透]告知服务器想要连接 [{ clientInfo.endpoint }]");
             SendToServer(w => {
                 w.Put(BuiltinMsgId.C2SRequestP2PConnection);
-                w.Put(id);
+                w.Put(myId.id);
                 w.Put(key.id);
             });
         }
         
-        bool TryGetIdByEndpoint(IPEndPoint endpoint, out NetId id)
+        public bool TryGetIdByEndpoint(IPEndPoint endpoint, out NetId id)
         {
             var clientInfo = serverConnections.Find(x => x.endpoint.Equals(endpoint));
-            id = new NetId(clientInfo.id);
-            return clientInfo.valid;
+            id = clientInfo.id;
+            return clientInfo != null;
         }
         
         bool RequireClinetInfo(NetId key, out ClientInfo clientInfo)
         {
-            clientInfo = serverConnections.Find(x => x.id == key.id);
-            if(clientInfo.valid)
+            clientInfo = serverConnections.Find(x => x.id == key);
+            if(clientInfo == null)
             {
                 Log.Info("找不到 ClientInfo: " + key);
                 return false;
@@ -272,30 +306,20 @@ namespace Prota.Net
         // Send
         // ============================================================================================================
         
-        public void SendToServerOrdered(Action<NetDataWriter> f)
-        {
-            SendToPeerOrdered(peerToServer, f);
-        }
-        
-        public void SendToServer(Action<NetDataWriter> f, DeliveryMethod deliveryMethod = DeliveryMethod.ReliableUnordered)
+        public void SendToServer(Action<NetDataWriter> f, DeliveryMethod deliveryMethod = DeliveryMethod.ReliableOrdered)
         {
             SendToPeer(peerToServer, f, deliveryMethod);
         }
         
         public NetDataWriter writer = new NetDataWriter();
-        public void SendToPeer(NetPeer peer, Action<NetDataWriter> f, DeliveryMethod deliveryMethod = DeliveryMethod.ReliableUnordered)
+        public void SendToPeer(NetPeer peer, Action<NetDataWriter> f, DeliveryMethod deliveryMethod = DeliveryMethod.ReliableOrdered)
         {
             lock(writer)
             {
                 writer.Reset();
                 f(writer);
-                peerToServer.Send(writer, deliveryMethod);
+                peer.Send(writer, deliveryMethod);
             }
-        }
-        
-        public void SendToPeerOrdered(NetPeer peer, Action<NetDataWriter> f)
-        {
-            SendToPeer(peer, f, DeliveryMethod.ReliableOrdered);
         }
         
         // ============================================================================================================
@@ -339,9 +363,8 @@ namespace Prota.Net
         {
             // 从服务器获取一些连接的基础信息.
             AddCallback(BuiltinMsgId.S2CNotifyInfo, (peer, reader, method) => {
-                id = reader.GetLong();
+                myId = new NetId(reader.GetLong());
                 myEndpoint = reader.GetNetEndPoint();
-                info.myEndpoint = myEndpoint.ToString();
             });
             
             // 服务器告知有新的连接加入/退出.
@@ -351,20 +374,32 @@ namespace Prota.Net
                 var endpoint = reader.GetNetEndPoint();
                 if(op == 1)     // 加入.
                 {
-                    serverConnections.Add(new ClientInfo(id, endpoint.Address.ToString(), endpoint.Port));
+                    serverConnections.Add(new ClientInfo(new NetId(id), endpoint.Address.ToString(), endpoint.Port));
                 }
                 else            // 退出.
                 {
-                    serverConnections.RemoveAll(x => x.id == id);
+                    serverConnections.RemoveAll(x => x.id == new NetId(id));
                 }
             });
             
             // 建立 p2p 连接. 第三步; 连接到目标端点.
             AddCallback(BuiltinMsgId.S2CResponseP2PConnection, (peer, reader, method) => {
                 var otherEndpoint = reader.GetNetEndPoint();
+                Log.Info($"[内网穿透]服务器告知需要连接 [{ otherEndpoint }]");
                 client.Connect(otherEndpoint, "ProtaClient");
             });
             
+            AddCallback(BuiltinMsgId.S2CNotifyHost, (peer, reader, method) => {
+                var id = reader.GetLong();
+                var clientInfo = serverConnections.Find(x => x.id == id);
+                if(clientInfo == null)
+                {
+                    Log.Info($"从服务器收到了客户端[{ id }]变更为主机通知, 但是找不到这个客户端.");
+                    return;
+                }
+                
+                clientInfo.isHost = reader.GetBool();
+            });
         }
         
         

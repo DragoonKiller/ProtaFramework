@@ -110,10 +110,11 @@ namespace Prota.Editor
                     .SetWidth(120)
                     .AddChild(new Label(columnData.columnName)
                         .SetTextCentered()
+                        .SetColor(new Color(.1f, .1f, .15f, 1))
                     )
                     .AddChild(new Label(columnData.type.ToString())
                         .SetTextCentered()
-                        .SetColor(new Color(.4f, .4f, .4f, 1))
+                        .SetColor(new Color(.2f, columnData.isIndex ? .3f : .2f, .2f, 1))
                     );
                 viewRoot.Add(column);
                 for(int i = 0; i < table.lineCount; i++)
