@@ -40,5 +40,20 @@ namespace Prota.Unity
             x = default;
             return false;
         }
+        
+        public static List<T> RemoveBySwap<T>(this List<T> l, int i)
+        {
+            var temp = l[l.Count - 1];
+            l[l.Count - 1] = l[i];
+            l[i] = temp;
+            l.RemoveAt(l.Count - 1);
+            return l;
+        }
+        
+        public static IList<T> RemoveLast<T>(this IList<T> l)
+        {
+            l.RemoveAt(l.Count - 1);
+            return l;
+        }
     }
 }

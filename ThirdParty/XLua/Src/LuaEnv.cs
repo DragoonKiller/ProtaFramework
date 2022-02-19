@@ -35,7 +35,6 @@ namespace XLua
             {
                 if (rawL == RealStatePtr.Zero)
                 {
-                    var p = UnityEngine.KeyCode.A;
                     throw new InvalidOperationException("this lua env had disposed!");
                 }
                 return rawL;

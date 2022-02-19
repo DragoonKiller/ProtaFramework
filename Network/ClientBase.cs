@@ -14,13 +14,38 @@ using NetCallback = System.Action<LiteNetLib.NetPeer, LiteNetLib.Utils.NetDataRe
 
 namespace Prota.Net
 {
-    public struct NetPeerKey
+    public static class BuiltinMsgId
     {
-        public readonly IPEndPoint endpoint;
+        // 告知服务器内容.
+        public const int S2CNotifyInfo = -1;
+        
+        // 告知有客户端连接/断开服务器.
+        public const int S2CAddOrRemoveClient = -2;
+        
+        // 告知服务器客户端的一些基础信息.
+        public const int C2SReportInfo = -10;
+        
+        // P2P 连接 request.
+        public const int C2SRequestP2PConnection = -101;
+        public const int S2CResponseP2PConnection = -101;
+        
+        // 数据传输.
+        public const int C2CAddRecord = -201;
+        public const int C2CRemoveRecord = -202;
+        public const int C2CModifyData = -203;
+        public const int C2CRequestModifyData = -204;
+        
+    }
+    
+    
+    [Serializable]
+    public struct NetId
+    {
+        public long id;
 
-        public NetPeerKey(IPEndPoint endpoint)
+        public NetId(long id)
         {
-            this.endpoint = endpoint;
+            this.id = id;
         }
     }
     
@@ -29,9 +54,21 @@ namespace Prota.Net
         [Serializable]
         public struct ClientInfo
         {
-            public long id;
-            public string ip;
-            public int port;
+            public readonly long id;
+            public readonly string ip;
+            public readonly int port;
+            
+            public readonly IPEndPoint endpoint;
+            
+            public ClientInfo(long id, string ip, int port)
+            {
+                this.id = id;
+                this.ip = ip;
+                this.port = port;
+                this.endpoint = LiteNetLib.NetUtils.MakeEndPoint(ip, port);
+            }
+            
+            public bool valid => !string.IsNullOrEmpty(ip);
         }
         
         [Serializable]
@@ -94,7 +131,7 @@ namespace Prota.Net
                     info.server = peer.EndPoint.ToString();
                     peerToServer = peer;
                     SendToServer(w => {
-                        w.Put(-10);
+                        w.Put(BuiltinMsgId.C2SReportInfo);
                         w.Put(this.GetInstanceID());
                         w.Put(this.ToString());
                     });
@@ -159,18 +196,17 @@ namespace Prota.Net
             peerToServer = null;
         }
         
-        public NetPeerKey ConnectTo(IPEndPoint endpoint)
+        public void ConnectTo(IPEndPoint endpoint)
         {
             client.Connect(endpoint, authorizedKey);
-            return new NetPeerKey(endpoint);
         }
         
-        public NetPeerKey ConnectTo(string endpoint)
+        public void ConnectTo(string endpoint)
         {
             var parts = endpoint.Split(":");
             if(parts.Length != 2) throw new Exception("Invalid endpoint " + endpoint);
             var ipEndpoint = LiteNetLib.NetUtils.MakeEndPoint(parts[0], int.Parse(parts[1]));
-            return ConnectTo(ipEndpoint);
+            ConnectTo(ipEndpoint);
         } 
         
         void DisconnectTo(NetPeer peer)
@@ -178,10 +214,11 @@ namespace Prota.Net
             peer.Disconnect();
         }
         
-        public void DisconnectTo(NetPeerKey key)
+        public void DisconnectTo(NetId key)
         {
-            var target = client.ConnectedPeerList.Find(x => x.EndPoint.Equals(key.endpoint));
-            target?.Disconnect();
+            if(!RequireClinetInfo(key, out var clientInfo)) return;
+            if(!RequirePeer(clientInfo.endpoint, out var target)) return;
+            target.Disconnect();
         }
         
         public void DisconnectTo(IPEndPoint endpoint)
@@ -191,17 +228,45 @@ namespace Prota.Net
         }
         
         // 通过服务器, 建立 p2p 连接.
-        public void ConnectClientByServer(int otherClientId)
+        public void ConnectClientByServer(NetId key)
         {
-            var clientInfo = serverConnections.Find(x => x.id == otherClientId);
-            if(string.IsNullOrEmpty(clientInfo.ip)) throw new Exception("serverId not found!");
-            var ipAddress = LiteNetLib.NetUtils.MakeEndPoint(clientInfo.ip, clientInfo.port);
+            if(!RequireClinetInfo(key, out var clientInfo)) return;
             SendToServer(w => {
-                w.Put(-101);
+                w.Put(BuiltinMsgId.C2SRequestP2PConnection);
                 w.Put(id);
-                w.Put(otherClientId);
+                w.Put(key.id);
             });
         }
+        
+        bool TryGetIdByEndpoint(IPEndPoint endpoint, out NetId id)
+        {
+            var clientInfo = serverConnections.Find(x => x.endpoint.Equals(endpoint));
+            id = new NetId(clientInfo.id);
+            return clientInfo.valid;
+        }
+        
+        bool RequireClinetInfo(NetId key, out ClientInfo clientInfo)
+        {
+            clientInfo = serverConnections.Find(x => x.id == key.id);
+            if(clientInfo.valid)
+            {
+                Log.Info("找不到 ClientInfo: " + key);
+                return false;
+            }
+            return true;
+        }
+        
+        bool RequirePeer(IPEndPoint endpoint, out NetPeer target)
+        {
+            target = client.ConnectedPeerList.Find(x => x.EndPoint.Equals(endpoint));
+            if(target == null)
+            {
+                Log.Info("找不到 target: " + endpoint);
+                return false;
+            }
+            return true;
+        }
+        
         
         // ============================================================================================================
         // Send
@@ -273,24 +338,20 @@ namespace Prota.Net
         void RegisterInternalCallbacks()
         {
             // 从服务器获取一些连接的基础信息.
-            AddCallback(-1, (peer, reader, method) => {
+            AddCallback(BuiltinMsgId.S2CNotifyInfo, (peer, reader, method) => {
                 id = reader.GetLong();
                 myEndpoint = reader.GetNetEndPoint();
                 info.myEndpoint = myEndpoint.ToString();
             });
             
             // 服务器告知有新的连接加入/退出.
-            AddCallback(-2, (peer, reader, method) => {
+            AddCallback(BuiltinMsgId.S2CAddOrRemoveClient, (peer, reader, method) => {
                 var op = reader.GetInt();
                 var id = reader.GetLong();           // 服务器一侧保存的 id.
                 var endpoint = reader.GetNetEndPoint();
                 if(op == 1)     // 加入.
                 {
-                    serverConnections.Add(new ClientInfo() {
-                        id = id,
-                        ip = endpoint.Address.ToString(),
-                        port = endpoint.Port,
-                    });
+                    serverConnections.Add(new ClientInfo(id, endpoint.Address.ToString(), endpoint.Port));
                 }
                 else            // 退出.
                 {
@@ -299,11 +360,10 @@ namespace Prota.Net
             });
             
             // 建立 p2p 连接. 第三步; 连接到目标端点.
-            AddCallback(-101, (peer, reader, method) => {
+            AddCallback(BuiltinMsgId.S2CResponseP2PConnection, (peer, reader, method) => {
                 var otherEndpoint = reader.GetNetEndPoint();
                 client.Connect(otherEndpoint, "ProtaClient");
             });
-            
             
         }
         

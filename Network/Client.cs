@@ -10,6 +10,7 @@ using System.Collections.Generic;
 
 namespace Prota.Net
 {
+    
     [LuaCallCSharp]
     public class Client : ClientBase
     {
