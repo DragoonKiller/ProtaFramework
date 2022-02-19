@@ -146,6 +146,12 @@ namespace Prota.Unity
             return x;
         }
         
+        public static Label SetTextCentered(this Label x)
+        {
+            x.style.unityTextAlign = new StyleEnum<TextAnchor>(TextAnchor.MiddleCenter);
+            return x;
+        }
+        
         public static T HoverLeaveColor<T>(this T x, Color a, Color b) where T: VisualElement
         {
             x.RegisterCallback<MouseEnterEvent>(e => x.style.backgroundColor = a);

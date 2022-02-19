@@ -9,15 +9,6 @@ using System.Runtime.InteropServices;
 namespace Prota.Unity
 {
     
-    public enum DataType : byte
-    {
-        None = 0,
-        Int32 = 1,
-        Int64 = 2,
-        Float32 = 3,
-        Float64 = 4,
-        String = 5,
-    }
     
     // 表列定义.
     public class DataEntry
@@ -64,170 +55,13 @@ namespace Prota.Unity
         IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
     }
     
-    [StructLayout(LayoutKind.Explicit)]
-    internal struct RawDataValue
-    {
-        [FieldOffset(0)]
-        internal readonly int i32;
-        
-        [FieldOffset(0)]
-        internal readonly long i64;
-        
-        [FieldOffset(0)]
-        internal readonly float f32;
-        
-        [FieldOffset(0)]
-        internal readonly double f64;
-        
-        [FieldOffset(0)]
-        internal readonly string str;
-        
-        public RawDataValue(RawDataValue value) : this() => this.i64 = value.i64;
-        public RawDataValue(int v) : this() => i32 = v;
-        public RawDataValue(long v) : this() => i64 = v;
-        public RawDataValue(float v) : this() => f32 = v;
-        public RawDataValue(double v) : this() => f64 = v;
-        public RawDataValue(string v) : this() => str = v;
-
-        public static bool operator==(RawDataValue a, RawDataValue b) => a.i64 == b.i64;
-        public static bool operator!=(RawDataValue a, RawDataValue b) => a.i64 != b.i64;
-        
-        public override bool Equals(object obj) => obj is RawDataValue value && i64 == value.i64;
-        
-        public override int GetHashCode() => i64.GetHashCode();
-    }
-    
-    
-    [StructLayout(LayoutKind.Sequential)]
-    public struct DataValue
-    {
-        internal readonly RawDataValue rawValue;
-        
-        public readonly DataType type;
-        
-        int i32 => rawValue.i32;
-        long i64 => rawValue.i64;
-        float f32 => rawValue.f32;
-        double f64 => rawValue.f64;
-        string str => rawValue.str;
-        
-        public DataValue(int v)
-        {
-            type = DataType.Int32;
-            rawValue = new RawDataValue(v);
-        }
-        
-        public DataValue(long v)
-        {
-            type = DataType.Int64;
-            rawValue = new RawDataValue(v);
-        }
-        public DataValue(float v)
-        {
-            type = DataType.Float32;
-            rawValue = new RawDataValue(v);
-        }
-        public DataValue(double v)
-        {
-            type = DataType.Float64;
-            rawValue = new RawDataValue(v);
-        }
-        public DataValue(string v)
-        {
-            type = DataType.String;
-            rawValue = new RawDataValue(v);
-        }
-        
-        internal DataValue(DataType type, RawDataValue value)
-        {
-            rawValue = new RawDataValue(value);
-            this.type = type;
-        }
-        
-        public static implicit operator DataValue(int v) => new DataValue(v);
-        public static implicit operator DataValue(long v) => new DataValue(v);
-        public static implicit operator DataValue(float v) => new DataValue(v);
-        public static implicit operator DataValue(double v) => new DataValue(v);
-        public static implicit operator DataValue(string v) => new DataValue(v);
-        
-        
-        public static bool operator==(DataValue a, DataValue b)
-        {
-            if(a.type != b.type) return false;
-            switch(a.type)
-            {
-                case DataType.Int32: return a.i32 == b.i32;
-                case DataType.Int64: return a.i64 == b.i64;
-                case DataType.Float32: return a.f32 == b.f32;
-                case DataType.Float64: return a.f64 == b.f64;
-                case DataType.String: return a.str == b.str;
-                default: return false;
-            } 
-        }
-         
-        public static bool operator!=(DataValue a, DataValue b) => !(a == b);
-
-        public override bool Equals(object obj)
-        {
-            return (obj is DataValue value) && (this == value);
-        }
-
-        public override int GetHashCode()
-        {
-            switch(type)
-            {
-                case DataType.Int32: return i32.GetHashCode();
-                case DataType.Int64: return i64.GetHashCode();
-                case DataType.Float32: return f32.GetHashCode();
-                case DataType.Float64: return f64.GetHashCode();
-                case DataType.String: return str.GetHashCode();
-                default: return type.GetHashCode();
-            }
-        }
-    }
     
     
     public class DataColumn
     {
-        public struct AddEvent
-        {
-            public int line;
-
-            public AddEvent(int line)
-            {
-                this.line = line;
-            }
-        }
-        
-        public struct RemoveEvent
-        {
-            public int line;
-            public int swapLine;
-
-            public RemoveEvent(int line, int swapLine)
-            {
-                this.line = line;
-                this.swapLine = swapLine;
-            }
-        }
-        
-        public struct ModifyEvnet
-        {
-            public int i;
-            public DataValue from;
-            public DataValue to;
-
-            public ModifyEvnet(int i, DataValue from, DataValue to)
-            {
-                this.i = i;
-                this.from = from;
-                this.to = to;
-            }
-        }
-    
-        event Action<AddEvent> addCallbacks;
-        event Action<RemoveEvent> removeCallbacks;
-        event Action<ModifyEvnet> modifyCallbacks;
+        public event Action<int> addCallbacks;
+        public event Action<int, int> removeCallbacks;
+        public event Action<int, DataValue, DataValue> modifyCallbacks;
 
         readonly List<RawDataValue> dataList = new List<RawDataValue>();
         readonly Dictionary<DataValue, int> index = null;
@@ -253,7 +87,7 @@ namespace Prota.Unity
                 if(!TestDuplicatedIndexValue(i, value)) return;
                 var original = dataList[i];
                 dataList[i] = value.rawValue;
-                modifyCallbacks?.Invoke(new ModifyEvnet(i, new DataValue(this.type, original), value));
+                modifyCallbacks?.Invoke(i, new DataValue(this.type, original), value);
             }
         }
         
@@ -268,24 +102,24 @@ namespace Prota.Unity
             {
                 index = new Dictionary<DataValue, int>();
                 
-                addCallbacks += e => {
-                    index.Add(this[e.line], e.line);
+                addCallbacks += i => {
+                    index.Add(this[i], i);
                 };
                 
-                removeCallbacks += (e) => {
-                    index.Remove(this[e.line]);
+                removeCallbacks += (i, swap) => {
+                    index.Remove(this[i]);
                 };
                 
-                modifyCallbacks += (e) => {
-                    index.Remove(e.from);
-                    index.Add(e.to, e.i);
+                modifyCallbacks += (i, from, to) => {
+                    index.Remove(from);
+                    index.Add(to, i);
                 };
             }
         }
 
-        internal void InvokeAddCallbacks(int i) => addCallbacks?.Invoke(new AddEvent(i));
+        internal void InvokeAddCallbacks(int i) => addCallbacks?.Invoke(i);
         
-        internal void InvokeRemoveCallbacks(int i, int swap) => removeCallbacks?.Invoke(new RemoveEvent(i, swap));
+        internal void InvokeRemoveCallbacks(int i, int swap) => removeCallbacks?.Invoke(i, swap);
         
         internal int IndexOfValue(DataValue value)
         {
@@ -433,6 +267,8 @@ namespace Prota.Unity
         
         public readonly string name;
         
+        public readonly List<DataColumn> data = new List<DataColumn>();
+        
         readonly AddAccessor add;
         
         // 有多少数据行.
@@ -442,7 +278,9 @@ namespace Prota.Unity
         
         public int columnCount => schema.Count;
         
-        public readonly List<DataColumn> data = new List<DataColumn>();
+        public DataColumn Data(int i) => data[i];
+        
+        public DataColumn DataByName(string name) => data[GetColumnId(name)];
         
         public DataTable(string name, DataSchema schema)
         {
@@ -479,15 +317,15 @@ namespace Prota.Unity
             
             var list = new List<DataValue>();
             
-            for(int i = 0; i < columnCount; i++)
-            {
-                list.Add(data[i].RemoveBySwap(x));
-            }
-            
             var swap = Count - 1;
             for(int i = 0; i < columnCount; i++)
             {
                 data[i].InvokeRemoveCallbacks(x, swap);
+            }
+            
+            for(int i = 0; i < columnCount; i++)
+            {
+                list.Add(data[i].RemoveBySwap(x));
             }
             
             Count -= 1;
