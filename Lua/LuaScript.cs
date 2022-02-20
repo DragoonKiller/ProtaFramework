@@ -94,6 +94,7 @@ namespace Prota.Lua
                 instance = LuaCore.instance.env.NewTable();
                 instance.SetInPath("gameObject", this.gameObject);
                 instance.SetInPath("transform", this.transform);
+                instance.SetInPath("this", this);
                 selfArg = new object[] { instance };
             }
             

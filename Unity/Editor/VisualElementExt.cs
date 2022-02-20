@@ -249,5 +249,21 @@ namespace Prota.Unity
             x.style.flexGrow = 1.0f;
             return x;
         }
+        
+        public static T SetChildList<G, T>(this T l, int n, Func<int, G> onCreate, Action<int, G> onDisable, Action<int, G> onUpdate) where T: VisualElement where G:VisualElement
+        {
+            for(int i = 0; i < n; i++)
+            {
+                if(i >= l.childCount)
+                {
+                    l.AddChild(onCreate(i));
+                }
+                
+                onUpdate(i, l[i] as G);
+            }
+            
+            for(int i = n; i < l.childCount; i++) onDisable(i, l[i] as G);
+            return l;
+        }
     }
 }

@@ -37,7 +37,7 @@ namespace Prota.Editor
             var color = typeToColor[value.type];
             this.typeIndicator.SetColor(color);
             
-            valueIndicator.value = value.ToString();
+            valueIndicator.value = value.stringPresentation;
         }
         
         public void WriteValue(string value)
@@ -55,7 +55,7 @@ namespace Prota.Editor
                 .SetGrow();
             
             
-            hierarchy.Add(typeIndicator  = new VisualElement()
+            hierarchy.Add(typeIndicator = new VisualElement()
                 .SetWidth(2)
                 .SetHeight(20)
             );

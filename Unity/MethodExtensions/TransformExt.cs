@@ -70,5 +70,17 @@ namespace Prota.Unity
             var r = t.gameObject.AddComponent<T>();
             return r;
         }
+        
+        public static GameObject ClearSub(this GameObject x)
+        {
+            x.transform.ClearSub();
+            return x;
+        }
+        
+        public static Transform ClearSub(this Transform x)
+        {
+            for(int i = x.childCount - 1; i >= 0; i--) GameObject.Destroy(x.GetChild(i).gameObject);
+            return x;
+        }
     }
 }

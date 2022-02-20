@@ -19,7 +19,6 @@ namespace Prota.Lua
         
         LuaTable cache = null;
         
-        [LuaCallCSharp]
         public LuaTable GetLuaTable()
         {
             if(cache != null) return cache;

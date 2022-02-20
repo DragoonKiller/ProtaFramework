@@ -55,5 +55,21 @@ namespace Prota.Unity
             l.RemoveAt(l.Count - 1);
             return l;
         }
+        
+        public static IList<T> SetListLength<T>(List<T> l, int n, Func<int, T> onCreate, Action<int, T> onDisable, Action<int, T> onEnable)
+        {
+            for(int i = 0; i < n; i++)
+            {
+                if(i >= l.Count)
+                {
+                    l.Add(onCreate(i));
+                }
+                
+                onEnable(i, l[i]);
+            }
+            
+            for(int i = n; i < l.Count; i++) onDisable(i, l[i]);
+            return l;
+        }
     }
 }

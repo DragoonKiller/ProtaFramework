@@ -76,7 +76,6 @@ namespace Prota.Net
         }
     }
     
-    [LuaCallCSharp]
     public sealed class NetData : DataTableComponent
     {
         public const string ownerKey = "owner";
@@ -118,7 +117,7 @@ namespace Prota.Net
 
         public void Modify(int keyColumnId, DataValue key, int columnId, DataValue value)
         {
-            var i = table.data[keyColumnId].IndexOfValue(key);
+            var i = table[keyColumnId].IndexOfValue(key);
             if(client.isHost)
             {
                 // TODO
@@ -137,7 +136,7 @@ namespace Prota.Net
             }
             else if(owner == client.myId)
             {
-                var newLineIndex = table.data[columnId][i] = value;
+                var newLineIndex = table[columnId][i] = value;
                 C2CRequestModify(owner, table.name, value);
             }
             else
@@ -150,7 +149,7 @@ namespace Prota.Net
         public void Remove(int keyColumnId, DataValue key)
         {
             // Host 由通用数据表同步机制同步给其它玩家.
-            var i = table.data[keyColumnId].IndexOfValue(key);
+            var i = table[keyColumnId].IndexOfValue(key);
             if(client.isHost)
             {
                 
@@ -165,12 +164,12 @@ namespace Prota.Net
             var owner = table.DataByName(ownerKey)[i].i64;
             if(owner == 0 || client.isHost)
             {
-                C2CRequestRemoveKey(owner, table.name, key);
+                C2CRequestRemove(owner, table.name, key);
             }
             else if(owner == client.myId)
             {
                 var newLineIndex = table.RemoveRecord(i);
-                C2CRequestRemoveKey(owner, table.name, key);
+                C2CRequestRemove(owner, table.name, key);
             }
             else
             {
@@ -178,17 +177,17 @@ namespace Prota.Net
             }
         }
         
-        private void C2CRequestNewLine(long owner, string name, List<DataValue> values)
+        void C2CRequestNewLine(long owner, string name, List<DataValue> values)
         {
             
         }
 
-        private void C2CRequestModify(long owner, string name, DataValue value)
+        void C2CRequestModify(long owner, string name, DataValue value)
         {
             
         }
         
-        private void C2CRequestRemoveKey(long owner, string name, DataValue key)
+        void C2CRequestRemove(long owner, string name, DataValue key)
         {
             
         }

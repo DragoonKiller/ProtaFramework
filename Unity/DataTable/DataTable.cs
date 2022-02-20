@@ -10,6 +10,7 @@ namespace Prota.Unity
 {
     
     
+    [Serializable]
     // 表列定义.
     public class DataEntry
     {
@@ -119,10 +120,16 @@ namespace Prota.Unity
             }
         }
 
-        internal void InvokeAddCallbacks(int i) => addCallbacks?.Invoke(i);
+        internal void InvokeAddCallbacks(int i)
+        {
+            addCallbacks?.Invoke(i);
+        }
         
-        internal void InvokeRemoveCallbacks(int i, int swap) => removeCallbacks?.Invoke(i, swap);
-        
+        internal void InvokeRemoveCallbacks(int i, int swap)
+        {
+            removeCallbacks?.Invoke(i, swap);
+        }
+    
         public int IndexOfValue(DataValue value)
         {
             if(index != null)
@@ -269,7 +276,7 @@ namespace Prota.Unity
         
         public readonly string name;
         
-        public readonly List<DataColumn> data = new List<DataColumn>();
+        internal readonly List<DataColumn> data = new List<DataColumn>();
         
         readonly AddAccessor add;
         
@@ -279,6 +286,17 @@ namespace Prota.Unity
         public int lineCount => Count;
         
         public int columnCount => schema.Count;
+        
+        public DataColumn this[string name]
+        {
+            get
+            {
+                var id = this.ColumnNameToId(name);
+                return this.data[id];
+            }
+        }
+        
+        public DataColumn this[int i] => this.data[i];
         
         public DataColumn Data(int i) => data[i];
         
@@ -345,7 +363,28 @@ namespace Prota.Unity
         
         public string ColumnIdToName(int columnId) => schema[columnId].name;
         
-        
+        public void Clear(bool invokeCallbacks = true)
+        {
+            for(int i = 0; i < Count; i++)
+            {
+                if(invokeCallbacks)
+                {
+                    for(int j = 0; j < columnCount; j++)
+                    {
+                        data[j].InvokeRemoveCallbacks(Count - 1, Count - 1);
+                    }
+                }
+                
+                for(int j = 0; j < columnCount; j++)
+                {
+                    data[j].RemoveBySwap(i);
+                }
+                
+                Count -= 1;
+            }
+            
+            Count = 0;
+        }
         
         public override string ToString() => $"DataTable[{ name }]";
     }

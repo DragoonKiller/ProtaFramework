@@ -5,7 +5,6 @@ using System.Collections.Generic;
 
 namespace Prota.Net
 {
-    [LuaCallCSharp]
     public static class NetUtils
     {
         public enum DataType : byte

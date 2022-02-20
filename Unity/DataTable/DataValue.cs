@@ -43,6 +43,7 @@ namespace Prota.Unity
             this.i64 = value.i64;
             this.str = value.str;
         }
+        
         public RawDataValue(int v) : this() => i32 = v;
         public RawDataValue(long v) : this() => i64 = v;
         public RawDataValue(float v) : this() => f32 = v;
@@ -61,6 +62,8 @@ namespace Prota.Unity
             ret.Add(str);
             return ret.ToHashCode();
         }
+        
+        public override string ToString() => $"RawData[{i64};{str}]";
     }
     
     
@@ -76,6 +79,23 @@ namespace Prota.Unity
         public float f32 => rawValue.f32;
         public double f64 => rawValue.f64;
         public string str => rawValue.str;
+        
+
+        public string stringPresentation
+        {
+            get
+            {
+                switch(type)
+                {
+                    case DataType.Int32: return i32.ToString();
+                    case DataType.Int64: return i64.ToString();
+                    case DataType.Float32: return f32.ToString();
+                    case DataType.Float64: return f64.ToString();
+                    case DataType.String: return str.ToString();
+                    default: return "UnknownType";
+                }
+            }
+        }
         
         public DataValue(int v)
         {
@@ -106,6 +126,49 @@ namespace Prota.Unity
         
         internal DataValue(DataType type, RawDataValue value)
         {
+            rawValue = new RawDataValue(value);
+            this.type = type;
+        }
+        
+        internal DataValue(DataType type, long value)
+        {
+            if(type == DataType.Int32)
+            {
+                rawValue = new RawDataValue((int)value);
+                this.type = type;
+            }
+            else if(type == DataType.Int64)
+            {
+                rawValue = new RawDataValue(value);
+                this.type = type;
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+        
+        internal DataValue(DataType type, double value)
+        {
+            if(type == DataType.Float32)
+            {
+                rawValue = new RawDataValue((float)value);
+                this.type = type;
+            }
+            else if(type == DataType.Float64)
+            {
+                rawValue = new RawDataValue(value);
+                this.type = type;
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+        
+        internal DataValue(DataType type, string value)
+        {
+            Debug.Assert(type == DataType.String);
             rawValue = new RawDataValue(value);
             this.type = type;
         }
@@ -150,18 +213,7 @@ namespace Prota.Unity
                 default: return type.GetHashCode();
             }
         }
-
-        public override string ToString()
-        {
-            switch(type)
-            {
-                case DataType.Int32: return i32.ToString();
-                case DataType.Int64: return i64.ToString();
-                case DataType.Float32: return f32.ToString();
-                case DataType.Float64: return f64.ToString();
-                case DataType.String: return str.ToString();
-                default: return "UnknownType";
-            }
-        }
+        
+        public override string ToString() => $"[{ type }({ stringPresentation })]";
     }
 }

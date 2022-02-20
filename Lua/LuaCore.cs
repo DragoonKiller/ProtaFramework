@@ -68,8 +68,8 @@ namespace Prota.Lua
                 try
                 {
                     var path = PathToSourcePath(s);
-                    var f = File.ReadAllBytes(path);
                     s = path;
+                    var f = File.ReadAllBytes(path);
                     return f;
                 }
                 catch(Exception e)
@@ -82,10 +82,11 @@ namespace Prota.Lua
             foreach(var directory in Directory.EnumerateDirectories(luaSourcePath, "*", SearchOption.TopDirectoryOnly))
             {
                 var d = new DirectoryInfo(directory);
+                if(d.Name.StartsWith(".")) continue;
                 var fs = d.GetFiles("Init.lua");
                 if(fs == null || fs.Length == 0)
                 {
-                    Debug.LogWarning("目录 " + directory + " 不包含 Init.lua 文件");
+                    // Debug.LogWarning("目录 " + directory + " 不包含 Init.lua 文件");
                     continue;
                 }
                 
@@ -94,7 +95,7 @@ namespace Prota.Lua
             
             // TODO: 这里收集加密/压缩过后的文件.
             
-            Debug.Log("LuaEnv 创建完毕!");
+            Debug.Log("LuaEnv 初始化完毕!");
         }
         
         public void Reset()
@@ -107,28 +108,38 @@ namespace Prota.Lua
         
         public LoadedScript Load(string key)
         {
+            key = key.Replace("\\", "/");
             var path = PathToSourcePath(key);
-            
             if(loaded.TryGetValue(path, out var res)) return res;
             
-            // 脚本在一般情况下返回一个 table 表示这个类.
-            // 脚本在非一般情况下返回 nil.
-            // 否则都不合法.
-            var source = GetSource(path);
-            if(source == null) return null;
-            var f = env.LoadString(source, key);
-            var ret = f.Call();
+            res = new LoadedScript();
+            loaded.Add(path, res);
+            
             LuaTable table = null;
-            if(ret != null && ret.Length >= 1 && ret[0] != null) table = (LuaTable)ret[0];
+            try
+            {
+                var ret = env.DoString($"return require '{ key }'", path);
+                if(ret != null && ret.Length >= 1 && ret[0] != null) table = ret[0] as LuaTable;
+            }
+            catch(Exception e)
+            {
+                Log.Exception(e);
+            }
+                
+            // 没有返回值, 或返回值不是 table.
+            if(table == null)
+            {
+                // Log.Error($"脚本 { key } [{ path }] 没有返回 table.");
+                return null;
+            }
             
             // 即使不是"类"的脚本也会有一个 metatable, 如果没有返回值那么里面什么都没有.
             var metaTable = env.NewTable();
             metaTable.SetInPath<LuaBase>("__index", table);
             
-            res = new LoadedScript();
             res.path = path;
             res.scriptMeta = metaTable;
-            loaded.Add(res.path, res);
+            
             return res;
         }
         
@@ -160,7 +171,10 @@ namespace Prota.Lua
         
         public static string PathToSourcePath(string path)
         {
-            return Path.Combine(LuaCore.luaSourcePath, path + ".lua");
+            path = Path.Combine(LuaCore.luaSourcePath, path + ".lua");
+            path = path.Replace("\\", "/");
+            path = path.ToLower();
+            return path;
         }
         
     }

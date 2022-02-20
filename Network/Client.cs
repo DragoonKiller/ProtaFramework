@@ -12,7 +12,6 @@ namespace Prota.Net
 {
     
     // 引入了 client-host 机制的 ClientBase.
-    [LuaCallCSharp]
     public class Client : ClientBase
     {
         [NonSerialized]

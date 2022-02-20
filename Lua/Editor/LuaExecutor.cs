@@ -17,8 +17,6 @@ namespace Prota.Lua
             window.Show();
         }
         
-        
-        
         void OnEnable()
         {
             rootVisualElement.AddChild(new Button() { text = "重置虚拟机" }
@@ -34,7 +32,7 @@ namespace Prota.Lua
             
             for(int i = 0; i < 10; i++)
             {
-                var fname = string.Format("./{0}.lua", i.ToString());
+                var fname = string.Format("./LuaScripts/{0}.lua", i.ToString());
                 
                 rootVisualElement
                     .AddChild(new Button() { text = "执行 " + fname }

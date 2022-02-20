@@ -24,9 +24,13 @@ namespace Prota.Editor
             }
         }
         
+        const int columnWidth = 120;
+        
         public ObjectField dataTableObjectField;
         
         public ObjectField dataTableComponentField;
+        
+        public VisualElement headerRoot;
         
         public VisualElement viewRoot;
         
@@ -50,8 +54,17 @@ namespace Prota.Editor
                             table = (x.newValue as DataTableComponent)?.table;
                         })
                     )
+                    .AddChild(new Button(() => (dataTableComponentField.value as DataTableComponent)?.table?.Clear()) { text = "Clear" })
                     .AddChild(new Button(() => SetTestData(dataTableComponentField.value as DataTableComponent)) { text = "Sample" })
                 )
+                .AddChild(new VisualElement().AsHorizontalSeperator(2))
+                .AddChild(new VisualElement().SetHorizontalLayout()
+                    .AddChild(new Button(CreateLine) { text = "Add Record" })
+                )
+                .AddChild(headerRoot = new VisualElement()
+                    .SetHorizontalLayout()
+                )
+                .AddChild(new VisualElement().AsHorizontalSeperator(2))
                 .AddChild(new ScrollView(ScrollViewMode.VerticalAndHorizontal)
                     .SetGrow()
                     .AddChild(viewRoot = new VisualElement() { name = "ViewRoot" }
@@ -103,32 +116,55 @@ namespace Prota.Editor
         
         void CreateView()
         {
-            foreach(var columnData in table.data)
-            {
-                var column = new VisualElement()
-                    .SetVerticalLayout()
-                    .SetWidth(120)
-                    .AddChild(new Label(columnData.columnName)
-                        .SetTextCentered()
-                        .SetColor(new Color(.1f, .1f, .15f, 1))
-                    )
-                    .AddChild(new Label(columnData.type.ToString())
-                        .SetTextCentered()
-                        .SetColor(new Color(.2f, columnData.isIndex ? .3f : .2f, .2f, 1))
+            viewRoot.SetChildList(table.data.Count,
+                (col) => {
+                    var columnData = table.data[col];
+                    
+                    headerRoot.AddChild(new VisualElement()
+                        .SetVerticalLayout()
+                        .SetWidth(columnWidth)
+                        .AddChild(new TextField() { name = "input" })
+                        .AddChild(new Label(columnData.columnName) { name = "columnName" }
+                            .SetTextCentered()
+                            .SetColor(new Color(.1f, .1f, .15f, 1))
+                        )
+                        .AddChild(new Label(columnData.type.ToString()) { name = "columnType" }
+                            .SetTextCentered()
+                            .SetColor(new Color(.2f, columnData.isIndex ? .3f : .2f, .2f, 1))
+                        )
                     );
-                viewRoot.Add(column);
-                for(int i = 0; i < table.lineCount; i++)
-                {
-                    var grid = new DataTableGridView(i, columnData.columnId, table);
-                    grid.ShowValue(columnData[i]);
-                    column.Add(grid);
+                        
+                    var column = new VisualElement()
+                        .SetVerticalLayout()
+                        .SetWidth(columnWidth);
+                        
+                    for(int i = 0; i < table.lineCount; i++)
+                    {
+                        var grid = new DataTableGridView(i, columnData.columnId, table);
+                        grid.ShowValue(columnData[i]);
+                        column.Add(grid);
+                    }
+                    return column;
+                },
+                (col, g) => {
+                    headerRoot[col].SetVisible(false);
+                    g.SetVisible(false);
+                },
+                (col, g) => {
+                    headerRoot[col].Q<Label>("columnName").text = table.data[col].columnName;
+                    headerRoot[col].Q<Label>("columnType").text = table.data[col].type.ToString();
+                    headerRoot[col].SetVisible(true);
+                    g.SetVisible(true);
                 }
-            }
+            );
         }
         
         void ClearView()
         {
-            viewRoot.Clear();
+            foreach(var child in viewRoot.Children())
+            {
+                child.SetVisible(false);
+            }
         }
         
         void OnAdd(int i)
@@ -137,30 +173,38 @@ namespace Prota.Editor
             {
                 var columnData = table.data[x];
                 var columnView = viewRoot[x];
-                var grid = new DataTableGridView(i, columnData.columnId, table);
+                
+                var grid = null as DataTableGridView;
+                if(i < columnView.childCount)
+                {
+                    grid = columnView[i] as DataTableGridView;
+                    grid.SetVisible(true);
+                }
+                else
+                {
+                    columnView.AddChild(grid = new DataTableGridView(i, columnData.columnId, table));
+                }
+                
                 grid.ShowValue(columnData[i]);
-                columnView.Add(grid);
             }
         }
         
         void OnRemove(int i, int swap)
         {
-            int viewLine = i + 2;
             for(int x = 0; x < table.columnCount; x++)
             {
                 var columnView = viewRoot[x];
-                columnView.RemoveAt(columnView.childCount - 1);
-                if(viewLine < columnView.childCount)
+                columnView[columnView.childCount - 1].SetVisible(false);
+                if(i < columnView.childCount)
                 {
-                    (columnView[viewLine] as DataTableGridView).ShowValue(table.data[x][swap]);
+                    (columnView[i] as DataTableGridView).ShowValue(table.data[x][swap]);
                 }
             }
         }
         
         void OnModify(int i, int x, DataValue from, DataValue to)
         {
-            var viewline = i + 2;
-            (viewRoot[x][viewline] as DataTableGridView).ShowValue(to);
+            (viewRoot[x][i] as DataTableGridView).ShowValue(to);
         }
         
         // ============================================================================================================
@@ -190,7 +234,35 @@ namespace Prota.Editor
         // ============================================================================================================
         // ============================================================================================================
         
-        
+        void CreateLine()
+        {
+            if(table == null) return;
+            table.AddRecord(r =>
+            {
+                for(int i = 0; i < table.columnCount; i++)
+                {
+                    var v = headerRoot[i].Q<TextField>("input").value;
+                    var type = table[i].type;
+                    
+                    bool success;
+                    switch(type)
+                    {
+                        case DataType.Int32: success = int.TryParse(v, out var intValue); if(success) r.Add(intValue); break;
+                        case DataType.Int64: success = long.TryParse(v, out var longValue); if(success) r.Add(longValue); break;
+                        case DataType.Float32: success = float.TryParse(v, out var floatValue); if(success) r.Add(floatValue); break;
+                        case DataType.Float64: success = double.TryParse(v, out var doubleValue); if(success) r.Add(doubleValue); break;
+                        case DataType.String: success = true; r.Add(v); break;
+                        default: continue;
+                    }
+                    
+                    if(!success)
+                    {
+                        Log.Error($"第{ i }列[{ table[i].columnName }] 填写的类型不正确, 应为 [{ type }] 值为 [{ v }]");
+                        return;
+                    }
+                }
+            });
+        }
         
         
         void SetTestData(DataTableComponent component)
