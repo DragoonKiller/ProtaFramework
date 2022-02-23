@@ -103,6 +103,8 @@ namespace Prota.Net
         
         protected EventBasedNetListener listener { get; private set; }
         
+        protected EventBasedNatPunchListener NATPunchListener { get; private set; }
+        
         protected virtual string authorizedKey => "ProtaClient";
         
         public NetId myId;
@@ -124,7 +126,10 @@ namespace Prota.Net
         protected virtual void Start()
         {
             listener = new EventBasedNetListener();
+            NATPunchListener = new EventBasedNatPunchListener();
             client = new NetManager(listener);
+            client.NatPunchEnabled = true;
+            client.NatPunchModule.Init(NATPunchListener);
             client.Start();
             ConnectToServer();
             

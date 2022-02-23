@@ -276,7 +276,7 @@ namespace Prota.Unity
         
         public readonly string name;
         
-        internal readonly List<DataColumn> data = new List<DataColumn>();
+        public readonly List<DataColumn> data = new List<DataColumn>();
         
         readonly AddAccessor add;
         

@@ -21,22 +21,22 @@ namespace Prota.Unity
     }
     
     [StructLayout(LayoutKind.Explicit)]
-    internal struct RawDataValue
+    public struct RawDataValue
     {
         [FieldOffset(0)]
-        internal readonly int i32;
+        public readonly int i32;
         
         [FieldOffset(0)]
-        internal readonly long i64;
+        public readonly long i64;
         
         [FieldOffset(0)]
-        internal readonly float f32;
+        public readonly float f32;
         
         [FieldOffset(0)]
-        internal readonly double f64;
+        public readonly double f64;
         
         [FieldOffset(8)]
-        internal readonly string str;
+        public readonly string str;
         
         public RawDataValue(RawDataValue value) : this()
         {
@@ -70,7 +70,7 @@ namespace Prota.Unity
     [StructLayout(LayoutKind.Sequential)]
     public struct DataValue
     {
-        internal readonly RawDataValue rawValue;
+        public readonly RawDataValue rawValue;
         
         public readonly DataType type;
         
@@ -124,13 +124,13 @@ namespace Prota.Unity
             rawValue = new RawDataValue(v);
         }
         
-        internal DataValue(DataType type, RawDataValue value)
+        public DataValue(DataType type, RawDataValue value)
         {
             rawValue = new RawDataValue(value);
             this.type = type;
         }
         
-        internal DataValue(DataType type, long value)
+        public DataValue(DataType type, long value)
         {
             if(type == DataType.Int32)
             {
@@ -148,7 +148,7 @@ namespace Prota.Unity
             }
         }
         
-        internal DataValue(DataType type, double value)
+        public DataValue(DataType type, double value)
         {
             if(type == DataType.Float32)
             {
@@ -166,7 +166,7 @@ namespace Prota.Unity
             }
         }
         
-        internal DataValue(DataType type, string value)
+        public DataValue(DataType type, string value)
         {
             Debug.Assert(type == DataType.String);
             rawValue = new RawDataValue(value);

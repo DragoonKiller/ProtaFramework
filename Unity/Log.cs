@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Prota.Unity
 {
-    internal static class Log
+    public static class Log
     {
         public static void Info(string s = "") => Debug.Log($"Prota:Unity:{ s }");
         public static void Warning(string s = "") => Debug.LogWarning($"Prota:Unity:{ s }");
