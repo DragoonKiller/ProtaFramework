@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace Prota.Unity
+namespace Prota.Editor
 {
     public static partial class Utils
     {
@@ -12,7 +12,7 @@ namespace Prota.Unity
         {
             return Directory.GetFiles(curSelectPath, "*.*", SearchOption.TopDirectoryOnly)
                 .Where(x => validExtension.Contains(Path.GetExtension(x)))
-                .Select(x => Utils.AssetDatabase.FullPathToAssetPath(Path.GetFullPath(x)))
+                .Select(x => AssetDatabase.FullPathToAssetPath(Path.GetFullPath(x)))
                 .ToList();
         }
         

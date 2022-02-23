@@ -3,7 +3,7 @@ using UnityEngine;
 using System.IO;
 
 
-namespace Prota.Unity
+namespace Prota.Editor
 {
     public static partial class Utils
     {

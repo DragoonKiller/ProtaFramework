@@ -191,6 +191,10 @@ namespace Prota.Net
                 reader.Recycle();
             };
             
+            listener.NetworkReceiveUnconnectedEvent += (endpoint, reader, method) => {
+                Log.Info($"从 { endpoint } 收到了未知的消息.");
+            };
+            
             RegisterInternalCallbacks();
         }
         

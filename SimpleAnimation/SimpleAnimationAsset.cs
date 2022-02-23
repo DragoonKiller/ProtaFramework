@@ -1,0 +1,130 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+
+namespace Prota.Animation
+{
+    
+    public class SimpleAnimationAsset : ScriptableObject
+    {
+        public List<Sprite> sprites = new List<Sprite>();
+        
+        public List<Sprite> frames = new List<Sprite>();
+        
+        public List<Vector2> anchors = new List<Vector2>();
+        
+        
+        // in frames
+        public int duration;
+        
+        public float fps;
+        
+        public bool loop;
+        
+        [NonSerialized]
+        public List<Sprite> anchorResources = new List<Sprite>();
+        
+        public void Clear()
+        {
+            sprites.Clear();
+            anchorResources.Clear();
+            frames.Clear();
+            anchors.Clear();
+        }
+        
+        public void Process()
+        {
+            var prevSprite = sprites[0];
+            
+            sprites.Sort((a, b) => a.name.CompareTo(b.name));
+            
+            foreach(var sprite in sprites)
+            {
+                var name = sprite.name;
+                var info = name.Split("_");
+                var numStr = info[info.Length - 1];
+                var num = int.Parse(numStr);
+                for(int _ = 0; _ < 1000; _++)
+                {
+                    if(frames.Count >= num) break;
+                    frames.Add(prevSprite);
+                }
+                prevSprite = sprite;
+            }
+            frames.Add(sprites.Last());
+            
+            anchorResources.Sort((a, b) => a.name.CompareTo(b.name));
+            
+            var prevAnchor = new Vector3(0, 0, 0);
+            foreach(var sprite in anchorResources)
+            {
+                var name = sprite.name;
+                var info = name.Split("_");
+                var numStr = info[info.Length - 1];
+                var num = int.Parse(numStr);
+                for(int _ = 0; _ < 1000; _++)
+                {
+                    if(anchors.Count >= num) break;
+                    anchors.Add(GetAnchor(prevSprite));
+                }
+                prevSprite = sprite;
+            }
+            anchors.Add(GetAnchor(anchorResources.Last()));
+        }
+        
+        Vector2 GetAnchor(Sprite sprite)
+        {
+            var texture = sprite.texture;
+            var rawData = texture.GetRawTextureData<Color32>();
+            
+            int w = texture.width, h = texture.height;
+            
+            // 找到 R 通道 >= 0.5 的最长的行.
+            var max = 0;
+            var row = 0;
+            for(int i = 0; i < h; i++)
+            {
+                int cc = 0;
+                for(int j = 0; j < w; j++)
+                {
+                    var color = rawData[j + w * i];
+                    var r = color.r * color.a / (255 * 128);
+                    cc += r;
+                }
+                if(cc >= max)
+                {
+                    max = cc;
+                    row = i;
+                }
+            }
+            
+            // 找到 R 通道 >= 0.5 的最长的列.
+            max = 0;
+            var col = 0;
+            for(int j = 0; j < w; j++)
+            {
+                int cc = 0;
+                for(int i = 0; i < h; i++)
+                {
+                    var color = rawData[j + w * i];
+                    var r = color.r * color.a / (255 * 128);
+                    cc += r;
+                }
+                if(cc >= max)
+                {
+                    max = cc;
+                    col = j;
+                }
+            }
+            
+            var hRate = texture.height == 1 ? 0 : (float)row / (texture.height - 1);
+            var wRate = texture.width == 1 ? 0 : (float)col / (texture.width - 1);
+            var worldW = texture.width / sprite.pixelsPerUnit;
+            var worldH = texture.height / sprite.pixelsPerUnit;
+            
+            return new Vector2(wRate * worldW, hRate * worldH);
+        }
+        
+    }
+}

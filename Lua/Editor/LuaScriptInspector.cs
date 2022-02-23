@@ -190,7 +190,7 @@ namespace Prota.Lua
                     
                     var label = fileList[i] as Label;
                     label.SetVisible(true);
-                    var path = Prota.Unity.Utils.GetRelativePath(LuaCore.luaSourcePath, fn.FullName);
+                    var path = Prota.Editor.Utils.GetRelativePath(LuaCore.luaSourcePath, fn.FullName);
                     path = path.Replace("\\", "/").Replace(".lua", "");
                     label.text = path;
                     label.SetVisible(true);
