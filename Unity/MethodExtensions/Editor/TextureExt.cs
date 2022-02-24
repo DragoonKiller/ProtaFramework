@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using Prota.Unity;
+using System.Threading.Tasks;
+using System.Threading;
+using System.Buffers;
+using System;
 
 namespace Prota.Editor
 {
@@ -18,8 +22,10 @@ namespace Prota.Editor
             var adata = a.GetRawTextureData();
             var bdata = b.GetRawTextureData();
             if(adata.Length != bdata.Length) return false;
-            for(int i = 0; i < adata.Length; i++) if(adata[i] != bdata[i]) return false;
-            return true;
+            var sa = new Span<byte>(adata);
+            var sb = new Span<byte>(bdata);
+            var res = sa.SequenceEqual(sb);
+            return res;
         }
         
         public static bool AlmostSame(this Texture2D a, Texture2D b)

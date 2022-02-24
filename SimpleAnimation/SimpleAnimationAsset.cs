@@ -80,46 +80,47 @@ namespace Prota.Animation
             
             int w = texture.width, h = texture.height;
             
-            // 找到 R 通道 >= 0.5 的最长的行.
-            var max = 0;
-            var row = 0;
+            // 找到 R 通道 >= 0.5 的最长的行列.
+            
+            var rowRCnt = new int[h];
+            var colRCnt = new int[w];
+            
             for(int i = 0; i < h; i++)
             {
-                int cc = 0;
+                var offset = w * i;
                 for(int j = 0; j < w; j++)
                 {
-                    var color = rawData[j + w * i];
+                    var color = rawData[j + offset];
                     var r = color.r * color.a / (255 * 128);
-                    cc += r;
+                    rowRCnt[i] += r;
+                    colRCnt[j] += r;
                 }
-                if(cc >= max)
+            }
+            
+            var max = 0;
+            var row = 0;
+            for(int i = 0, n = rowRCnt.Length; i < n; i++)
+            {
+                if(rowRCnt[i] > max)
                 {
-                    max = cc;
+                    max = rowRCnt[i];
                     row = i;
                 }
             }
             
-            // 找到 R 通道 >= 0.5 的最长的列.
             max = 0;
             var col = 0;
-            for(int j = 0; j < w; j++)
+            for(int i = 0, n = colRCnt.Length; i < n; i++)
             {
-                int cc = 0;
-                for(int i = 0; i < h; i++)
+                if(colRCnt[i] > max)
                 {
-                    var color = rawData[j + w * i];
-                    var r = color.r * color.a / (255 * 128);
-                    cc += r;
-                }
-                if(cc >= max)
-                {
-                    max = cc;
-                    col = j;
+                    max = colRCnt[i];
+                    col = i;
                 }
             }
             
-            var hRate = texture.height == 1 ? 0 : (float)row / (texture.height - 1);
-            var wRate = texture.width == 1 ? 0 : (float)col / (texture.width - 1);
+            var hRate = texture.height == 1 ? 0 : -((float)row / (texture.height - 1) - 0.5f);
+            var wRate = texture.width == 1 ? 0 : ((float)col / (texture.width - 1) - 0.5f);
             var worldW = texture.width / sprite.pixelsPerUnit;
             var worldH = texture.height / sprite.pixelsPerUnit;
             

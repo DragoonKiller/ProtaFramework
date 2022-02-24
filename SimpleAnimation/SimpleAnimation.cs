@@ -24,9 +24,10 @@ namespace Prota.Animation
     
         void Update()
         {
+            this.name = $"Animation:{ asset?.name }";
+            
             if(!Application.isPlaying)
             {
-                this.name = $"Animation:{ asset?.name }";
                 return;
             }
             
@@ -43,6 +44,11 @@ namespace Prota.Animation
             curFrameNum = Mathf.Min(curFrameNum, asset.frames.Count - 1);
             var frame = asset.frames[curFrameNum];
             sprite.sprite = frame;
+            
+            var curAnchorNum = Mathf.FloorToInt(currentTime * asset.fps);
+            curAnchorNum = Mathf.Min(curAnchorNum, asset.anchors.Count - 1);
+            var curOffset = asset.anchors[curAnchorNum];
+            this.transform.localPosition = curOffset;
         }
         
         
