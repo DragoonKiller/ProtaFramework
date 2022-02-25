@@ -20,6 +20,7 @@ namespace Prota.Net
         protected override void Start()
         {
             base.Start();
+            RegiserUniversalOperation();
         }
         
         public readonly List<NetId> subClients = new List<NetId>();
@@ -48,16 +49,13 @@ namespace Prota.Net
             {
                 Log.Info($"尝试连接到主机: { id }[{ clientInfo.endpoint }]");
                 ConnectClientByServer(id);
-                Action<NetPeer> callback = null;
-                callback = peer => {
-                    if(TryGetIdByEndpoint(peer.EndPoint, out var connId) && id == connId)
-                    {
-                        Log.Info($"连接完成, 向主机 { connId }[{ peer.EndPoint }] 发送建立客户端连接的消息");
-                        onConnect -= callback;
-                        SendToPeer(peer, w => {
-                            w.Put(BuiltinMsgId.C2CRequestClientConnection);
-                        });
-                    }
+                Action<NetId> callback = null;
+                callback = id => {
+                    Log.Info($"连接完成, 向主机 { id } 发送建立客户端连接的消息");
+                    onConnect -= callback;
+                    SendToClient(id, w => {
+                        w.Put(BuiltinMsgId.C2CRequestClientConnection);
+                    });
                 };
                 onConnect += callback;
             }
@@ -74,22 +72,17 @@ namespace Prota.Net
             DisconnectTo(hostId);
         }
         
-        void OnHostResponse(NetPeer peer, NetDataReader reader, DeliveryMethod method)
+        void OnHostResponse(NetId id, NetDataReader reader, DeliveryMethod method)
         {
             var success = reader.GetBool();
-            Log.Info($"收到连接的主机的响应: [{ peer.EndPoint }] succcess:{ success }");
-            if(!TryGetIdByEndpoint(peer.EndPoint, out hostId))
-            {
-                Log.Warning($"与主机 [{ peer.EndPoint }] 建立了连接, 但是找不到对应的 id.");
-            }
-            
+            Log.Info($"收到连接的主机的响应: [{ id }] succcess:{ success }");
             // 什么都不做.
             // 主机会同步所有状态配表, 这时游戏世界就起来了.
         }
         
-        void OnHostDisconnect(NetPeer peer)
+        void OnHostDisconnect(NetId id)
         {
-            Log.Info($"与主机的连接中断了 [{ peer.EndPoint }]");
+            Log.Info($"与主机的连接中断了 [{ id }]");
             hostId = NetId.None;
         }
         
@@ -119,22 +112,20 @@ namespace Prota.Net
             });
         }
         
-        void OnClinetRequest(NetPeer peer, NetDataReader reader, DeliveryMethod method)
+        void OnClinetRequest(NetId id, NetDataReader reader, DeliveryMethod method)
         {
-            TryGetIdByEndpoint(peer.EndPoint, out var id);
-            Log.Info($"收到客户端连接主机的请求: { id }[{ peer.EndPoint }]");
+            Log.Info($"收到客户端连接主机的请求: { id }");
             subClients.Add(id);
-            SendToPeer(peer, w => {
+            SendToClient(id, w => {
                 w.Put(BuiltinMsgId.C2CResponseClientConnection);
                 w.Put(true);       // 确认成功.
                 // TODO 同步配表.
             });
         }
         
-        void OnClientDisconnect(NetPeer peer)
+        void OnClientDisconnect(NetId id)
         {
-            Log.Info($"与客户端的连接中断了 [{ peer.EndPoint }]");
-            TryGetIdByEndpoint(peer.EndPoint, out var id);
+            Log.Info($"与客户端的连接中断了 { id }");
             // TODO 清理该客户端所持有的数据.
         }
         
@@ -153,6 +144,28 @@ namespace Prota.Net
             onDisconnect -= OnClientDisconnect;
             onDisconnect -= OnHostDisconnect;
         }
+        
+        // ============================================================================================================
+        // 通用用户操作
+        // ============================================================================================================
+        
+        
+        void RegiserUniversalOperation()
+        {
+            AddCallback(MsgId.C2CLog, (id, reader, method) => {
+                Log.Info($"C2CLog:[from { id }]: { reader.GetString() }");
+            });
+        }
+        
+        public void LogTo(NetId id, string message, DeliveryMethod deliveryMethod = DeliveryMethod.ReliableOrdered)
+        {
+            SendToClient(id, w => {
+                w.Put(MsgId.C2CLog);
+                w.Put(message);
+            }, deliveryMethod);
+        }
+        
+        
         
     }
 }
