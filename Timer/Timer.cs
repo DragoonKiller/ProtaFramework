@@ -6,7 +6,6 @@ using XLua;
 
 namespace Prota.Timer
 {
-    [LuaCallCSharp]
     public class Timer
     {
         public TimeKey key { get; private set; }

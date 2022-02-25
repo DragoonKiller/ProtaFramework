@@ -95,8 +95,15 @@ namespace Prota.Net
             listener = new EventBasedNetListener();
             NATPunchListener = new EventBasedNatPunchListener();
             client = new NetManager(listener);
-            client.NatPunchEnabled = true;
-            client.NatPunchModule.Init(NATPunchListener);
+            
+            client.UpdateTime = 10;                     // 收发包等待间隔.
+            client.DisconnectTimeout = 60000;           // 一分钟超时断开连接.
+            client.BroadcastReceiveEnabled = true;      // 打开广播接收.
+            client.ReconnectDelay = 2000;               // 这么多时间没有回复后重新发送连接协议.
+            client.MaxConnectAttempts = 100000;         // 连不上时的重连尝试次数. 相当于一直尝试连接直到连上为止.
+            client.PingInterval = 3000;                 // ping 检测 & 心跳包时间间隔.
+            client.UnsyncedDeliveryEvent = true;        // 调用发送时直接发送, 不等 PollEvent.
+             
             client.Start();
             ConnectToServer();
             

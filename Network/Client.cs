@@ -153,7 +153,11 @@ namespace Prota.Net
         void RegiserUniversalOperation()
         {
             AddCallback(MsgId.C2CLog, (id, reader, method) => {
-                Log.Info($"C2CLog:[from { id }]: { reader.GetString() }");
+                var s = reader.GetString();
+                var t = new DateTime(reader.GetLong());
+                var now = DateTime.Now;
+                var delay = now - t;
+                Log.Info($" C2C Log { id } [{ delay.TotalMilliseconds.ToString(".00") }ms] { s }");
             });
         }
         
@@ -162,6 +166,7 @@ namespace Prota.Net
             SendToClient(id, w => {
                 w.Put(MsgId.C2CLog);
                 w.Put(message);
+                w.Put(DateTime.Now.Ticks);
             }, deliveryMethod);
         }
         
