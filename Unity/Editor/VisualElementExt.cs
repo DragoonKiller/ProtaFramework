@@ -22,6 +22,30 @@ namespace Prota.Unity
             return x;
         }
         
+        public static T SetMaxHeight<T>(this T x, float height) where T: VisualElement
+        {
+            x.style.maxHeight = height;
+            return x;
+        }
+        
+        public static T SetMinHeight<T>(this T x, float height) where T: VisualElement
+        {
+            x.style.minHeight = height;
+            return x;
+        }
+        
+        public static T SetMaxWidth<T>(this T x, float height) where T: VisualElement
+        {
+            x.style.maxWidth = height;
+            return x;
+        }
+        
+        public static T SetMinWidth<T>(this T x, float height) where T: VisualElement
+        {
+            x.style.minWidth = height;
+            return x;
+        }
+        
         public static T SetWidth<T>(this T x, Length width) where T: VisualElement
         {
             x.style.width = x.style.minWidth = x.style.maxWidth = width;
@@ -153,11 +177,11 @@ namespace Prota.Unity
             return x;
         }
         
-        public static T HoverLeaveColor<T>(this T x, Color a, Color b) where T: VisualElement
+        public static T HoverLeaveColor<T>(this T x, Color hover, Color leave) where T: VisualElement
         {
-            x.RegisterCallback<MouseEnterEvent>(e => x.style.backgroundColor = a);
-            x.RegisterCallback<MouseLeaveEvent>(e => x.style.backgroundColor = b);
-            x.SetColor(b);
+            x.RegisterCallback<MouseEnterEvent>(e => x.style.backgroundColor = hover);
+            x.RegisterCallback<MouseLeaveEvent>(e => x.style.backgroundColor = leave);
+            x.SetColor(leave);
             return x;
         }
         

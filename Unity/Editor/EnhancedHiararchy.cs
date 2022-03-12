@@ -36,6 +36,7 @@ namespace Prota.Unity
                 
                 g.GetComponents<Component>(comps);
                 // comps.Sort(Compare);
+                comps.Reverse();
                 
                 // Component 图标部分.
                 foreach(var c in comps)

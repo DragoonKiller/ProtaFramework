@@ -346,6 +346,7 @@ namespace Prota.Net
             if(clientInfo == null)
             {
                 Log.Error($"找不到编号为 { key.id } 的客户端, 跳过数据发送.");
+                return;
             }
             
             var peer = connectedPeers.Find(x => x.EndPoint.Equals(clientInfo.endpoint));

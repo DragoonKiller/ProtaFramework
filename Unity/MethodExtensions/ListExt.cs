@@ -56,7 +56,8 @@ namespace Prota.Unity
             return l;
         }
         
-        public static IList<T> SetListLength<T>(List<T> l, int n, Func<int, T> onCreate, Action<int, T> onDisable, Action<int, T> onEnable)
+        public static F SetLength<T, F>(this F l, int n, Func<int, T> onCreate, Action<int, T> onEnable, Action<int, T> onDisable)
+            where F: List<T>
         {
             for(int i = 0; i < n; i++)
             {

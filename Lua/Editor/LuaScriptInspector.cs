@@ -131,7 +131,7 @@ namespace Prota.Lua
                 return;
             }
             
-            var f = new FileInfo(LuaCore.PathToSourcePath(script.luaPath));
+            var f = new FileInfo(LuaCore.KeyToSourcePath(script.luaPath));
             
             if(f.Exists)
             {

@@ -16,9 +16,9 @@ namespace Prota.Lua
         public LuaTable instance;  // 实例对象.
         
         [NonSerialized]
-        public LuaCore.LoadedScript loaded;   // 记录绑定的 metatable.
+        public LuaLoadedModule loaded;   // 记录绑定的 metatable.
         
-        object[] selfArg;
+        public object[] selfArg;
         
         // ========================================================================================
         // ========================================================================================
@@ -87,26 +87,6 @@ namespace Prota.Lua
         // ========================================================================================
         
         
-        void CreateData()
-        {
-            if(instance == null)
-            {
-                instance = LuaCore.instance.env.NewTable();
-                instance.SetInPath("gameObject", this.gameObject);
-                instance.SetInPath("transform", this.transform);
-                instance.SetInPath("this", this);
-                selfArg = new object[] { instance };
-            }
-            
-            if(creationPath != null)
-            {
-                luaPath = creationPath;
-                creationPath = null;
-                instance.SetInPath("args", creationArgs);
-                creationArgs = null;
-            }
-            
-        }
         
         void Unload()
         {
@@ -121,6 +101,27 @@ namespace Prota.Lua
         }
         
         
+        void CreateData()
+        {
+            if(instance == null)
+            {
+                instance = LuaCore.instance.env.NewTable();
+                instance.SetInPath("gameObject", gameObject);
+                instance.SetInPath("transform", transform);
+                instance.SetInPath("this", this);
+                selfArg = new object[] { instance };
+            }
+            
+            if(LuaCSExt.creationPath != null)
+            {
+                luaPath = LuaCSExt.creationPath;
+                LuaCSExt.creationPath = null;
+                instance.SetInPath("args", LuaCSExt.creationArgs);
+                LuaCSExt.creationArgs = null;
+            }
+            
+        }
+        
         // 只更换 metatable.
         public void Load()
         {
@@ -132,17 +133,18 @@ namespace Prota.Lua
                 return;
             }
             
-            var meta = LuaCore.instance.Load(luaPath);
-            if(meta == null)
+            var module = LuaCore.instance.Load(luaPath);
+            if(module == null)
             {
                 Debug.LogError("脚本加载失败: " + luaPath);
+                return;
             }
             
-            if(meta == this.loaded) return; // metadata 完全相同不用重设.
+            if(module == this.loaded) return; // metadata 完全相同不用重设.
             
-            this.loaded = meta;
+            this.loaded = module;
             
-            instance.SetMetaTable(meta.scriptMeta);
+            loaded.Attach(instance);
             
             luaAwake = instance.GetInPath<LuaFunction>("Awake");
             luaStart = instance.GetInPath<LuaFunction>("Start");
@@ -156,85 +158,5 @@ namespace Prota.Lua
         }
         
         
-        // ========================================================================================
-        // ========================================================================================
-        // ========================================================================================
-        
-        static string creationPath = null;
-        static LuaTable creationArgs = null;
-        
-        [LuaCallCSharp]
-        public static LuaTable CreateGameObject(string path, LuaTable args = null)
-        {
-            var g = new GameObject();
-            return CreateScript(g, path, args);
-        }
-        
-        [LuaCallCSharp]
-        public static LuaTable CreateScript(GameObject go, string path, LuaTable args = null)
-        {
-            if(!LuaCore.IsValidPath(path))
-            {
-                Debug.LogError("给出的路径不正确: " + path);
-                return null;
-            }
-            
-            creationPath = path;
-            creationArgs = args;
-            var script = go.AddComponent<LuaScript>();
-            return script.instance;
-        }
-        
-        static List<LuaScript> getCache = new List<LuaScript>();
-        [LuaCallCSharp]
-        public static LuaTable Get(GameObject go, string path = null)
-        {
-            getCache.Clear();
-            go.GetComponents<LuaScript>(getCache);
-            foreach(var s in getCache)
-            {
-                if(path == null || s.luaPath == path)
-                    return s.instance;
-            }
-            return null;
-        }
-        
-        
-        [LuaCallCSharp]
-        public static bool ObjectIsNull(object x)
-        {
-            if(x is UnityEngine.Object o) return o == null;
-            return x == null;
-        }
-        
-        [LuaCallCSharp]
-        public static void Activate(object target, bool value = true)
-        {
-            switch(target)
-            {
-                case Behaviour c:
-                c.enabled = value;
-                break;
-                
-                case GameObject g:
-                g.SetActive(value);
-                break;
-                
-                case Transform t:
-                t.gameObject.SetActive(value);
-                break;
-                
-                default:
-                Debug.LogError("Activate类型不正确 " + target.ToString());
-                break;
-            }
-        }
-        
-        [LuaCallCSharp]
-        public static LuaTable GetDataBinding(GameObject g)
-        {
-            var d = g.GetComponent<LuaDataBinding>();
-            return d.GetLuaTable();
-        }
     }
 }
