@@ -23,7 +23,6 @@ namespace Prota.Input
             public readonly List<VisualElement> callbacks = new List<VisualElement>();
         }
         
-        
         VisualElement root;
         
         VisualElement contentRoot;
@@ -54,7 +53,16 @@ namespace Prota.Input
         
         void Update()
         {
-            actions.SetSync(script.callbacks, (k, v) => {
+            if(!Application.isPlaying)
+            {
+                actions.Clear();
+                return;
+            }
+            
+            if(Selection.objects.Count() != 1) return;
+            if(this.root == null) return;
+            
+            actions.SetSync(GameInput.callbacks, (k, v) => {
                 var action = new ActionRecord() { actionName = k }
                     .SetGrow()
                     .AddChild(new Label() { name = "title", text = k })
@@ -82,7 +90,7 @@ namespace Prota.Input
                     var tt = v[i].Target;
                     if(tt is UnityEngine.Object gg)
                     {
-                        content = gg.ToString() + " : " + gg.GetInstanceID();
+                        content = gg.ToString() + " : " + gg.GetInstanceID() + " " + v[i].ToString();
                     }
                     else
                     {

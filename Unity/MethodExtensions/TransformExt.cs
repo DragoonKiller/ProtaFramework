@@ -82,5 +82,13 @@ namespace Prota.Unity
             for(int i = x.childCount - 1; i >= 0; i--) GameObject.Destroy(x.GetChild(i).gameObject);
             return x;
         }
+        
+        public static Transform SetIdentity(this Transform t)
+        {
+            t.position = Vector3.zero;
+            t.rotation = Quaternion.identity;
+            t.localScale = Vector3.one;
+            return t;
+        }
     }
 }

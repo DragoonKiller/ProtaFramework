@@ -68,9 +68,12 @@ namespace Prota.Unity
         public static int FloorToInt(this float x) => Mathf.FloorToInt(x);
         public static int CeilToInt(this float x) => Mathf.CeilToInt(x);
         
+        public static float Clamp(this float x, float a, float b) => x < a ? a : x > b ? b : x;
+        
         
         public static float XMap(this float x, float a, float b) => (x - a) / (b - a);
         public static float XMap(this float x, float a, float b, float from, float to) => (x - a) / (b - a) * (to - from) + from;
+        
         
         
         

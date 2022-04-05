@@ -15,24 +15,27 @@ namespace Prota.Input
         
         PlayerInput input => GetComponent<PlayerInput>();
         
-        public readonly Dictionary<string, List<Action<InputAction.CallbackContext>>> callbacks
+        public static readonly Dictionary<string, List<Action<InputAction.CallbackContext>>> callbacks
             = new Dictionary<string, List<Action<InputAction.CallbackContext>>>();
         
         
         void Awake()
         {
-            input.onActionTriggered += e => {
-                if(!callbacks.TryGetValue(e.action.name, out var actions)) return;
-                foreach(var a in actions) a(e); 
-            };
+            input.onActionTriggered += OnTriggered;
         }
         
         void OnDestroy()
         {
-            
+            if(input) input.onActionTriggered -= OnTriggered;
         }
         
-        public void AddCallback(string name, Action<InputAction.CallbackContext> callback)
+        void OnTriggered(InputAction.CallbackContext e)
+        {
+                if(!callbacks.TryGetValue(e.action.name, out var actions)) return;
+                foreach(var a in actions) a(e);
+        }
+        
+        public static void AddCallback(string name, Action<InputAction.CallbackContext> callback)
         {
             callbacks.GetOrCreate(name, out var list);
             if(!list.Contains(callback))
@@ -42,7 +45,7 @@ namespace Prota.Input
         }
         
 
-        public void RemoveCallback(string name, Action<InputAction.CallbackContext> callback)
+        public static void RemoveCallback(string name, Action<InputAction.CallbackContext> callback)
         {
             callbacks.GetOrCreate(name, out var list);
             list.Remove(callback);

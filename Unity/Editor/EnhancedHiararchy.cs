@@ -2,13 +2,12 @@ using UnityEngine;
 using UnityEditor;
 using System;
 using System.Collections.Generic;
+using Prota.Unity;
 
-namespace Prota.Unity
+namespace Prota.Editor
 {
-    [InitializeOnLoad]
-    public class EnhancedHiararchy
+    public class EnhancedHiararchy : UnityEditor.Editor
     {
-        
         static EnhancedHiararchy()
         {
             EditorApplication.hierarchyWindowItemOnGUI += OnHiararchyGUI;

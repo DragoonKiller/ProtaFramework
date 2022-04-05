@@ -29,6 +29,12 @@ namespace Prota.Unity
         
         public static T Last<T>(this List<T> l, T v) => l[l.Count - 1] = v;
         
+        public static T Pop<T>(this List<T> l)
+        {
+            var res = l.Last();
+            l.RemoveLast();
+            return res;
+        }
         
         public static bool TryGetValue<T>(this List<T> l, int i, out T x)
         {

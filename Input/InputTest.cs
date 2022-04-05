@@ -5,25 +5,23 @@ namespace Prota.Input
 {
     public class InputTest : MonoBehaviour
     {
-        GameInput input => GetComponent<GameInput>();
-        
         void Awake()
         {
-            input.AddCallback("123", e => {
+            GameInput.AddCallback("123", e => {
                 Debug.Log("111");
             });
             
-            input.AddCallback("123", e => {
+            GameInput.AddCallback("123", e => {
                 Debug.Log("222");
             });
             
-            input.AddCallback("Move", CallbackA);
+            GameInput.AddCallback("Move", CallbackA);
             
-            input.AddCallback("MouseMove", e => {
+            GameInput.AddCallback("MouseMove", e => {
                 Debug.LogWarning(e.ReadValue<Vector2>());
             });
             
-            input.AddCallback("PrimaryAction", e => {
+            GameInput.AddCallback("PrimaryAction", e => {
                 Debug.Log(Mouse.current.position.ReadValue() + " | " + e.action.activeControl.GetType());
             });
         }
