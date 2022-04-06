@@ -35,7 +35,7 @@ namespace Prota.Input
                 foreach(var a in actions) a(e);
         }
         
-        public static void AddCallback(string name, Action<InputAction.CallbackContext> callback)
+        public void AddCallback(string name, Action<InputAction.CallbackContext> callback)
         {
             callbacks.GetOrCreate(name, out var list);
             if(!list.Contains(callback))
@@ -45,7 +45,7 @@ namespace Prota.Input
         }
         
 
-        public static void RemoveCallback(string name, Action<InputAction.CallbackContext> callback)
+        public void RemoveCallback(string name, Action<InputAction.CallbackContext> callback)
         {
             callbacks.GetOrCreate(name, out var list);
             list.Remove(callback);

@@ -15,6 +15,7 @@ namespace Prota.Editor
         // 配置项
         // ============================================================================================================
         
+        public const GizmoType AllTypeOfGizmo = GizmoType.Active | GizmoType.Pickable | GizmoType.Selected | GizmoType.NonSelected | GizmoType.NotInSelectionHierarchy | GizmoType.InSelectionHierarchy;
         
         public static bool showTransformConnection
         {
@@ -29,6 +30,11 @@ namespace Prota.Editor
             set => EditorPrefs.SetBool("ProtaFramework.ShowColliderRange", value);
         }
         
+        public static bool showSpriteRendererRange
+        {
+            get => EditorPrefs.GetBool("ProtaFramework.ShowSpriteRendererRange", true);
+            set => EditorPrefs.SetBool("ProtaFramework.ShowSpriteRendererRange", value);
+        }
         
         
         
@@ -51,6 +57,7 @@ namespace Prota.Editor
         {
             showTransformConnection = EditorGUILayout.ToggleLeft("Show Transform Connection", showTransformConnection);
             showColliderRange = EditorGUILayout.ToggleLeft("Show Collider Range", showColliderRange);
+            showSpriteRendererRange = EditorGUILayout.ToggleLeft("Show Sprite Renderer Range", showSpriteRendererRange);
             SceneView.lastActiveSceneView.Repaint();
         }
         
@@ -74,7 +81,7 @@ namespace Prota.Editor
         }
         
         
-        [DrawGizmo(GizmoType.NonSelected | GizmoType.Selected)]
+        [DrawGizmo(AllTypeOfGizmo)]
         static void DrawTransformConnnection(Transform t, GizmoType type)
         {
             if(!showTransformConnection) return;
@@ -92,7 +99,7 @@ namespace Prota.Editor
         static readonly Color darkRed = Color.red - new Color(.3f, .3f, .3f, 0);
         static readonly Color darkGreen = Color.green - new Color(.3f, .3f, .2f, 0);
         
-        [DrawGizmo(GizmoType.NonSelected)]
+        [DrawGizmo(AllTypeOfGizmo)]
         static void DrawColliderRange(BoxCollider2D c, GizmoType type)
         {
             if(!showColliderRange) return;
@@ -101,13 +108,31 @@ namespace Prota.Editor
             var min = c.bounds.min;
             var max = c.bounds.max;
             color.PushToGizmos();
-            Gizmos.DrawLine(min, max.X(min.x));
-            Gizmos.DrawLine(min, max.Y(min.y));
-            Gizmos.DrawLine(min.X(max.x), max);
-            Gizmos.DrawLine(min.Y(max.y), max);
+            Gizmos.DrawLine(min, max.WithX(min.x));
+            Gizmos.DrawLine(min, max.WithY(min.y));
+            Gizmos.DrawLine(min.WithX(max.x), max);
+            Gizmos.DrawLine(min.WithY(max.y), max);
             color.PopFromGizmos();
         }
         
+        
+        static readonly Color darkBlue = Color.blue - new Color(.3f, .3f, .4f, 0);
+        
+        
+        [DrawGizmo(AllTypeOfGizmo)]
+        static void DrawSpriteRenderer(SpriteRenderer c, GizmoType type)
+        {
+            if(!showSpriteRendererRange) return;
+            if(c == null) return;
+            var min = c.bounds.min;
+            var max = c.bounds.max;
+            var color = darkBlue.PushToGizmos();
+            Gizmos.DrawLine(min, max.WithX(min.x));
+            Gizmos.DrawLine(min, max.WithY(min.y));
+            Gizmos.DrawLine(min.WithX(max.x), max);
+            Gizmos.DrawLine(min.WithY(max.y), max);
+            color.PopFromGizmos();
+        }
         
         
         

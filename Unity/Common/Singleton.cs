@@ -5,15 +5,21 @@ using Prota.Unity;
 
 namespace Prota.Unity
 {
-    public class SingletonRoot : MonoBehaviour
+    internal class Singleton : MonoBehaviour
     {
-        public static SingletonRoot instance;
+        public static Singleton instance;
         
         public static Dictionary<Type, MonoBehaviour> pool = new Dictionary<Type, MonoBehaviour>();
         
-        void Awake()
+        public static Dictionary<Type, List<Action>> onInit = new Dictionary<Type, List<Action>>();
+        
+        Singleton()
         {
             instance = this;
+        }
+        
+        void Awake()
+        {
             DontDestroyOnLoad(this.gameObject);
         }
         
@@ -49,17 +55,29 @@ namespace Prota.Unity
             }
             
             g.transform.SetIdentity();
-            var c = g.GetOrCreate(t);
-            Debug.Assert(c as MonoBehaviour != null);
-            pool.Add(t, c as MonoBehaviour);
-            return c as MonoBehaviour;
+            var c = g.GetOrCreate(t) as MonoBehaviour;
+            Debug.Assert(c != null);
+            pool.Add(t, c);
+            
+            onInit.GetOrCreate(t, out var list);
+            foreach(var f in list) f();
+            list.Clear();
+            
+            return c;
         }
         
         public static void Deregister<T>()
         {
-            if(!pool.TryGetValue(typeof(T), out var component)) return;
+            Deregister(typeof(T));
+        }
+        
+        public static void Deregister(Type t)
+        {
+            if(!pool.TryGetValue(t, out var component)) return;
             component.gameObject.Destroy();
-            pool.Remove(typeof(T));
+            pool.Remove(t);
+            onInit.GetOrCreate(t, out var list);
+            list.Clear();
         }
         
         public static T Get<T>() where T : MonoBehaviour
@@ -72,40 +90,6 @@ namespace Prota.Unity
             if(pool.TryGetValue(t, out var component)) return component;
             var c = Register(t);
             return c;
-        }
-        
-    }
-    
-    
-    
-    
-    public static class Singleton
-    {
-        public static T Get<T>() where T: MonoBehaviour
-        {
-            return SingletonRoot.Get<T>();
-        }
-        
-        public static void Clear<T>() where T: MonoBehaviour
-        {
-            SingletonRoot.Deregister<T>();
-        }
-        
-        public static void Init(GameObject root)
-        {
-            SingletonRoot.instance = root.AddComponent<SingletonRoot>();
-        }
-        
-        public static MonoBehaviour Get(Type t)
-        {
-            if(typeof(MonoBehaviour).IsAssignableFrom(t))
-            {
-                return SingletonRoot.Get(t) as MonoBehaviour;
-            }
-            else
-            {
-                throw new ArgumentException("Singleton must be MonoBehaviour.");
-            }
         }
     }
     
