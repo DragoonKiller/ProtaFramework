@@ -161,7 +161,7 @@ namespace Prota.Unity
             if(index.TryGetValue(value, out var line))
             {
                 if(line == i) return true;  // 重复赋相同的值.
-                Log.Error($"{ this }: 索引的值重复了: 值[{ value }] 原有行[{ line }]");
+                UnityEngine.Debug.LogError($"{ this }: 索引的值重复了: 值[{ value }] 原有行[{ line }]");
                 return false;
             }
             return true;
@@ -170,7 +170,7 @@ namespace Prota.Unity
         bool IndexValid(int i)
         {
             var valid = 0 <= i && i < dataList.Count;
-            if(!valid) Log.Error($"{ this }: 索引越界 { i } n: { dataList.Count }");
+            UnityEngine.Debug.LogError($"{ this }: 索引越界 { i } n: { dataList.Count }");
             return valid;
         }
         
@@ -178,7 +178,7 @@ namespace Prota.Unity
         {
             if(type != this.type)
             {
-                Log.Error($"{ this }: 添加值的类型错误, 应为[{ this.type }] 实为[{ type }]");
+                UnityEngine.Debug.LogError($"{ this }: 添加值的类型错误, 应为[{ this.type }] 实为[{ type }]");
                 return false;
             }
             return true;
@@ -229,7 +229,7 @@ namespace Prota.Unity
                 
                 if(column != table.columnCount)
                 {
-                    Log.Error($"{this}: 填写的数据数量错误! 赋值了 { column } 个, 实际上需要 { table.columnCount } 个.");
+                    UnityEngine.Debug.LogError($"{this}: 填写的数据数量错误! 赋值了 { column } 个, 实际上需要 { table.columnCount } 个.");
                     Interrupt();
                     return -1;
                 }
@@ -249,7 +249,7 @@ namespace Prota.Unity
             {
                 if(column >= table.columnCount)
                 {
-                    Log.Error($"{this}: 添加了过多的数据, 只能接收 { table.columnCount } 条数据.");
+                    UnityEngine.Debug.LogError($"{this}: 添加了过多的数据, 只能接收 { table.columnCount } 条数据.");
                     Interrupt();
                     return false;
                 }
@@ -260,7 +260,7 @@ namespace Prota.Unity
             {
                 if(!valid) return this;
                 valid = false;
-                Log.Error($"{this}: 添加数据行发生错误, 回退修改.");
+                UnityEngine.Debug.LogError($"{this}: 添加数据行发生错误, 回退修改.");
                 for(int i = 0; i < column; i++)
                 {
                     table.data[i].RemoveBySwap(i);
@@ -338,7 +338,7 @@ namespace Prota.Unity
             // 删除只有索引越界一种情况, 而这种情况可以直接被这个地方的代码挡住, 这样删除操作总是会成功.
             if(!(0 <= x && x < Count))
             {
-                Log.Error($"尝试删除表中一行时, 索引越界: 表[{ name }] 总行数[{ Count }] 删除行[{ x }]");
+                UnityEngine.Debug.LogError($"尝试删除表中一行时, 索引越界: 表[{ name }] 总行数[{ Count }] 删除行[{ x }]");
                 return null;
             }
             

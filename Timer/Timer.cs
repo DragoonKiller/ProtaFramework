@@ -6,129 +6,58 @@ using XLua;
 
 namespace Prota.Timer
 {
+
     public class Timer
     {
+        public string mname = null;
         public TimeKey key { get; private set; }
         public readonly Action callback;
+        public bool repeat;
+        public float duration;
+        public string name => mname ?? key.id.ToString();
         
-        Timer(TimeKey key, bool repeat, Action callback)
+        public Timer(string name, float curTime, float duration, bool repeat, Action callback)
         {
-            this.key = key;
+            this.mname = name;
+            this.key = new TimeKey(curTime + duration);
+            this.duration = duration;
+            this.repeat = repeat;
             this.callback = callback;
         }
         
+        public static TimerQueue normalTimer = new TimerQueue(() => Time.time);
         
-        
-        public struct TimeKey
-        {
-            public readonly uint id;
-            public readonly float time;
-
-            public TimeKey(float time)
-            {
-                this.id = unchecked(++gid);
-                this.time = time;
-            }
-            
-            public TimeKey(TimeKey x)
-            {
-                this.id = x.id;
-                this.time = x.time;
-            }
-        }
-        
-        struct TimeKeyComparer : IComparer<TimeKey>
-        {
-            public int Compare(TimeKey a, TimeKey b)
-            {
-                return a.time != b.time ? a.time.CompareTo(b.time)
-                    : a.id.CompareTo(b.id);
-            }
-        }
-        
-        static uint gid = 0;
-        
-        static SortedDictionary<TimeKey, Timer> timers = new SortedDictionary<TimeKey, Timer>(new TimeKeyComparer());
-        
-        static SortedDictionary<TimeKey, Timer> realtimeTimers = new SortedDictionary<TimeKey, Timer>(new TimeKeyComparer());
-        
-        public static int timersPerFrame = 5000;
+        public static TimerQueue realtimeTimer = new TimerQueue(() => Time.realtimeSinceStartup);
         
         public static void Start()
         {
-            gid = 0;
+            
         }
         
         public static void Update()
         {
-            var curTime = Time.time;
-            int i = 0;
-            for(i = 0; i < timersPerFrame; i++)
-            {
-                if(timers.Count == 0) break;
-                var (timeKey, timer) = timers.First();
-                if(timeKey.time <= curTime) break;
-                timers.Remove(timeKey);
-                timer.callback();
-            }
-            if(i == timersPerFrame) Log.Warning($"达到{ timersPerFrame }/帧计时器处理上限");
-            
-            curTime = Time.realtimeSinceStartup;
-            for(i = 0; i < timersPerFrame; i++)
-            {
-                if(realtimeTimers.Count == 0) break;
-                var (timeKey, timer) = realtimeTimers.First();
-                if(timeKey.time <= curTime) break;
-                realtimeTimers.Remove(timeKey);
-                timer.callback();
-            }
-            
-            if(i == timersPerFrame) Log.Warning($"达到{ timersPerFrame }/帧计时器处理上限");
+            normalTimer.Update();
+            realtimeTimer.Update();
         }
         
         
-        public void Destroy()
+        
+        public static Timer New(float time, bool repeat, bool realtime, Action callback)
         {
-            timers.Remove(key);
-            realtimeTimers.Remove(key);
+            if(realtime) return realtimeTimer.New(time, repeat, callback);
+            return normalTimer.New(time, repeat, callback);
         }
+        public static Timer New(float time, bool repeat, Action callback) => New(time, repeat, false, callback);
+        public static Timer New(float time, Action callback) => New(time, false, false, callback);
         
-        public static Timer New(float time, Action callback)
-        {
-            var timer = new Timer(new TimeKey(Time.time + time), false, callback);
-            timers.Add(timer.key, timer);
-            return timer;
-        }
         
-        public static Timer NewRepeated(float time, Action callback)
+        public static Timer New(string name, float time, bool repeat, bool realtime, Action callback)
         {
-            var key = new TimeKey(Time.time + time);
-            Timer timer = null;
-            timer = new Timer(key, false, () => {
-                callback();
-                timer.key = new TimeKey(Time.time + time);    // 重新创建一个 key, 复用 timer.
-                timers.Add(timer.key, timer);
-            });
-            return timer;
+            if(realtime) return realtimeTimer.New(name, time, repeat, callback);
+            return normalTimer.New(name, time, repeat, callback);
         }
-        
-        public static Timer NewRealtime(float time, Action callback)
-        {
-            var timer = new Timer(new TimeKey(Time.time + time), false, callback);
-            realtimeTimers.Add(timer.key, timer);
-            return timer;
-        }
-        
-        public static Timer NewRealtimeRepeated(float time, Action callback)
-        {
-            var key = new TimeKey(Time.time + time);
-            Timer timer = null;
-            timer = new Timer(key, false, () => {
-                timer.key = new TimeKey(Time.time + time);    // 重新创建一个 key, 复用 timer.
-                realtimeTimers.Add(timer.key, timer);
-            });
-            return timer;
-        }
+        public static Timer New(string name, float time, bool repeat, Action callback) => New(name, time, repeat, false, callback);
+        public static Timer New(string name, float time, Action callback) => New(name, time, false, false, callback);
         
     } 
 }

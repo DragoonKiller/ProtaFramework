@@ -3,7 +3,7 @@ using UnityEngine;
 
 using System.Collections.Generic;
 
-namespace Prota.Unity
+namespace Prota
 {
     public static partial class MethodExtensions
     {
@@ -25,5 +25,11 @@ namespace Prota.Unity
         public static string GetNamePath(this GameObject g) => g.transform.GetNamePath();
         
         public static void Destroy(this GameObject g) => GameObject.Destroy(g);
+        
+        public static GameObject SetIdentity(this GameObject g)
+        {
+            g.transform.SetIdentity();
+            return g;
+        }
     }
 }

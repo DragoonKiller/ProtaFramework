@@ -9,12 +9,29 @@ namespace Prota.Animation
     [RequireComponent(typeof(SpriteRenderer))]
     public class SimpleAnimation : MonoBehaviour
     {
-        public SimpleAnimationAsset asset;
+        [SerializeField]
+        SimpleAnimationAsset asset;
         
         [Header("state")]
-        public float currentTime;
+        
+        [SerializeField]
+        float currentTime;
         
         SpriteRenderer sprite => this.GetComponent<SpriteRenderer>();
+        
+        public bool _mirror = false;
+        public bool mirror
+        {
+            get => _mirror;
+            set
+            {
+                if(value == _mirror) return;
+                _mirror = value;
+                var localScale = this.transform.localScale;
+                localScale.x *= -1;
+                this.transform.localScale = localScale;
+            }
+        }
         
         void Start()
         {
@@ -62,7 +79,18 @@ namespace Prota.Animation
         }
         
         
+        // 返回: 是否为新资源.
+        public bool SetAsset(SimpleAnimationAsset asset)
+        {
+            if(this.asset == asset || this.asset.name == asset.name) return false;
+            this.asset = asset;
+            return true;
+        }
         
+        public void Restart()
+        {
+            currentTime = 0;
+        }
         
         
         

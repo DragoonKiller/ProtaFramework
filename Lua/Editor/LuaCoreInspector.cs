@@ -14,7 +14,7 @@ namespace Prota.Lua
 {
     [CustomEditor(typeof(LuaCore), false)]
     [ExecuteAlways]
-    public class LuaCoreInspector : UnityEditor.Editor
+    public class LuaCoreInspector : UpdateInspector
     {
         LuaCore core => target as LuaCore;
         
@@ -49,17 +49,7 @@ namespace Prota.Lua
             return root;
         }
         
-        void OnEnable()
-        {
-            EditorApplication.update += Update;
-        }
-        
-        void OnDisable()
-        {
-            EditorApplication.update -= Update;
-        }
-        
-        void Update()
+        protected override void Update()
         {
             if(root == null) return;
             

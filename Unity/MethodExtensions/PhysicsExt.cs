@@ -3,17 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace Prota.Unity
+namespace Prota
 {
     public static partial class MethodExtensions
     {
+        // ============================================================================================================
+        // Consts
+        // ============================================================================================================
+        
         const float collisionSizeReduction = 1f / 256;
         
         static RaycastHit2D[] rayCastBuffer = new RaycastHit2D[128];
         
+        static readonly LayerMask maskOfAll = (LayerMask)(-1);
+        
+        // ============================================================================================================
+        // MoveAndCollide
+        // ============================================================================================================
+        
         public static Vector2 MoveAndCollide(this Collider2D c, Vector2 velocity)
         {
-            return MoveAndCollide(c, velocity, Time.fixedDeltaTime, (LayerMask)(-1));
+            return MoveAndCollide(c, velocity, Time.fixedDeltaTime, maskOfAll);
         }
         
         public static Vector2 MoveAndCollide(this Collider2D c, Vector2 velocity, LayerMask layer)
@@ -23,40 +33,54 @@ namespace Prota.Unity
         
         public static Vector2 MoveAndCollide(this Collider2D c, Vector2 velocity, float deltaTime)
         {
-            return MoveAndCollide(c, velocity, deltaTime, (LayerMask)(-1));
+            return MoveAndCollide(c, velocity, deltaTime, maskOfAll);
         }
         
         public static Vector2 MoveAndCollide(this Collider2D c, Vector2 velocity, float deltaTime, LayerMask layer)
         {
+            // 速度太慢, 当做没移动.
+            if(velocity.sqrMagnitude < 1e-8f) return Vector2.zero;
+            
             var move = velocity * deltaTime;
-            move = move.Len(move.magnitude + collisionSizeReduction);
+            move = move.Len(move.magnitude);
             
             switch(c)
             {
                 default:
                 case BoxCollider2D box:
                 {
-                    var n = Physics2D.BoxCastNonAlloc(c.bounds.center, c.bounds.size, c.transform.rotation.z, move, rayCastBuffer, move.magnitude + 1e-4f);
+                    var n = Physics2D.BoxCastNonAlloc(c.bounds.center, c.bounds.size, c.transform.rotation.z, move, rayCastBuffer, move.magnitude);
+                    
+                    #if UNITY_EDITOR
+                    var color = Color.yellow;
+                    var min = c.bounds.min + (Vector3)move;
+                    var max = c.bounds.max + (Vector3)move;
+                    Debug.DrawLine(min, min.WithX(max.x), color);
+                    Debug.DrawLine(min, min.WithY(max.y), color);
+                    Debug.DrawLine(min.WithX(max.x), max, color);
+                    Debug.DrawLine(min.WithY(max.y), max, color);
+                    #endif
+                    
                     move = ClosetCollide(n, c, move);
                 }
                 break;
                 
                 case CircleCollider2D circ:
                 {
-                    var n = Physics2D.CircleCastNonAlloc(circ.bounds.center, circ.radius, move, rayCastBuffer, move.magnitude + 1e-4f);
+                    var n = Physics2D.CircleCastNonAlloc(circ.bounds.center, circ.radius, move, rayCastBuffer, move.magnitude);
                     move = ClosetCollide(n, c, move);
                 }
                 break;
                 
                 case CapsuleCollider2D cap:
                 {
-                    var n = Physics2D.CapsuleCastNonAlloc(cap.bounds.center, cap.size, cap.direction, c.transform.rotation.z, move, rayCastBuffer, move.magnitude + 1e-4f);
+                    var n = Physics2D.CapsuleCastNonAlloc(cap.bounds.center, cap.size, cap.direction, c.transform.rotation.z, move, rayCastBuffer, move.magnitude);
                     move = ClosetCollide(n, c, move);
                 }
                 break;
             }
             
-            move = move.Len(move.magnitude - collisionSizeReduction);
+            move = move.Len(move.magnitude);
             return move;
         }
 
@@ -77,9 +101,15 @@ namespace Prota.Unity
             Array.Sort(rayCastBuffer, 0, n, raycastHit2DDistanceComparer);
             for(int i = 0; i < n; i++)
             {
-                if(rayCastBuffer[i].collider != c) return move.Len(rayCastBuffer[i].distance);
+                // 自己不算.
+                if(rayCastBuffer[i].collider == c) continue;
+                // 法线和移动方向相同, 不属于碰撞.
+                if(Vector2.Dot(rayCastBuffer[i].normal, move) >= 0) continue;
+                
+                return move.Len(rayCastBuffer[i].distance);
             }
             
+            // 啥都没碰到.
             return move;
         }
         
@@ -100,7 +130,7 @@ namespace Prota.Unity
         
         public static Vector2 MoveAndCollide(this Rigidbody2D rd, Vector2 velocity, float deltaTime)
         {
-            return rd.MoveAndCollide(velocity, deltaTime, (LayerMask)(-1));
+            return rd.MoveAndCollide(velocity, deltaTime, maskOfAll);
         }
         
         
@@ -112,7 +142,7 @@ namespace Prota.Unity
         
         public static Vector2 MoveAndCollide(this Rigidbody2D rd, Vector2 velocity)
         {
-            return rd.MoveAndCollide(velocity, Time.fixedDeltaTime, (LayerMask)(-1));
+            return rd.MoveAndCollide(velocity, Time.fixedDeltaTime, maskOfAll);
         }
         
         public static Rigidbody2D MoveRelative(this Rigidbody2D rd, Vector2 move)

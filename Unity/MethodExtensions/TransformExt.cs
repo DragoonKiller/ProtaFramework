@@ -4,7 +4,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Prota.Unity
+namespace Prota
 {
     public static partial class MethodExtensions
     {

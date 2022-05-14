@@ -257,7 +257,7 @@ namespace Prota.Editor
                     
                     if(!success)
                     {
-                        Log.Error($"第{ i }列[{ table[i].columnName }] 填写的类型不正确, 应为 [{ type }] 值为 [{ v }]");
+                        UnityEngine.Debug.Log($"第{ i }列[{ table[i].columnName }] 填写的类型不正确, 应为 [{ type }] 值为 [{ v }]");
                         return;
                     }
                 }
@@ -297,7 +297,7 @@ namespace Prota.Editor
             );
             
             component.table.DataByName("name").modifyCallbacks += (x, from, to) => {
-                Log.Info($"行[{ x }] 值[{ from } => { to }]");
+                UnityEngine.Debug.Log($"行[{ x }] 值[{ from } => { to }]");
             };
             
             component.Update();

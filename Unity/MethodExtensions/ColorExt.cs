@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Prota.Unity
+namespace Prota
 {
     public static partial class MethodExtensions
     {

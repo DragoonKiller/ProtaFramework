@@ -9,6 +9,8 @@ namespace Prota.Animation
     {
         void OnPreprocessTexture()
         {
+            if(!assetImporter.assetPath.Contains("/Animation/")) return;
+            
             var importer = assetImporter as TextureImporter;
             
             importer.filterMode = FilterMode.Bilinear;
