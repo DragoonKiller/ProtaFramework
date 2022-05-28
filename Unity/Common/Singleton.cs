@@ -1,11 +1,10 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using Prota.Unity;
 
 namespace Prota.Unity
 {
-    internal class Singleton : MonoBehaviour
+    public class Singleton : MonoBehaviour
     {
         public static Singleton instance;
         

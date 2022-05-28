@@ -1,0 +1,17 @@
+{
+    "name": "Prota.DataTable",
+    "rootNamespace": "Prota.Data",
+    "references": [
+        "GUID:1d01d2fa0687c4240ac5dc6551db391a",
+        "GUID:4af5db39d74318c4fa1288b56207dbe1"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

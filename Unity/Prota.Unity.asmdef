@@ -1,0 +1,16 @@
+{
+    "name": "Prota.Unity",
+    "rootNamespace": "Prota.Unity",
+    "references": [
+        "Prota.Utils"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

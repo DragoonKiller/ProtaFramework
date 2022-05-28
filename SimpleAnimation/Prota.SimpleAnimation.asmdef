@@ -1,0 +1,16 @@
+{
+    "name": "Prota.SimpleAnimation",
+    "rootNamespace": "",
+    "references": [
+        "GUID:1d01d2fa0687c4240ac5dc6551db391a"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

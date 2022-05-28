@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using LiteNetLib.Utils;
-using Prota.Unity;
+using Prota.Data;
 using UnityEngine;
 using XLua;
 

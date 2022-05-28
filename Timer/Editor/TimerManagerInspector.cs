@@ -37,7 +37,7 @@ namespace Prota.Timer
             return root;
         }
         
-        void Update(Dictionary<TimeKey, VisualElement> loaded, TimerQueue q, ScrollView scroll, Label count)
+        void UpdateTimer(Dictionary<TimeKey, VisualElement> loaded, TimerQueue q, ScrollView scroll, Label count)
         {
             count.text = q.timers.Count.ToString();
             loaded.SetSync(q.timers, (k, t) => {
@@ -69,8 +69,8 @@ namespace Prota.Timer
         {
             realtimeCur.text = $"realtime: { Time.realtimeSinceStartup.ToString("0.000000") }";
             normalCur.text = $"time: { Time.time.ToString("0.000000") }";
-            Update(normalLoaded, Timer.normalTimer, normalList, normalCount);
-            Update(realtimeLoaded, Timer.realtimeTimer, realtimeList, realtimeCount);
+            UpdateTimer(normalLoaded, Timer.normalTimer, normalList, normalCount);
+            UpdateTimer(realtimeLoaded, Timer.realtimeTimer, realtimeList, realtimeCount);
         }
     }
 }
