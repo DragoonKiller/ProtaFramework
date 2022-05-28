@@ -9,10 +9,8 @@ namespace Prota.Input
 {
     [RequireComponent(typeof(PlayerInput))]
     [DisallowMultipleComponent]
-    public sealed class GameInput : MonoBehaviour
+    public sealed class GameInput : Singleton<GameInput>
     {
-        public static GameInput instance;
-        
         PlayerInput input => GetComponent<PlayerInput>();
         
         public static readonly Dictionary<string, List<Action<InputAction.CallbackContext>>> callbacks

@@ -30,7 +30,7 @@ namespace Prota.Timer
             {
                 if(timers.Count == 0) break;
                 var (timeKey, timer) = timers.First();
-                if(timeKey.time <= curTime) break;
+                if(curTime < timeKey.time) break;
                 timers.Remove(timeKey);
                 timer.callback();
                 if(timer.repeat) timers[new TimeKey(timer.duration)] = timer;
@@ -41,6 +41,7 @@ namespace Prota.Timer
         public Timer New(float duration, bool repeat, Action callback)
         {
             var timer = new Timer(null, GetTime(), duration, repeat, callback);
+            timers.Add(timer.key, timer);
             return timer;
         }
         

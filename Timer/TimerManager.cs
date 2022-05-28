@@ -1,8 +1,9 @@
+using Prota.Unity;
 using UnityEngine;
 
 namespace Prota.Timer
 {
-    public class TimerManager : MonoBehaviour
+    public class TimerManager : Singleton<TimerManager>
     {
         void Start()
         {
