@@ -9,7 +9,7 @@ namespace Prota.Animation
         
         public UnityEngine.Object target { get; private set; } = null;
         
-        public float ratio { get; private set; } = 0;
+        public float ratio { get; set; } = 0;
         
         public float duration { get; private set; } = 0;
         

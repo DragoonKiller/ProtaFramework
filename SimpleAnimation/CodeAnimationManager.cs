@@ -18,7 +18,7 @@ namespace Prota.Animation
             // Update.
             foreach(var tween in all)
             {
-                if(tween.updateMode == UpdateMode.Update)
+                if(tween.updateMode == UpdateMode.FixedUpdate)
                 {
                     tween.Update(Time.fixedDeltaTime);
                 }
