@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Prota
 {
-    public static partial class MethodExtensions
+    public static partial class UnityMethodExtensions
     {
         // ============================================================================================================
         // Consts

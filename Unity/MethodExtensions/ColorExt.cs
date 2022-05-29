@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Prota
 {
-    public static partial class MethodExtensions
+    public static partial class UnityMethodExtensions
     {
         public static Color Add(this Color a, Color b) => new Color(a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a);
         

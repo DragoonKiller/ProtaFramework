@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Prota
 {
-    public static partial class MethodExtensions
+    public static partial class UnityMethodExtensions
     {
         public static void ForeachChild(this Transform t, Action<Transform> f)
         {

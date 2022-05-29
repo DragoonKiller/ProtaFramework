@@ -85,6 +85,13 @@ namespace Prota
         public static float Length(this (Vector3 from, Vector3 to) p) => p.Vec().magnitude;
         
         
+        public static Vector2 ToVec2(this Vector3 p) => new Vector2(p.x, p.y);
+        public static Vector2 ToVec2(this Vector4 p) => new Vector2(p.x, p.y);
+        public static Vector3 ToVec3(this Vector2 p, float z = 0) => new Vector3(p.x, p.y, z);
+        public static Vector3 ToVec3(this Vector4 p) => new Vector3(p.x, p.y, p.z);
+        public static Vector3 ToVec4(this Vector2 p, float z = 0, float w = 0) => new Vector4(p.x, p.y, z, w);
+        public static Vector3 ToVec4(this Vector3 p, float w = 0) => new Vector4(p.x, p.y, p.z, w);
+        
         #endif
         
         
@@ -118,13 +125,13 @@ namespace Prota
             return (x - x.Mod(y)) / y;
         }
         
-        public static bool Within(this int x, int a, int b) => a <= x && x <= b;
+        public static bool In(this int x, int a, int b) => a <= x && x <= b;
         
-        public static bool WithinExclusive(this int x, int a, int b) => a < x && x < b;
+        public static bool InExclusive(this int x, int a, int b) => a < x && x < b;
         
-        public static bool Within(this float x, float a, float b) => a <= x && x <= b;
+        public static bool In(this float x, float a, float b) => a <= x && x <= b;
         
-        public static bool WithinExclusive(this float x, float a, float b) => a < x && x < b;
+        public static bool InExclusive(this float x, float a, float b) => a < x && x < b;
         
         public static int FloorToInt(this float x) => Mathf.FloorToInt(x);
         public static int CeilToInt(this float x) => Mathf.CeilToInt(x);

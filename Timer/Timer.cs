@@ -43,7 +43,7 @@ namespace Prota.Timer
         
         public static Timer New(float time, bool repeat, bool realtime, Action callback)
         {
-            TimerManager.Get();
+            TimerManager.EnsureExists();
             if(realtime) return realtimeTimer.New(time, repeat, callback);
             return normalTimer.New(time, repeat, callback);
         }
@@ -53,7 +53,7 @@ namespace Prota.Timer
         
         public static Timer New(string name, float time, bool repeat, bool realtime, Action callback)
         {
-            TimerManager.Get();
+            TimerManager.EnsureExists();
             if(realtime) return realtimeTimer.New(name, time, repeat, callback);
             return normalTimer.New(name, time, repeat, callback);
         }

@@ -3,28 +3,28 @@ using System.Collections.Generic;
 namespace Prota
 {
     
-    public static class StaticTempList<T>
+    public class StaticTempList<T>
     {
-        static List<T> _list = new List<T>();
-        public static List<T> list
+        static List<T> list = new List<T>();
+        public static List<T> Get()
         {
-            get
-            {
-                _list.Clear();
-                return _list;
-            }
+            list.Clear();
+            return list;
         }
+        
+        
+        public static void Clear() => list.Clear();
     }
     
     public static class StaticTempDictionary<K, V>
     {
-        static Dictionary<K, V> _dict = new Dictionary<K, V>();
-        public static Dictionary<K, V> dict
+        static Dictionary<K, V> dict = new Dictionary<K, V>();
+        public static Dictionary<K, V> Get()
         {
-            get
-            {
-                return _dict;
-            }
+            dict.Clear();
+            return dict;
         }
+        
+        public static void Clear() => dict.Clear();
     }
 }

@@ -31,7 +31,7 @@ namespace Prota
                 }
             }
             
-            var temp = StaticTempList<K>.list;
+            var temp = StaticTempList<K>.Get();
             
             foreach(var e in target)
             {

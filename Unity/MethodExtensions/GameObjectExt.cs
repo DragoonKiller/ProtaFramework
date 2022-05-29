@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Prota
 {
-    public static partial class MethodExtensions
+    public static partial class UnityMethodExtensions
     {
         public static T GetOrCreate<T>(this GameObject g) where T : Component
         {

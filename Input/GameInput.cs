@@ -11,7 +11,8 @@ namespace Prota.Input
     [DisallowMultipleComponent]
     public sealed class GameInput : Singleton<GameInput>
     {
-        PlayerInput input => GetComponent<PlayerInput>();
+        PlayerInput cache;
+        PlayerInput input => cache == null ? cache = UnityEngine.Object.FindObjectOfType<PlayerInput>() : cache;
         
         public static readonly Dictionary<string, List<Action<InputAction.CallbackContext>>> callbacks
             = new Dictionary<string, List<Action<InputAction.CallbackContext>>>();
