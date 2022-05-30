@@ -1,11 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Prota.Unity;
-using System.Collections;
-
-
-
 
 
 namespace Prota.Data

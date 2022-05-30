@@ -5,7 +5,7 @@ using Prota.Unity;
 
 namespace Prota.Editor
 {
-    public static partial class MethodExtensions
+    public static partial class UnityMethodExtensions
     {
         public static List<Color> gizmosColors = new List<Color>();
         

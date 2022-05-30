@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Prota.Unity;
 using UnityEngine;
 
 namespace Prota.Animation

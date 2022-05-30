@@ -83,8 +83,8 @@ namespace Prota.Animation
                 }
                 // Log.Info(animName + " : " + file.Name + " : " + isAnchor);
                 if(!anims.TryGetValue(animName, out var lists)) anims[animName] = lists = (new List<string>(), new List<string>());
-                if(!isAnchor) lists.anims.Add(Prota.Editor.Utils.AssetDatabase.FullPathToAssetPath(file.FullName));
-                else lists.anchors.Add(Prota.Editor.Utils.AssetDatabase.FullPathToAssetPath(file.FullName));
+                if(!isAnchor) lists.anims.Add(file.FullName.FullPathToAssetPath());
+                else lists.anchors.Add(file.FullName.FullPathToAssetPath());
             }
             
             foreach(var (name, lists) in anims)

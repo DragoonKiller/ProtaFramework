@@ -3,12 +3,12 @@ using UnityEditor;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 
-using Prota.Unity;
-using System.Linq;
 using System.Collections.Generic;
 using System;
 
-namespace Prota.Data
+using Prota.Data;
+
+namespace Prota.Editor
 {
     public class DataTableInspector : UnityEditor.EditorWindow
     {

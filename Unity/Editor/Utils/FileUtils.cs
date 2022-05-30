@@ -12,7 +12,7 @@ namespace Prota.Editor
         {
             return Directory.GetFiles(curSelectPath, "*.*", SearchOption.TopDirectoryOnly)
                 .Where(x => validExtension.Contains(Path.GetExtension(x)))
-                .Select(x => AssetDatabase.FullPathToAssetPath(Path.GetFullPath(x)))
+                .Select(x => Path.GetFullPath(x).FullPathToAssetPath())
                 .ToList();
         }
         

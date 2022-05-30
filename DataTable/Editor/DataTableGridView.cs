@@ -3,11 +3,12 @@ using UnityEditor;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 
-using Prota.Unity;
-using System.Linq;
 using System.Collections.Generic;
 
-namespace Prota.Data
+
+using Prota.Data;
+
+namespace Prota.Editor
 {
     public class DataTableGridView : VisualElement
     {

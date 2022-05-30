@@ -7,9 +7,10 @@ using Prota.Unity;
 using XLua;
 using System.Collections.Concurrent;
 using System.IO;
-using System.Linq;
 
-namespace Prota.Lua
+using Prota.Lua;
+
+namespace Prota.Editor
 {
     [CustomEditor(typeof(LuaScript), false)]
     public class LuaScriptInspector : UnityEditor.Editor

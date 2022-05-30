@@ -2,9 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-using Prota.Unity;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Prota.Data
 {

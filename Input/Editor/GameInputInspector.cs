@@ -7,9 +7,10 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
-using Prota.Unity;
 
-namespace Prota.Input
+using Prota.Input;
+
+namespace Prota.Editor
 {
     [CustomEditor(typeof(GameInput), false)]
     [ExecuteAlways]

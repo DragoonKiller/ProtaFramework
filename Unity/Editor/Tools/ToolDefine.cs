@@ -1,7 +1,7 @@
 using System;
 
 
-namespace Prota.Unity
+namespace Prota.Editor
 {
     
     public class ProtaToolAttribute : Attribute

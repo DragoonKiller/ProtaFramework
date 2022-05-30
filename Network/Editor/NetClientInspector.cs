@@ -6,7 +6,9 @@ using System.Collections.Generic;
 
 using Prota.Unity;
 
-namespace Prota.Net
+using Prota.Net;
+
+namespace Prota.Editor
 {
     [CustomEditor(typeof(Client))]
     public class NetClientInspector : UnityEditor.Editor

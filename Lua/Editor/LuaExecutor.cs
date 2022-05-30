@@ -5,7 +5,9 @@ using UnityEditor.UIElements;
 using Prota.Unity;
 using System.IO;
 
-namespace Prota.Lua
+using Prota.Lua;
+
+namespace Prota.Editor
 {
     public class LuaExecutor : EditorWindow
     {

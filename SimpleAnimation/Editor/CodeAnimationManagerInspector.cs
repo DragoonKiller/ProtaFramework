@@ -9,7 +9,9 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace Prota.Animation
+using Prota.Animation;
+
+namespace Prota.Editor
 {
     [CustomEditor(typeof(CodeAnimationManager), false)]
     [ExecuteAlways]

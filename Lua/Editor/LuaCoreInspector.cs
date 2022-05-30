@@ -10,7 +10,9 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace Prota.Lua
+using Prota.Lua;
+
+namespace Prota.Editor
 {
     [CustomEditor(typeof(LuaCore), false)]
     [ExecuteAlways]

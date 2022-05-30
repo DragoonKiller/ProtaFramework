@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using UnityEditor.UIElements;
 
-namespace Prota.Unity
+namespace Prota.Editor
 {
     public class ProtaToolWindow : EditorWindow
     {

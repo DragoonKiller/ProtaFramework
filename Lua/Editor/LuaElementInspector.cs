@@ -9,7 +9,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 
-namespace Prota.Lua
+using Prota.Lua;
+
+namespace Prota.Editor
 {
     public class LuaElementInspector : VisualElement
     {

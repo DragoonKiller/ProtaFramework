@@ -2,8 +2,6 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System;
 using System.Collections.Generic;
-using System.Collections;
-using Prota.Unity;
 
 namespace Prota.Input
 {

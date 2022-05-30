@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 namespace Prota
 {
     public static partial class UnityMethodExtensions

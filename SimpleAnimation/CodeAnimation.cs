@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Prota.Unity;
 
 namespace Prota.Animation
 {
@@ -147,6 +148,18 @@ namespace Prota.Animation
                 .OnUpdate(x => t.anchoredPosition = (from, to).Lerp(x))
                 .OnComplete(() => t.anchoredPosition = to)
                 .Target(t);
+        }
+        
+        public static GameObject KillAllTween(this GameObject g)
+        {
+            CodeAnimationManager.instance.KillAll(g);
+            return g;
+        }
+        
+        public static T KillAllTween<T>(this T c) where T: Component
+        {
+            CodeAnimationManager.instance.KillAll(c.gameObject);
+            return c;
         }
     }
     

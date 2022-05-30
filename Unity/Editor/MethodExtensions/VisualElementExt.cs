@@ -6,9 +6,9 @@ using UnityEditor.UIElements;
 using System;
 using System.Collections.Generic;
 
-namespace Prota.Unity
+namespace Prota.Editor
 {
-    public static partial class MethodExtensions
+    public static partial class UnityMethodExtensions
     {
         public static T SetWidth<T>(this T x, float width) where T: VisualElement
         {

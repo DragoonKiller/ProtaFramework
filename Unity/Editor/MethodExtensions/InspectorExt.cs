@@ -1,11 +1,11 @@
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using Prota.Unity;
 
-
-namespace Prota.Unity
+namespace Prota.Editor
 {
-    public static partial class MethodExtensions
+    public static partial class UnityMethodExtensions
     {
         static Color recordColor;
         public static void SetColor(this EditorWindow w, Color c)

@@ -4,7 +4,9 @@ using Prota.Unity;
 using UnityEngine.UIElements;
 using System.Collections.Generic;
 
-namespace Prota.Timer
+using Prota.Timer;
+
+namespace Prota.Editor
 {
     [CustomEditor(typeof(TimerManager), false)]
     public class TimerManagerInspector : UpdateInspector
@@ -69,8 +71,8 @@ namespace Prota.Timer
         {
             realtimeCur.text = $"realtime: { Time.realtimeSinceStartup.ToString("0.000000") }";
             normalCur.text = $"time: { Time.time.ToString("0.000000") }";
-            UpdateTimer(normalLoaded, Timer.normalTimer, normalList, normalCount);
-            UpdateTimer(realtimeLoaded, Timer.realtimeTimer, realtimeList, realtimeCount);
+            UpdateTimer(normalLoaded, Timer.Timer.normalTimer, normalList, normalCount);
+            UpdateTimer(realtimeLoaded, Timer.Timer.realtimeTimer, realtimeList, realtimeCount);
         }
     }
 }

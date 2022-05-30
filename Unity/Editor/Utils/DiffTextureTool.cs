@@ -1,9 +1,8 @@
 using UnityEngine;
 using UnityEditor;
-using Prota.Unity;
 using Prota.Editor;
 
-namespace Prota.Unity
+namespace Prota.Editor
 {
     public static partial class Utils
     {

@@ -1,7 +1,7 @@
 
 using UnityEngine;
 
-namespace Prota.Unity
+namespace Prota.Editor
 {
     public static partial class Log
     {

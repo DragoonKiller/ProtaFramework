@@ -2,7 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 
-namespace Prota.Unity
+namespace Prota
 {
     public abstract class Singleton<T> : MonoBehaviour
         where T: Singleton<T> 
