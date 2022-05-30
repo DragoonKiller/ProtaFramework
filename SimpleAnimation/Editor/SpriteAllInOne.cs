@@ -3,7 +3,6 @@ using UnityEditor;
 using Prota.Editor;
 using System.Linq;
 using System.Collections.Generic;
-using Prota.Unity;
 using System.IO;
 
 namespace Prota.Animation

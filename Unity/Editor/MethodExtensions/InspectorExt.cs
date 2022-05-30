@@ -1,7 +1,6 @@
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
-using Prota.Unity;
 
 namespace Prota.Editor
 {

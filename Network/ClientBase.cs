@@ -8,8 +8,6 @@ using System.Net;
 using Prota.Lua;
 using System.Collections.Generic;
 
-using Prota.Unity;
-
 using NetCallback = System.Action<Prota.Net.NetId, LiteNetLib.Utils.NetDataReader, LiteNetLib.DeliveryMethod>;
 
 namespace Prota.Net

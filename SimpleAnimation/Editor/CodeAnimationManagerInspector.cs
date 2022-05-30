@@ -3,8 +3,6 @@ using UnityEditor;
 using System;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
-using Prota.Unity;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;

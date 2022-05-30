@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using UnityEngine.UIElements;
 
-namespace Prota.Unity
+namespace Prota.Editor
 {
     public abstract class UpdateInspector : UnityEditor.Editor
     {

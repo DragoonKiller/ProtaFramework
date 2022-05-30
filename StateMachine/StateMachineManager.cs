@@ -1,6 +1,5 @@
 using UnityEngine;
 using Prota.Timer;
-using Prota.Unity;
 using System.Collections.Generic;
 
 namespace Prota.StateMachine

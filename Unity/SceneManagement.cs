@@ -2,9 +2,9 @@ using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Prota.Unity
+namespace Prota
 {
-    public static class Scene
+    public static class ProtaScene
     {
         public static void ForeachScene(Action<UnityEngine.SceneManagement.Scene> f)
         {

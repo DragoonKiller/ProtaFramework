@@ -3,7 +3,6 @@ using UnityEditor;
 using System;
 using XLua;
 using System.Collections.Generic;
-using Prota.Unity;
 using System.Linq;
 
 namespace Prota.Lua

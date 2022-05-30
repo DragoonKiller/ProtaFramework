@@ -1,10 +1,6 @@
 using System;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEditor;
-using UnityEditor.SceneManagement;
-using System.Collections.Generic;
-using Prota.Unity;
 
 namespace Prota.Editor
 {

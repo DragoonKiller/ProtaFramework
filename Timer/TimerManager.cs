@@ -1,4 +1,3 @@
-using Prota.Unity;
 using UnityEngine;
 
 namespace Prota.Timer

@@ -3,7 +3,6 @@ using UnityEditor;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 using System;
-using Prota.Unity;
 using Prota;
 
 using Prota.Editor;

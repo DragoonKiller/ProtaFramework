@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using Prota.Unity;
 
 namespace Prota.Animation
 {

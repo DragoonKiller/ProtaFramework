@@ -4,7 +4,6 @@ using XLua;
 using System.Collections.Generic;
 using System;
 using System.IO;
-using Prota.Unity;
 
 namespace Prota.Lua
 {
