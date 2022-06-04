@@ -4,9 +4,10 @@ using UnityEngine;
 
 namespace Prota.UI
 {
-    public class UIElement : MonoBehaviour
+    // 基础 UI 元素.
+    [DisallowMultipleComponent]
+    public class UIContent : MonoBehaviour
     {
-        
         
     }
 }

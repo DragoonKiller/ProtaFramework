@@ -16,7 +16,7 @@ namespace Prota
         
         public static F SetSync<K, G, H, F>(
             this F target,
-            IDictionary<K, H> val,
+            IReadOnlyDictionary<K, H> val,
             Func<K, H, G> newFunc,
             Action<K, G, H> updateFunc,
             Action<K, G> removeFunc

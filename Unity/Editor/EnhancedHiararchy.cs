@@ -2,20 +2,49 @@ using UnityEngine;
 using UnityEditor;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Prota.Editor
 {
-    public class EnhancedHiararchy : UnityEditor.Editor
+    [InitializeOnLoad]
+    public class EnhancedHierarchy : UnityEditor.Editor
     {
-        static EnhancedHiararchy()
+        static EnhancedHierarchy()
         {
-            EditorApplication.hierarchyWindowItemOnGUI += OnHiararchyGUI;
+            UpdateSettings();
         }
-
+        
+        static bool registered
+        {
+            get => EditorPrefs.GetBool("Prota:EnhancedHierarchyEnabled", true);
+            set => EditorPrefs.SetBool("Prota:EnhancedHierarchyEnabled", value);
+        }
+        
+        [MenuItem("ProtaFramework/Editor/Toggle Enhanced Hierarchy")]
+        static void SwitchEnhancedHierarchy()
+        {
+            registered = !registered;
+            UpdateSettings();
+        }
+        
+        static void UpdateSettings()
+        {
+            if(!registered) 
+            {
+                UnityEngine.Debug.Log($"Enhanced Hierarchy disabled.");
+                EditorApplication.hierarchyWindowItemOnGUI -= OnHierarchyGUI;
+            }
+            else
+            {
+                UnityEngine.Debug.Log($"Enhanced Hierarchy enabled.");
+                EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyGUI;
+            }
+        }
+        
         private const int pixelPerDepth = 14;
         static readonly List<Component> comps = new List<Component>();
         
-        static void OnHiararchyGUI(int instanceId, Rect area)
+        static void OnHierarchyGUI(int instanceId, Rect area)
         {
             var originalGUIColor = GUI.color;
             
