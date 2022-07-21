@@ -16,9 +16,9 @@ namespace Prota.Procedural
         
         [SerializeField] TextureType recordType;
         
-        [SerializeField] Texture texture;
+        public Texture texture;
         
-        [SerializeField] Sprite sprite;
+        public Sprite sprite;
         
         void Start()
         {
