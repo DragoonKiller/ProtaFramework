@@ -105,6 +105,9 @@ namespace Prota
         public static Vector2 Ceil(this Vector2 a) => new Vector2(a.x.Ceil(), a.y.Ceil());
         public static Vector3 Ceil(this Vector3 a) => new Vector3(a.x.Ceil(), a.y.Ceil(), a.z.Ceil());
         
+        public static Vector3 Divide(this Vector3 a, Vector3 b) => new Vector3(a.x / b.x, a.y / b.x, a.z / b.z);
+        public static Vector2 Divide(this Vector2 a, Vector2 b) => new Vector2(a.x / b.x, a.y / b.x);
+        
     }
     
 }

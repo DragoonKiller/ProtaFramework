@@ -62,7 +62,5 @@ namespace Prota
         public static float XMap(this float x, float a, float b) => (x - a) / (b - a);
         public static float XMap(this float x, float a, float b, float from, float to) => (x - a) / (b - a) * (to - from) + from;
         
-        
-        
     }
 }
