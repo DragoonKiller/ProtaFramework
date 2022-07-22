@@ -34,7 +34,7 @@ namespace Prota.VisualEffect
         
         void OnDestroy()
         {
-            if(rd.material == mat)
+            if(rd.material == mat && rd.sharedMaterial != mat)
             {
                 DestroyImmediate(mat);
             }

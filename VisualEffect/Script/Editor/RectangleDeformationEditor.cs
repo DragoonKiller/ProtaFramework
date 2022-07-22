@@ -21,6 +21,7 @@ namespace Prota.Editor
             t.coordBottomRight = PosHandle(t, t.coordBottomRight, sz, sz.min);
             t.coordTopLeft = PosHandle(t, t.coordTopLeft, sz, sz.min);
             t.coordTopRight = PosHandle(t, t.coordTopRight, sz, sz.min);
+            EditorUtility.SetDirty(target);
         }
         
         Vector2 PosHandle(RectangleDeformation t, Vector2 curHandle, Bounds b, Vector2 localOffset)
@@ -31,6 +32,5 @@ namespace Prota.Editor
             res = res.Divide(b.size);
             return res;
         }
-    
     }
 }

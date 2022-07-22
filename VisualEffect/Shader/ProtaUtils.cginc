@@ -17,7 +17,8 @@ float nan()
 
 float2 solve2(float a, float b, float c)
 {
-    if(abs(a) < 1e-6) return -c / b;
+    if(abs(b) < 1e-7) return nan();
+    if(abs(a) < 1e-7) return -c / b;
     float s = b * b - 4 * a * c;
     if(isNan(s) || s < 0) return float2(nan(), nan());
     float ss = sqrt(s);

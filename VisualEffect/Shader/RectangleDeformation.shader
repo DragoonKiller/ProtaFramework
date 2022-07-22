@@ -17,6 +17,7 @@ Shader "Hidden/RectangleDeformation"
         Cull Off
         ZWrite On
         ZTest Less
+        Blend SrcAlpha OneMinusSrcAlpha
 
         Pass
         {
@@ -61,9 +62,10 @@ Shader "Hidden/RectangleDeformation"
             float solveOneDirection(float2 baseA, float2 dirA, float2 baseB, float2 dirB, float2 target)
             {
                 float a = cross(dirA, dirB);
-                float b = cross(dirB, baseA - target) + cross(dirA, baseB - target);
+                float b = cross(dirA, baseB - target) + cross(baseA - target, dirB);
                 float c = cross(baseA - target, baseB - target);
                 float2 sol = solve2(a, b, c);
+                
                 float2 s = float2(
                     dot(sol.x * dirA + baseA - target, sol.x * dirB + baseB - target),
                     dot(sol.y * dirA + baseA - target, sol.y * dirB + baseB - target)
@@ -76,15 +78,15 @@ Shader "Hidden/RectangleDeformation"
             fixed4 frag (v2f i) : SV_Target
             {
                 float x = solveOneDirection(_CoordBottomLeft, _CoordBottomRight - _CoordBottomLeft, _CoordTopLeft, _CoordTopRight - _CoordTopLeft, i.uv);
-                float y = 0.02; // solveOneDirection(_CoordBottomLeft, _CoordTopLeft - _CoordBottomLeft, _CoordBottomRight, _CoordTopRight - _CoordBottomRight, i.uv);
+                float y = solveOneDirection(_CoordBottomLeft, _CoordTopLeft - _CoordBottomLeft, _CoordBottomRight, _CoordTopRight - _CoordBottomRight, i.uv);
                 float2 uv = float2(x, y);
                 
                 fixed4 col = tex2D(_MainTex, uv);
-                // if(!(0 <= uv.x && uv.x <= 1 && 0 <= uv.y && uv.y <= 1)) col = float4(0, 0, 0, 0);
+                if(!(0 <= uv.x && uv.x <= 1 && 0 <= uv.y && uv.y <= 1)) col = float4(0, 0, 0, 0);
                 
                 // col = float4(i.uv, 0, 1);
-                col = float4(uv, 0, 1);
-                // col *= i.color * _Color;
+                // col = float4(uv, 0, 1);
+                col *= i.color * _Color;
                 return col;
             }
             ENDCG
