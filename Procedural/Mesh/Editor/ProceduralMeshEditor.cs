@@ -10,9 +10,10 @@ namespace Prota.Editor
     [CustomEditor(typeof(ProceduralMesh))]
     public class ProceduralMeshEditor : UnityEditor.Editor
     {
+        ProceduralMesh t => target as ProceduralMesh;
+        
         public void OnSceneGUI()
         {
-            var t = target as ProceduralMesh;
             Undo.RecordObject(t, "SetMesh");
             
             var g = t.meshGenerator;
@@ -28,20 +29,31 @@ namespace Prota.Editor
             var modified = false;
             
             var a = g.bottomLeft;
-            g.bottomLeft = Handles.PositionHandle(g.bottomLeft, Quaternion.identity);
-            if(a != g.bottomLeft) modified = true;
             
-            a = g.bottonRight;
-            g.bottonRight = Handles.PositionHandle(g.bottonRight, Quaternion.identity);
-            if(a != g.bottonRight) modified = true;
+            Vector3 Transform(Vector3 v)
+            {
+                return t.transform.InverseTransformPoint(Handles.PositionHandle(t.transform.TransformPoint(v), Quaternion.identity));
+            }
             
-            a = g.topLeft;
-            g.topLeft = Handles.PositionHandle(g.topLeft, Quaternion.identity);
-            if(a != g.topLeft) modified = true;
+            modified |= g.bottomLeft.DiffModify(Transform(g.bottomLeft));
+            modified |= g.bottonRight.DiffModify(Transform(g.bottonRight));
+            modified |= g.topLeft.DiffModify(Transform(g.topLeft));
+            modified |= g.topRight.DiffModify(Transform(g.topRight));
             
-            a = g.topRight;
-            g.topRight = Handles.PositionHandle(g.topRight, Quaternion.identity);
-            if(a != g.topRight) modified = true;
+            // g.bottomLeft = Transform(g.bottomLeft);
+            // if(a != g.bottomLeft) modified = true;
+            // 
+            // a = g.bottonRight;
+            // g.bottonRight = Transform(g.bottonRight);
+            // if(a != g.bottonRight) modified = true;
+            // 
+            // a = g.topLeft;
+            // g.topLeft = Transform(g.topLeft);
+            // if(a != g.topLeft) modified = true;
+            // 
+            // a = g.topRight;
+            // g.topRight = Transform(g.topRight);
+            // if(a != g.topRight) modified = true;
             
             if(modified)
             {

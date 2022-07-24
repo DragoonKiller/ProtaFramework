@@ -9,7 +9,7 @@ namespace Prota.Procedural
         {
             w += 1;
             h += 1;
-            var res = new Texture2D(w, h, TextureFormat.RGBA32, 0, true, true);
+            var res = new Texture2D(w, h, TextureFormat.RGBA32, 0, true);
             var data = new Color32[w * h];
             for(int i = 0; i < h; i++) for(int j = 0; j < w; j++)
             {

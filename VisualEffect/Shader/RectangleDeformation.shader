@@ -41,14 +41,18 @@ Shader "Hidden/RectangleDeformation"
                 float4 vertex : SV_POSITION;
                 float4 color : COLOR;
             };
-
-
+            
+            CBUFFER_START(UnityPerDraw)
+            CBUFFER_END
+            
+            CBUFFER_START(UnityPerMaterial)
             sampler2D _MainTex;
             float4 _Color;
             float2 _CoordBottomLeft;
             float2 _CoordBottomRight;
             float2 _CoordTopLeft;
             float2 _CoordTopRight;
+            CBUFFER_END
 
             v2f vert (appdata v)
             {
@@ -64,7 +68,12 @@ Shader "Hidden/RectangleDeformation"
                 float a = cross(dirA, dirB);
                 float b = cross(dirA, baseB - target) + cross(baseA - target, dirB);
                 float c = cross(baseA - target, baseB - target);
-                float2 sol = solve2(a, b, c);
+                int rootCount = 0;
+                float2 sol = float2(0, 0);
+                solve2(a, b, c, sol, rootCount);
+                
+                if(rootCount == 0) return 0;
+                if(rootCount == 1) return sol.x;
                 
                 float2 s = float2(
                     dot(sol.x * dirA + baseA - target, sol.x * dirB + baseB - target),

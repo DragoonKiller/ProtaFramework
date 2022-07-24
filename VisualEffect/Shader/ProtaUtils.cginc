@@ -5,24 +5,38 @@ float xmap(float x, float a, float b, float l, float r)
     return (x - a) / (b - a) * (r - l) + l;
 }
 
-bool isNan(float x)
-{
-    return !(x < 0.f || x > 0.f || x == 0.f);
-}
-
 float nan()
 {
     return 0.0 / 0.0;
 }
 
-float2 solve2(float a, float b, float c)
+void solve2(float a, float b, float c, out float2 root, out int rootCount)
 {
-    if(abs(b) < 1e-7) return nan();
-    if(abs(a) < 1e-7) return -c / b;
+    if(abs(b) < 1e-7)
+    {
+        rootCount = 0;
+        root = float2(0, 0);
+        return;
+    }
+    
+    if(abs(a) < 1e-7)
+    {
+        rootCount = 1;
+        root = float2(-c / b, -c / b);
+        return;
+    }
+    
     float s = b * b - 4 * a * c;
-    if(isNan(s) || s < 0) return float2(nan(), nan());
+    if(isnan(s) || s < 0)
+    {
+        rootCount = 0;
+        root = float2(0, 0);
+        return;
+    }
+    
     float ss = sqrt(s);
-    return float2((-b + ss) / (2 * a), (-b - ss) / (2 * a));
+    rootCount = 2;
+    root = float2((-b + ss) / (2 * a), (-b - ss) / (2 * a));
 }
 
 
