@@ -16,12 +16,17 @@ namespace Prota.Editor
             
             HandleUtility.AddControl(0, 1000);
             
-            var sz = t.rd.bounds;
+            var sz = t.GetComponent<Renderer>().bounds;
+            
+            EditorGUI.BeginChangeCheck();
             t.coordBottomLeft = PosHandle(t, t.coordBottomLeft, sz, sz.min);
             t.coordBottomRight = PosHandle(t, t.coordBottomRight, sz, sz.min);
             t.coordTopLeft = PosHandle(t, t.coordTopLeft, sz, sz.min);
             t.coordTopRight = PosHandle(t, t.coordTopRight, sz, sz.min);
-            EditorUtility.SetDirty(target);
+            if(EditorGUI.EndChangeCheck())
+            {
+                EditorUtility.SetDirty(target);
+            }
         }
         
         Vector2 PosHandle(RectangleDeformation t, Vector2 curHandle, Bounds b, Vector2 localOffset)

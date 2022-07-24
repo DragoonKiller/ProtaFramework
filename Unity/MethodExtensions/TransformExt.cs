@@ -90,5 +90,7 @@ namespace Prota
             t.localScale = Vector3.one;
             return t;
         }
+        
+        public static bool IsPrefab(this Transform t) => t.gameObject.IsPrefab();
     }
 }

@@ -5,6 +5,8 @@ using UnityEngine;
 namespace Prota.VisualEffect
 {
     [ExecuteAlways]
+    [RequireComponent(typeof(Renderer))]
+    [RequireComponent(typeof(MaterialHandler))]
     public class RectangleDeformation : MonoBehaviour
     {
         public Vector2 coordBottomLeft = new Vector2(0, 0);
@@ -12,32 +14,14 @@ namespace Prota.VisualEffect
         public Vector2 coordTopLeft = new Vector2(0, 1);
         public Vector2 coordTopRight = new Vector2(1, 1);
         
-        Material mat;
-        
-        public Renderer rd => this.GetComponent<Renderer>();
-        
         void Update()
         {
-            if(rd == null) return;
-            
-            if(mat == null || mat != rd.sharedMaterial)
-            {
-                mat = new Material(rd.sharedMaterial);
-                rd.material = mat;
-            }
-            
+            var mat = this.GetMaterialInstance();
+            if(mat == null) return;
             mat.SetVector("_CoordBottomLeft", coordBottomLeft);
             mat.SetVector("_CoordBottomRight", coordBottomRight);
             mat.SetVector("_CoordTopLeft", coordTopLeft);
             mat.SetVector("_CoordTopRight", coordTopRight);
-        }
-        
-        void OnDestroy()
-        {
-            if(rd.material == mat && rd.sharedMaterial != mat)
-            {
-                DestroyImmediate(mat);
-            }
         }
         
         

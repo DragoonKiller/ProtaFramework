@@ -29,5 +29,7 @@ namespace Prota
             g.transform.SetIdentity();
             return g;
         }
+        
+        public static bool IsPrefab(this GameObject g) => !g.scene.IsValid();
     }
 }

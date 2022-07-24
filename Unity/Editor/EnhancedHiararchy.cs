@@ -27,6 +27,13 @@ namespace Prota.Editor
             UpdateSettings();
         }
         
+        [MenuItem("ProtaFramework/Editor/GC Unused Assets")]
+        static void GCUnusedAssets()
+        {
+            Resources.UnloadUnusedAssets();
+        }
+        
+        
         static void UpdateSettings()
         {
             if(!registered) 
