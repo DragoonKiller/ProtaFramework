@@ -25,10 +25,12 @@ namespace Prota
         
         public Material[] mats => isShared ? materialTemplates : materialInstances;
         
+        static Material[] tempArr = new Material[1];
         
         void Awake()
         {
-            if(materialTemplates == null) materialTemplates = new Material[1];
+            materialTemplates = tempArr;
+            materialInstances = tempArr;
         }
         
         void OnDestroy()

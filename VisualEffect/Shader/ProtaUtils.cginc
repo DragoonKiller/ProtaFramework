@@ -1,5 +1,13 @@
 
 
+#define isnan _ProtaIsNan
+
+bool _ProtaIsNan(float a) { return !(a < 0.0) && !(a == 0.0) && !(a > 0.0); }
+bool _ProtaIsNan(float2 a) { return isnan(a.x) || isnan(a.y); }
+bool _ProtaIsNan(float3 a) { return isnan(a.x) || isnan(a.y) || isnan(a.z); }
+bool _ProtaIsNan(float4 a) { return isnan(a.x) || isnan(a.y) || isnan(a.z) || isnan(a.w); }
+
+
 float xmap(float x, float a, float b, float l, float r)
 {
     return (x - a) / (b - a) * (r - l) + l;

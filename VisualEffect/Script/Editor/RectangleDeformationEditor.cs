@@ -19,23 +19,32 @@ namespace Prota.Editor
             var sz = t.GetComponent<Renderer>().bounds;
             
             EditorGUI.BeginChangeCheck();
-            t.coordBottomLeft = PosHandle(t, t.coordBottomLeft, sz, sz.min);
-            t.coordBottomRight = PosHandle(t, t.coordBottomRight, sz, sz.min);
-            t.coordTopLeft = PosHandle(t, t.coordTopLeft, sz, sz.min);
-            t.coordTopRight = PosHandle(t, t.coordTopRight, sz, sz.min);
+            t.coordBottomLeft = PosHandle(1, t, t.coordBottomLeft, sz, sz.min);
+            t.coordBottomRight = PosHandle(2, t, t.coordBottomRight, sz, sz.min);
+            t.coordTopLeft = PosHandle(3, t, t.coordTopLeft, sz, sz.min);
+            t.coordTopRight = PosHandle(4, t, t.coordTopRight, sz, sz.min);
             if(EditorGUI.EndChangeCheck())
             {
                 EditorUtility.SetDirty(target);
             }
         }
         
-        Vector2 PosHandle(RectangleDeformation t, Vector2 curHandle, Bounds b, Vector2 localOffset)
+        Vector2 PosHandle(int id, RectangleDeformation t, Vector2 curHandle, Bounds b, Vector2 localOffset)
         {
             var p = curHandle * b.size + localOffset;
-            var res = Handles.PositionHandle(p, Quaternion.identity);
-            res -= (Vector3)(localOffset);
-            res = res.Divide(b.size);
-            return res;
+            
+            using(var handleContext = HandleContext.Get())
+            {
+                Handles.color = new Color(.2f, 1f, .2f, 1);
+                var size = HandleUtility.GetHandleSize(p) * 0.1f;
+                var snap = Vector3.one * 0.5f;
+                var res = Handles.FreeMoveHandle(id, p, size, snap, (controlID, position, rotation, size, eventType) => {
+                    Handles.DotHandleCap(controlID, position, rotation, size, eventType);
+                });
+                res -= (Vector3)(localOffset);
+                res = res.Divide(b.size);
+                return res;
+            }
         }
     }
 }

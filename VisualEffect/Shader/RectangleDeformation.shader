@@ -72,7 +72,7 @@ Shader "Hidden/RectangleDeformation"
                 float2 sol = float2(0, 0);
                 solve2(a, b, c, sol, rootCount);
                 
-                if(rootCount == 0) return 0;
+                if(rootCount == 0) return nan();
                 if(rootCount == 1) return sol.x;
                 
                 float2 s = float2(
@@ -91,6 +91,8 @@ Shader "Hidden/RectangleDeformation"
                 float2 uv = float2(x, y);
                 
                 fixed4 col = tex2D(_MainTex, uv);
+                if(isnan(uv.x) || isnan(uv.y)) col = float4(0, 0, 0, 0);
+                if(isinf(uv.x) || isinf(uv.y)) col = float4(0, 0, 0, 0);
                 if(!(0 <= uv.x && uv.x <= 1 && 0 <= uv.y && uv.y <= 1)) col = float4(0, 0, 0, 0);
                 
                 // col = float4(i.uv, 0, 1);

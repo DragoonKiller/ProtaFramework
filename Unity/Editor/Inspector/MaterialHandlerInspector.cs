@@ -22,6 +22,7 @@ namespace Prota.Editor
         {
             var root = new VisualElement();
             
+            root.AddChild(new PropertyField(serializedObject.FindProperty("isShared")));
             root.AddChild(new PropertyField(serializedObject.FindProperty("materialTemplates")));
             root.AddChild(new VisualElement().AsHorizontalSeperator(2));
             root.AddChild(matInstanceRoot = new VisualElement()
