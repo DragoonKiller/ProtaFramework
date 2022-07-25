@@ -3,20 +3,43 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using Prota.VisualEffect;
+using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 
 namespace Prota.Editor
 {
     [CustomEditor(typeof(RectangleDeformation))]
-    public class RectangleDeformationEditor : UnityEditor.Editor
+    public class RectangleDeformationEditor : UpdateInspector
     {
+        RectangleDeformation t => target as RectangleDeformation;
+        public override VisualElement CreateInspectorGUI()
+        {
+            var root = new VisualElement();
+            
+            root.AddChild(new PropertyField(serializedObject.FindProperty("coordBottomLeft")));
+            root.AddChild(new PropertyField(serializedObject.FindProperty("coordBottomRight")));
+            root.AddChild(new PropertyField(serializedObject.FindProperty("coordTopLeft")));
+            root.AddChild(new PropertyField(serializedObject.FindProperty("coordTopRight")));
+            
+            root.AddChild(new Button(() => {
+                t.coordBottomLeft = Vector2.zero;
+                t.coordBottomRight = Vector2.right;
+                t.coordTopLeft = Vector2.up;
+                t.coordTopRight = Vector2.one;
+            }){ text = "Set default" });
+            
+            return root;
+        }
+
         public void OnSceneGUI()
         {
-            var t = target as RectangleDeformation;
             Undo.RecordObject(t, "SetMesh");
             
             HandleUtility.AddControl(0, 1000);
             
             var sz = t.GetComponent<Renderer>().bounds;
+            
+            if(sz.size.ToVec2().Area() <= 1e6f) return;
             
             EditorGUI.BeginChangeCheck();
             t.coordBottomLeft = PosHandle(1, t, t.coordBottomLeft, sz, sz.min);
@@ -28,7 +51,12 @@ namespace Prota.Editor
                 EditorUtility.SetDirty(target);
             }
         }
-        
+
+        protected override void Update()
+        {
+            
+        }
+
         Vector2 PosHandle(int id, RectangleDeformation t, Vector2 curHandle, Bounds b, Vector2 localOffset)
         {
             var p = curHandle * b.size + localOffset;
@@ -36,9 +64,9 @@ namespace Prota.Editor
             using(var handleContext = HandleContext.Get())
             {
                 Handles.color = new Color(.2f, 1f, .2f, 1);
-                var size = HandleUtility.GetHandleSize(p) * 0.1f;
+                var size = HandleUtility.GetHandleSize(p) * 0.05f;
                 var snap = Vector3.one * 0.5f;
-                var res = Handles.FreeMoveHandle(id, p, size, snap, (controlID, position, rotation, size, eventType) => {
+                var res = Handles.FreeMoveHandle(id, p, Quaternion.identity, size, snap, (controlID, position, rotation, size, eventType) => {
                     Handles.DotHandleCap(controlID, position, rotation, size, eventType);
                 });
                 res -= (Vector3)(localOffset);

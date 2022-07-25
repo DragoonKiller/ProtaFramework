@@ -13,7 +13,7 @@ namespace Prota
     {
         Renderer rd => this.GetComponent<Renderer>();
         
-        [SerializeReference] Material[] materialTemplates;
+        [SerializeField] Material[] materialTemplates;
         
         [SerializeReference] Material[] materialCloneSource;
         
@@ -29,8 +29,9 @@ namespace Prota
         
         void Awake()
         {
-            materialTemplates = tempArr;
-            materialInstances = tempArr;
+            if(materialTemplates == null) materialTemplates = tempArr;
+            materialCloneSource = materialTemplates.ToArray();
+            materialInstances = materialTemplates.ToArray();
         }
         
         void OnDestroy()

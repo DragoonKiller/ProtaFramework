@@ -83,6 +83,10 @@ namespace Prota
         public static float Length(this (Vector3 from, Vector3 to) p) => p.Vec().magnitude;
         
         
+        public static float Area(this Vector2 p) => p.x * p.y;
+        
+        public static float Volume(this Vector3 p) => p.x * p.y * p.z;
+        
         public static Vector2 ToVec2(this Vector3 p) => new Vector2(p.x, p.y);
         public static Vector2 ToVec2(this Vector4 p) => new Vector2(p.x, p.y);
         public static Vector3 ToVec3(this Vector2 p, float z = 0) => new Vector3(p.x, p.y, z);
