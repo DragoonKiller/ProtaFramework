@@ -15,9 +15,9 @@ namespace Prota
         
         [SerializeField] Material[] materialTemplates;
         
-        [SerializeReference] Material[] materialCloneSource;
+        Material[] materialCloneSource;
         
-        [SerializeReference] Material[] materialInstances;
+        Material[] materialInstances;
         
         [SerializeField] public bool isShared = false;
         

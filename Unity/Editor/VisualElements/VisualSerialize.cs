@@ -60,11 +60,6 @@ namespace UnityEngine.UIElements
             refresh?.Invoke();
         }
         
-        public event Action onClickKey;
-        public event Action onClickValue;
-        
-        
-        
         protected VisualElement CreateElementFromObject(Func<object> Get, Action<object> Set, out VisualElement subElement)
         {
             subElement = null;
