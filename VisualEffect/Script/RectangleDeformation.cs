@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+using Prota.Unity;
+
 namespace Prota.VisualEffect
 {
     [ExecuteAlways]

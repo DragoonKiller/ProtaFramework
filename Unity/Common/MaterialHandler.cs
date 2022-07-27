@@ -59,6 +59,9 @@ namespace Prota
                 materialTemplates.CopyTo(s, 0);
                 s[index] = material;
             }
+            
+            Update();
+            
             return this;
         }
         
