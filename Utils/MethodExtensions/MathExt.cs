@@ -62,5 +62,12 @@ namespace Prota
         public static float XMap(this float x, float a, float b) => (x - a) / (b - a);
         public static float XMap(this float x, float a, float b, float from, float to) => (x - a) / (b - a) * (to - from) + from;
         
+        public static float Lerp(this (float a, float b) v, float x) => (v.b - v.a) * x + v.a;
+        public static double Lerp(this (double a, double b) v, double x) => (v.b - v.a) * x + v.a;
+        
+        public static float InvLerp(this (float a, float b) v, float x) => (x - v.a) / (v.b - v.a);
+        public static double InvLerp(this (double a, double b) v, double x) => (x - v.a) / (v.b - v.a);
+        
+        
     }
 }
