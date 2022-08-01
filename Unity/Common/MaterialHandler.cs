@@ -107,7 +107,7 @@ namespace Prota
         void Clear()
         {
             materialCloneSource = null;
-            materialInstances.DestroyAllImmediate();
+            materialInstances.Where(x => x.name.StartsWith("[!]")).DestroyAllImmediate();
         }
         
     }

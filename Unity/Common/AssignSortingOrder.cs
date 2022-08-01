@@ -47,7 +47,7 @@ namespace Prota
         
         void OnDestroy()
         {
-            if(this.TryGetComponent<Renderer>(out var renderer)) DestroyImmediate(renderer);
+            if(this.TryGetComponent<Renderer>(out var renderer)) Destroy(renderer);
         }
     }
     
