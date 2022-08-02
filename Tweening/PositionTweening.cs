@@ -5,11 +5,11 @@ namespace Prota.Tweening
 {
     public struct TweenComposedMove
     {
-        public readonly TweeningHandle x;
-        public readonly TweeningHandle y;
-        public readonly TweeningHandle z;
+        public readonly TweenHandle x;
+        public readonly TweenHandle y;
+        public readonly TweenHandle z;
 
-        public TweenComposedMove(TweeningHandle x, TweeningHandle y, TweeningHandle z)
+        public TweenComposedMove(TweenHandle x, TweenHandle y, TweenHandle z)
         {
             this.x = x;
             this.y = y;
@@ -21,14 +21,14 @@ namespace Prota.Tweening
     
     public static class PositionTweening
     {
-        public static TweeningHandle TweenMoveX(this Transform g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.MoveX, g, SingleMoveX).SetDuration(time).RecordTime();
+        public static TweenHandle TweenMoveX(this Transform g, float to, float time)
+            => ProtaTweeningManager.instance.New(TweeningType.MoveX, g, SingleMoveX).SetFrom(g.position.x).Start(time);
         
-        public static TweeningHandle TweenMoveY(this Transform g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.MoveY, g, SingleMoveY).SetDuration(time).RecordTime();
+        public static TweenHandle TweenMoveY(this Transform g, float to, float time)
+            => ProtaTweeningManager.instance.New(TweeningType.MoveY, g, SingleMoveY).SetFrom(g.position.y).Start(time);
 
-        public static TweeningHandle TweenMoveZ(this Transform g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.MoveZ, g, SingleMoveZ).SetDuration(time).RecordTime();
+        public static TweenHandle TweenMoveZ(this Transform g, float to, float time)
+            => ProtaTweeningManager.instance.New(TweeningType.MoveZ, g, SingleMoveZ).SetFrom(g.position.z).Start(time);
         
         public static TweenComposedMove TweenMove(this Transform g, Vector3 to, float time)
         {
@@ -38,34 +38,6 @@ namespace Prota.Tweening
                 TweenMoveZ(g, to.z, time)
             );
         }
-        
-        
-        
-        
-        public static TweeningHandle TweenTrackingX(this Transform g, Transform target, float time)
-        {
-            return ProtaTweeningManager.instance.New(TweeningType.MoveX, g, TrackingMoveX).SetDuration(time).RecordTime().SetCustomData(target);
-        }
-        
-        public static TweeningHandle TweenTrackingY(this Transform g, Transform target, float time)
-        {
-            return ProtaTweeningManager.instance.New(TweeningType.MoveY, g, TrackingMoveY).SetDuration(time).RecordTime().SetCustomData(target);
-        }
-
-        public static TweeningHandle TweenTrackingZ(this Transform g, Transform target, float time)
-        {
-            return ProtaTweeningManager.instance.New(TweeningType.MoveZ, g, TrackingMoveZ).SetDuration(time).RecordTime().SetCustomData(target);
-        }
-        
-        public static TweenComposedMove TweenTracking(this Transform g, Transform target, float time)
-        {
-            return new TweenComposedMove(
-                TweenTrackingX(g, target, time),
-                TweenTrackingY(g, target, time),
-                TweenTrackingZ(g, target, time)
-            );
-        }
-        
         
         
         public static Transform ClearTweenMoveX(this Transform g)
@@ -115,19 +87,11 @@ namespace Prota.Tweening
             return ref m;
         }
         
-        public static ref TweenComposedMove RecordTime(ref this TweenComposedMove m, bool isRealtime)
+        public static ref TweenComposedMove Start(ref this TweenComposedMove m, float duration, bool realtime = false)
         {
-            m.x.RecordTime(isRealtime);
-            m.y.RecordTime(isRealtime);
-            m.z.RecordTime(isRealtime);
-            return ref m;
-        }
-        
-        public static ref TweenComposedMove SetDuration(ref this TweenComposedMove m, float duration)
-        {
-            m.x.SetDuration(duration);
-            m.y.SetDuration(duration);
-            m.z.SetDuration(duration);
+            m.Start(duration, realtime);
+            m.Start(duration, realtime);
+            m.Start(duration, realtime);
             return ref m;
         }
         
@@ -151,26 +115,26 @@ namespace Prota.Tweening
         // ============================================================================================================
         
         
-        static void SingleMoveX(TweeningHandle h, float t)
+        static void SingleMoveX(TweenHandle h, float t)
         {
             var tr = (Transform)h.target;
             tr.localPosition = tr.localPosition.WithX(h.Evaluate(t));
         }
         
-        static void SingleMoveY(TweeningHandle h, float t)
+        static void SingleMoveY(TweenHandle h, float t)
         {
             var tr = (Transform)h.target;
             tr.localPosition = tr.localPosition.WithY(h.Evaluate(t));
         }
         
-        static void SingleMoveZ(TweeningHandle h, float t)
+        static void SingleMoveZ(TweenHandle h, float t)
         {
             var tr = (Transform)h.target;
             tr.localPosition = tr.localPosition.WithZ(h.Evaluate(t));
         }
         
         
-        static void TrackingMoveX(TweeningHandle h, float t)
+        static void TrackingMoveX(TweenHandle h, float t)
         {
             if(h.customData == null) return;
             var tr = (Transform)h.target;
@@ -178,7 +142,7 @@ namespace Prota.Tweening
             tr.localPosition = tr.localPosition.WithX(h.Evaluate(t));
         }
         
-        static void TrackingMoveY(TweeningHandle h, float t)
+        static void TrackingMoveY(TweenHandle h, float t)
         {
             if(h.customData == null) return;
             var tr = (Transform)h.target;
@@ -186,7 +150,7 @@ namespace Prota.Tweening
             tr.localPosition = tr.localPosition.WithY(h.Evaluate(t));
         }
         
-        static void TrackingMoveZ(TweeningHandle h, float t)
+        static void TrackingMoveZ(TweenHandle h, float t)
         {
             if(h.customData == null) return;
             var tr = (Transform)h.target;

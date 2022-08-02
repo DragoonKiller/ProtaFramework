@@ -10,16 +10,16 @@ namespace Prota.Tweening
     {
         public static long idGen = 0;
         
-        public Dictionary<long, TweeningHandle> idMap = new Dictionary<long, TweeningHandle>();
+        public Dictionary<long, TweenHandle> idMap = new Dictionary<long, TweenHandle>();
         
         public Dictionary<UnityEngine.Object, BindingList> targetMap = new Dictionary<UnityEngine.Object, BindingList>(); 
         
-        public List<long> toBeRemoved = new List<long>();
+        public List<(long, TweenHandle)> toBeRemoved = new List<(long, TweenHandle)>();
         
-        public ObjectPool<TweeningHandle> pool = new ObjectPool<TweeningHandle>(() => new TweeningHandle(),
+        public ObjectPool<TweenHandle> pool = new ObjectPool<TweenHandle>(() => new TweenHandle(),
              null,
              v => {
-                v = null;
+                v.customData = null;
                 v.target = null;
                 v.SetGuard(null);
              },
@@ -34,7 +34,7 @@ namespace Prota.Tweening
             
             foreach(var (k, v) in idMap)
             {
-                v.callback(v, v.GetTimeLerp());
+                v.update(v, v.GetTimeLerp());
             }
         }
         
@@ -43,20 +43,29 @@ namespace Prota.Tweening
             toBeRemoved.Clear();
             foreach(var (k, v) in idMap)
             {
-                if(v.target != null || v.guard == null || v.callback == null)
+                if(v.target == null || v.guard == null || v.update == null || v.isTimeout)
                 {
-                    toBeRemoved.Add(k);
+                    toBeRemoved.Add((k, v));
                 }
             }
-            foreach(var k in toBeRemoved)
+            
+            foreach(var (k, v) in toBeRemoved)
             {
-                var v = idMap[k];
+                if(v.isTimeout && !(v.target == null || v.guard == null || v.update == null))
+                {
+                    v.update(v, 1);
+                }
+            }
+            
+            foreach(var (k, v) in toBeRemoved)
+            {
                 ActualDelete(k, v);
             }
+            
             toBeRemoved.Clear();
         }
         
-        void ActualDelete(long key, TweeningHandle handle)
+        void ActualDelete(long key, TweenHandle handle)
         {
             Debug.Assert(idMap[key] == handle);
             if(targetMap.TryGetValue(handle.target, out var bindingList) && bindingList[handle.type] == handle)
@@ -68,24 +77,26 @@ namespace Prota.Tweening
                     targetMap.Remove(handle.target);
                 }
             }
-            handle.callback = null;
+            handle.update = null;
             handle.onFinish?.Invoke(handle);
             handle.onFinish = null;
             pool.Release(handle);
             idMap.Remove(key);
         }
         
-        public TweeningHandle New(TweeningType type, UnityEngine.Object target, ValueTweeningCallback callback)
+        public TweenHandle New(TweeningType type, UnityEngine.Object target, ValueTweeningUpdate onUpdate)
         {
             Debug.Assert(target != null);
             
             var v = pool.Get();
             v.id = ++idGen;
+            idMap.Add(v.id, v);
+            
             v.target = target;
             v.SetGuard(target);
             v.type = type;
             
-            v.callback = callback;
+            v.update = onUpdate;
             
             targetMap.TryGetValue(target, out var bindingList);
             if(bindingList == null)
@@ -102,11 +113,11 @@ namespace Prota.Tweening
         }
         
         
-        public bool Remove(TweeningHandle v)
+        public bool Remove(TweenHandle v)
         {
             if(v == null) return false;
             if(!idMap.ContainsKey(v.id)) return false;
-            v.callback = null;
+            v.update = null;
             return true;
         }
         

@@ -46,7 +46,7 @@ namespace Prota
         {
             if(Application.isPlaying)
             {
-                if(this.TryGetComponent<Renderer>(out var renderer)) DestroyImmediate(renderer);
+                if(this.TryGetComponent<Renderer>(out var renderer)) Destroy(renderer);
             }
         }
     }

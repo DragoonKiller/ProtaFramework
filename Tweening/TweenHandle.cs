@@ -5,7 +5,7 @@ using UnityEngine.Pool;
 using Prota.Unity;
 namespace Prota.Tweening
 {
-    public delegate void ValueTweeningCallback(TweeningHandle h, float t);
+    public delegate void ValueTweeningUpdate(TweenHandle h, float t);
     
     public enum TweeningType
     {
@@ -27,14 +27,14 @@ namespace Prota.Tweening
         
     }
     
-    public class TweeningHandle
+    public class TweenHandle
     {
         internal long id;
         internal UnityEngine.Object target;      // duplicated control. cannot be null.
         internal TweeningType type;
-        internal ValueTweeningCallback callback;
+        internal ValueTweeningUpdate update;
         
-        public Action<TweeningHandle> onFinish;
+        public Action<TweenHandle> onFinish;
         public object customData;
         
         public float from { get; private set; }
@@ -45,9 +45,11 @@ namespace Prota.Tweening
         public bool realtime { get; private set; }
         public UnityEngine.Object guard { get; private set; }        // lifetime control. cannot be null.
         
+        public bool isTimeout => timeTo < (realtime ? Time.realtimeSinceStartup : Time.time);
+        
         public float EvaluateRatio(float ratio)
         {
-            return curve == null ? curve.Evaluate(ratio) : ratio;
+            return curve?.Evaluate(ratio) ?? ratio;
         }
         
         public float Evaluate(float ratio)
@@ -60,45 +62,41 @@ namespace Prota.Tweening
             return (timeFrom, timeTo).InvLerp(realtime ? Time.realtimeSinceStartup : Time.time);
         }
         
-        public TweeningHandle SetFrom(float from)
+        public TweenHandle SetFrom(float from)
         {
             this.from = from;
             return this;
         }
         
-        public TweeningHandle SetTo(float from)
+        public TweenHandle SetTo(float from)
         {
             this.to = to;
             return this;
         }
         
-        public TweeningHandle RecordTime(bool isRealtime = false)
+        public TweenHandle Start(float duration, bool realtime = false)
         {
-            this.realtime = isRealtime;
+            this.realtime = realtime;
             this.timeFrom = realtime ? Time.realtimeSinceStartup : Time.time;
-            return this;
-        }
-        
-        public TweeningHandle SetDuration(float duration)
-        {
             this.timeTo = this.timeFrom + duration;
+            
             return this;
-        }
+        } 
         
-        public TweeningHandle SetCurve(AnimationCurve curve = null)
+        public TweenHandle SetCurve(AnimationCurve curve = null)
         {
             if(curve == null) curve = AnimationCurve.Linear(0, 0, 1, 1);
             this.curve = curve;
             return this;
         }
         
-        public TweeningHandle SetGuard(UnityEngine.Object x)
+        public TweenHandle SetGuard(UnityEngine.Object x)
         {
-            this.guard = guard;
+            this.guard = x;
             return this;
         }
         
-        public TweeningHandle SetCustomData(object x)
+        public TweenHandle SetCustomData(object x)
         {
             this.customData = x;
             return this;
@@ -109,9 +107,9 @@ namespace Prota.Tweening
     
     public class BindingList
     {
-        public int count = 0;
-        public TweeningHandle[] bindings = new TweeningHandle[15];
-        public TweeningHandle this[TweeningType type]
+        public int count;
+        public TweenHandle[] bindings = new TweenHandle[15];
+        public TweenHandle this[TweeningType type]
         {
             get => type < 0 ? null : bindings[(int)type];
             set

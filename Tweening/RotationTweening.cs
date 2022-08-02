@@ -5,11 +5,11 @@ namespace Prota.Tweening
 {
     public struct TweenComposedRotate
     {
-        public readonly TweeningHandle x;
-        public readonly TweeningHandle y;
-        public readonly TweeningHandle z;
+        public readonly TweenHandle x;
+        public readonly TweenHandle y;
+        public readonly TweenHandle z;
 
-        public TweenComposedRotate(TweeningHandle x, TweeningHandle y, TweeningHandle z)
+        public TweenComposedRotate(TweenHandle x, TweenHandle y, TweenHandle z)
         {
             this.x = x;
             this.y = y;
@@ -21,19 +21,19 @@ namespace Prota.Tweening
     
     public static class RotationTweening
     {
-        public static TweeningHandle TweenRotateX(this Transform g, float to, float time)
+        public static TweenHandle TweenRotateX(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.RotateX, g, SingleMoveX).SetDuration(time).RecordTime();
+            return ProtaTweeningManager.instance.New(TweeningType.RotateX, g, RotateX).SetFrom(g.rotation.eulerAngles.x).Start(time);
         }
         
-        public static TweeningHandle TweenRotateY(this Transform g, float to, float time)
+        public static TweenHandle TweenRotateY(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.RotateY, g, SingleMoveY).SetDuration(time).RecordTime();
+            return ProtaTweeningManager.instance.New(TweeningType.RotateY, g, RotateY).SetFrom(g.rotation.eulerAngles.y).Start(time);
         }
 
-        public static TweeningHandle TweenRotateZ(this Transform g, float to, float time)
+        public static TweenHandle TweenRotateZ(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.RotateZ, g, SingleMoveZ).SetDuration(time).RecordTime();
+            return ProtaTweeningManager.instance.New(TweeningType.RotateZ, g, RotateZ).SetFrom(g.rotation.eulerAngles.z).Start(time);
         }
         
         public static TweenComposedRotate TweenRotate(this Transform g, Vector3 to, float time)
@@ -93,19 +93,11 @@ namespace Prota.Tweening
             return ref m;
         }
         
-        public static ref TweenComposedRotate RecordTime(ref this TweenComposedRotate m, bool isRealtime)
+        public static ref TweenComposedRotate SetDuration(ref this TweenComposedRotate m, float duration, bool realtime = false)
         {
-            m.x.RecordTime(isRealtime);
-            m.y.RecordTime(isRealtime);
-            m.z.RecordTime(isRealtime);
-            return ref m;
-        }
-        
-        public static ref TweenComposedRotate SetDuration(ref this TweenComposedRotate m, float duration)
-        {
-            m.x.SetDuration(duration);
-            m.y.SetDuration(duration);
-            m.z.SetDuration(duration);
+            m.x.Start(duration, realtime);
+            m.y.Start(duration, realtime);
+            m.z.Start(duration, realtime);
             return ref m;
         }
         
@@ -129,22 +121,22 @@ namespace Prota.Tweening
         // ============================================================================================================
         
         
-        static void SingleMoveX(TweeningHandle h, float t)
+        static void RotateX(TweenHandle h, float t)
         {
             var tr = (Transform)h.target;
-            tr.position = tr.position.WithX(h.Evaluate(t));
+            tr.rotation = Quaternion.Euler(tr.rotation.eulerAngles.WithX(h.Evaluate(t)));
         }
         
-        static void SingleMoveY(TweeningHandle h, float t)
+        static void RotateY(TweenHandle h, float t)
         {
             var tr = (Transform)h.target;
-            tr.position = tr.position.WithY(h.Evaluate(t));
+            tr.rotation = Quaternion.Euler(tr.rotation.eulerAngles.WithY(h.Evaluate(t)));
         }
         
-        static void SingleMoveZ(TweeningHandle h, float t)
+        static void RotateZ(TweenHandle h, float t)
         {
             var tr = (Transform)h.target;
-            tr.position = tr.position.WithZ(h.Evaluate(t));
+            tr.rotation = Quaternion.Euler(tr.rotation.eulerAngles.WithZ(h.Evaluate(t)));
         }
         
     }

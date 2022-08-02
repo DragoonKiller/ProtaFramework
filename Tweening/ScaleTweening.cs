@@ -5,11 +5,11 @@ namespace Prota.Tweening
 {
     public struct TweenComposedScale
     {
-        public readonly TweeningHandle x;
-        public readonly TweeningHandle y;
-        public readonly TweeningHandle z;
+        public readonly TweenHandle x;
+        public readonly TweenHandle y;
+        public readonly TweenHandle z;
 
-        public TweenComposedScale(TweeningHandle x, TweeningHandle y, TweeningHandle z)
+        public TweenComposedScale(TweenHandle x, TweenHandle y, TweenHandle z)
         {
             this.x = x;
             this.y = y;
@@ -22,19 +22,19 @@ namespace Prota.Tweening
     
     public static class ScaleTweening
     {
-        public static TweeningHandle TweenScaleX(this Transform g, float to, float time)
+        public static TweenHandle TweenScaleX(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.ScaleX, g, ScaleX).SetDuration(time).RecordTime();
+            return ProtaTweeningManager.instance.New(TweeningType.ScaleX, g, ScaleX).SetFrom(g.localScale.x).Start(time);
         }
         
-        public static TweeningHandle TweenScaleY(this Transform g, float to, float time)
+        public static TweenHandle TweenScaleY(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.ScaleY, g, ScaleY).SetDuration(time).RecordTime();
+            return ProtaTweeningManager.instance.New(TweeningType.ScaleY, g, ScaleY).SetFrom(g.localScale.y).Start(time);
         }
 
-        public static TweeningHandle TweenScaleZ(this Transform g, float to, float time)
+        public static TweenHandle TweenScaleZ(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.ScaleZ, g, ScaleZ).SetDuration(time).RecordTime();
+            return ProtaTweeningManager.instance.New(TweeningType.ScaleZ, g, ScaleZ).SetFrom(g.localScale.z).Start(time);
         }
         
         public static TweenComposedScale TweenScale(this Transform g, Vector3 to, float time)
@@ -95,19 +95,11 @@ namespace Prota.Tweening
             return ref m;
         }
         
-        public static ref TweenComposedScale RecordTime(ref this TweenComposedScale m, bool isRealtime)
+        public static ref TweenComposedScale SetDuration(ref this TweenComposedScale m, float duration, bool realtime = false)
         {
-            m.x.RecordTime(isRealtime);
-            m.y.RecordTime(isRealtime);
-            m.z.RecordTime(isRealtime);
-            return ref m;
-        }
-        
-        public static ref TweenComposedScale SetDuration(ref this TweenComposedScale m, float duration)
-        {
-            m.x.SetDuration(duration);
-            m.y.SetDuration(duration);
-            m.z.SetDuration(duration);
+            m.x.Start(duration, realtime);
+            m.y.Start(duration, realtime);
+            m.z.Start(duration, realtime);
             return ref m;
         }
         
@@ -131,46 +123,21 @@ namespace Prota.Tweening
         // ============================================================================================================
         
         
-        static void ScaleX(TweeningHandle h, float t)
+        static void ScaleX(TweenHandle h, float t)
         {
             var tr = (Transform)h.target;
             tr.localScale = tr.localScale.WithX(h.Evaluate(t));
         }
         
-        static void ScaleY(TweeningHandle h, float t)
+        static void ScaleY(TweenHandle h, float t)
         {
             var tr = (Transform)h.target;
             tr.localScale = tr.localScale.WithY(h.Evaluate(t));
         }
         
-        static void ScaleZ(TweeningHandle h, float t)
+        static void ScaleZ(TweenHandle h, float t)
         {
             var tr = (Transform)h.target;
-            tr.localScale = tr.localScale.WithZ(h.Evaluate(t));
-        }
-        
-        
-        static void TrackingScaleX(TweeningHandle h, float t)
-        {
-            if(h.customData == null) return;
-            var tr = (Transform)h.target;
-            h.SetTo((h.customData as Transform).transform.position.x);
-            tr.localScale = tr.localScale.WithX(h.Evaluate(t));
-        }
-        
-        static void TrackingScaleY(TweeningHandle h, float t)
-        {
-            if(h.customData == null) return;
-            var tr = (Transform)h.target;
-            h.SetTo((h.customData as Transform).transform.position.y);
-            tr.localScale = tr.localScale.WithY(h.Evaluate(t));
-        }
-        
-        static void TrackingScaleZ(TweeningHandle h, float t)
-        {
-            if(h.customData == null) return;
-            var tr = (Transform)h.target;
-            h.SetTo((h.customData as Transform).transform.position.z);
             tr.localScale = tr.localScale.WithZ(h.Evaluate(t));
         }
         
