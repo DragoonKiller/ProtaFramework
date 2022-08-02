@@ -38,16 +38,16 @@ namespace Prota
         
         void Update()
         {
-            if(!Application.isPlaying)
-            {
-                rd.sortingLayerID = layer;
-                rd.sortingOrder = orderInLayer;
-            }
+            rd.sortingLayerID = layer;
+            rd.sortingOrder = orderInLayer;
         }
         
         void OnDestroy()
         {
-            if(this.TryGetComponent<Renderer>(out var renderer)) Destroy(renderer);
+            if(Application.isPlaying)
+            {
+                if(this.TryGetComponent<Renderer>(out var renderer)) DestroyImmediate(renderer);
+            }
         }
     }
     

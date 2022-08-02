@@ -12,7 +12,7 @@ namespace Prota.Tweening
         
         public Dictionary<long, TweeningHandle> idMap = new Dictionary<long, TweeningHandle>();
         
-        public Dictionary<UnityEngine.Object, BindingList> bindingMap = new Dictionary<UnityEngine.Object, BindingList>(); 
+        public Dictionary<UnityEngine.Object, BindingList> targetMap = new Dictionary<UnityEngine.Object, BindingList>(); 
         
         public List<long> toBeRemoved = new List<long>();
         
@@ -20,7 +20,7 @@ namespace Prota.Tweening
              null,
              v => {
                 v = null;
-                v.binding = null;
+                v.target = null;
                 v.SetGuard(null);
              },
              null
@@ -30,31 +30,7 @@ namespace Prota.Tweening
         
         void Update()
         {
-            toBeRemoved.Clear();
-            foreach(var (k, v) in idMap)
-            {
-                if(v.binding != null || v.guard == null || v.callback == null)
-                {
-                    toBeRemoved.Add(k);
-                }
-            }
-            foreach(var k in toBeRemoved)
-            {
-                var v = idMap[k];
-                if(bindingMap.TryGetValue(v.binding, out var bindingList) && bindingList[v.type] == v)
-                {
-                    bindingList[v.type] = null;
-                    if(bindingList.count == 0)
-                    {
-                        listPool.Release(bindingList);
-                        bindingMap.Remove(v.binding);
-                    }
-                }
-                pool.Release(v);
-                idMap.Remove(k);
-            }
-            toBeRemoved.Clear();
-            
+            ActualDeleteAllTagged();
             
             foreach(var (k, v) in idMap)
             {
@@ -62,54 +38,90 @@ namespace Prota.Tweening
             }
         }
         
-        public TweeningHandle New(TweeningType type, GameObject binding, ValueTweeningCallback callback)
+        void ActualDeleteAllTagged()
         {
-            Debug.Assert(binding != null);
+            toBeRemoved.Clear();
+            foreach(var (k, v) in idMap)
+            {
+                if(v.target != null || v.guard == null || v.callback == null)
+                {
+                    toBeRemoved.Add(k);
+                }
+            }
+            foreach(var k in toBeRemoved)
+            {
+                var v = idMap[k];
+                ActualDelete(k, v);
+            }
+            toBeRemoved.Clear();
+        }
+        
+        void ActualDelete(long key, TweeningHandle handle)
+        {
+            Debug.Assert(idMap[key] == handle);
+            if(targetMap.TryGetValue(handle.target, out var bindingList) && bindingList[handle.type] == handle)
+            {
+                bindingList[handle.type] = null;
+                if(bindingList.count == 0)
+                {
+                    listPool.Release(bindingList);
+                    targetMap.Remove(handle.target);
+                }
+            }
+            handle.callback = null;
+            handle.onFinish?.Invoke(handle);
+            handle.onFinish = null;
+            pool.Release(handle);
+            idMap.Remove(key);
+        }
+        
+        public TweeningHandle New(TweeningType type, UnityEngine.Object target, ValueTweeningCallback callback)
+        {
+            Debug.Assert(target != null);
             
             var v = pool.Get();
             v.id = ++idGen;
-            v.binding = binding;
-            v.SetGuard(binding);
+            v.target = target;
+            v.SetGuard(target);
             v.type = type;
             
             v.callback = callback;
             
-            bindingMap.TryGetValue(binding, out var bindingList);
+            targetMap.TryGetValue(target, out var bindingList);
             if(bindingList == null)
             {
                 bindingList = listPool.Get();
-                bindingMap.Add(binding, bindingList);
+                targetMap.Add(target, bindingList);
             }
             
             var prev = bindingList[type];
-            if(prev != null)
-            {
-                // remove.
-                prev.binding = null;
-                prev.callback = null;
-            }
-            
+            Remove(prev);
             bindingList[type] = v;
             
             return v;
         }
         
         
-        public void Remove(TweeningHandle v)
+        public bool Remove(TweeningHandle v)
         {
-            if(idMap.ContainsKey(v.id)) v.callback = null;
+            if(v == null) return false;
+            if(!idMap.ContainsKey(v.id)) return false;
+            v.callback = null;
+            return true;
         }
         
-        public void Remove(GameObject binding, TweeningType type)
+        public bool Remove(UnityEngine.Object target, TweeningType type)
         {
-            if(!bindingMap.TryGetValue(binding, out var list)) return;
-            Remove(list[type]);
+            if(!targetMap.TryGetValue(target, out var list)) return false;
+            return Remove(list[type]);
         }
         
-        public void RemoveAll(GameObject binding)
+        public bool RemoveAll(UnityEngine.Object target)
         {
-            if(!bindingMap.TryGetValue(binding, out var list)) return;
-            foreach(var i in list.bindings) Remove(i);
+            if(!targetMap.TryGetValue(target, out var list)) return false;
+            var res = false;
+            foreach(var i in list.bindings) res |= Remove(i);
+            return res;
         }
     }
     

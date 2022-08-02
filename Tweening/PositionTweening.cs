@@ -21,22 +21,16 @@ namespace Prota.Tweening
     
     public static class PositionTweening
     {
-        public static TweeningHandle TweenMoveX(this GameObject g, float to, float time)
-        {
-            return ProtaTweeningManager.instance.New(TweeningType.MoveX, g, SingleMoveX).SetDuration(time).RecordTime();
-        }
+        public static TweeningHandle TweenMoveX(this Transform g, float to, float time)
+            => ProtaTweeningManager.instance.New(TweeningType.MoveX, g, SingleMoveX).SetDuration(time).RecordTime();
         
-        public static TweeningHandle TweenMoveY(this GameObject g, float to, float time)
-        {
-            return ProtaTweeningManager.instance.New(TweeningType.MoveY, g, SingleMoveY).SetDuration(time).RecordTime();
-        }
+        public static TweeningHandle TweenMoveY(this Transform g, float to, float time)
+            => ProtaTweeningManager.instance.New(TweeningType.MoveY, g, SingleMoveY).SetDuration(time).RecordTime();
 
-        public static TweeningHandle TweenMoveZ(this GameObject g, float to, float time)
-        {
-            return ProtaTweeningManager.instance.New(TweeningType.MoveZ, g, SingleMoveZ).SetDuration(time).RecordTime();
-        }
+        public static TweeningHandle TweenMoveZ(this Transform g, float to, float time)
+            => ProtaTweeningManager.instance.New(TweeningType.MoveZ, g, SingleMoveZ).SetDuration(time).RecordTime();
         
-        public static TweenComposedMove TweenMove(this GameObject g, Vector3 to, float time)
+        public static TweenComposedMove TweenMove(this Transform g, Vector3 to, float time)
         {
             return new TweenComposedMove(
                 TweenMoveX(g, to.x, time),
@@ -48,22 +42,22 @@ namespace Prota.Tweening
         
         
         
-        public static TweeningHandle TweenTrackingX(this GameObject g, GameObject target, float time)
+        public static TweeningHandle TweenTrackingX(this Transform g, Transform target, float time)
         {
             return ProtaTweeningManager.instance.New(TweeningType.MoveX, g, TrackingMoveX).SetDuration(time).RecordTime().SetCustomData(target);
         }
         
-        public static TweeningHandle TweenTrackingY(this GameObject g, GameObject target, float time)
+        public static TweeningHandle TweenTrackingY(this Transform g, Transform target, float time)
         {
             return ProtaTweeningManager.instance.New(TweeningType.MoveY, g, TrackingMoveY).SetDuration(time).RecordTime().SetCustomData(target);
         }
 
-        public static TweeningHandle TweenTrackingZ(this GameObject g, GameObject target, float time)
+        public static TweeningHandle TweenTrackingZ(this Transform g, Transform target, float time)
         {
             return ProtaTweeningManager.instance.New(TweeningType.MoveZ, g, TrackingMoveZ).SetDuration(time).RecordTime().SetCustomData(target);
         }
         
-        public static TweenComposedMove TweenTracking(this GameObject g, GameObject target, float time)
+        public static TweenComposedMove TweenTracking(this Transform g, Transform target, float time)
         {
             return new TweenComposedMove(
                 TweenTrackingX(g, target, time),
@@ -74,25 +68,25 @@ namespace Prota.Tweening
         
         
         
-        public static GameObject ClearTweenMoveX(this GameObject g)
+        public static Transform ClearTweenMoveX(this Transform g)
         {
             ProtaTweeningManager.instance.Remove(g, TweeningType.MoveX);
             return g;
         }
         
-        public static GameObject ClearTweenMoveY(this GameObject g)
+        public static Transform ClearTweenMoveY(this Transform g)
         {
             ProtaTweeningManager.instance.Remove(g, TweeningType.MoveY);
             return g;
         }
         
-        public static GameObject ClearTweenMoveZ(this GameObject g)
+        public static Transform ClearTweenMoveZ(this Transform g)
         {
             ProtaTweeningManager.instance.Remove(g, TweeningType.MoveZ);
             return g;
         }
         
-        public static GameObject ClearTweenMove(this GameObject g)
+        public static Transform ClearTweenMove(this Transform g)
         {
             g.ClearTweenMoveX();
             g.ClearTweenMoveY();
@@ -159,45 +153,45 @@ namespace Prota.Tweening
         
         static void SingleMoveX(TweeningHandle h, float t)
         {
-            var tr = h.binding.transform;
-            tr.position = tr.position.WithX(h.Evaluate(t));
+            var tr = (Transform)h.target;
+            tr.localPosition = tr.localPosition.WithX(h.Evaluate(t));
         }
         
         static void SingleMoveY(TweeningHandle h, float t)
         {
-            var tr = h.binding.transform;
-            tr.position = tr.position.WithY(h.Evaluate(t));
+            var tr = (Transform)h.target;
+            tr.localPosition = tr.localPosition.WithY(h.Evaluate(t));
         }
         
         static void SingleMoveZ(TweeningHandle h, float t)
         {
-            var tr = h.binding.transform;
-            tr.position = tr.position.WithZ(h.Evaluate(t));
+            var tr = (Transform)h.target;
+            tr.localPosition = tr.localPosition.WithZ(h.Evaluate(t));
         }
         
         
         static void TrackingMoveX(TweeningHandle h, float t)
         {
             if(h.customData == null) return;
-            var tr = h.binding.transform;
-            h.SetTo((h.customData as GameObject).transform.position.x);
-            tr.position = tr.position.WithX(h.Evaluate(t));
+            var tr = (Transform)h.target;
+            h.SetTo((h.customData as Transform).transform.position.x);
+            tr.localPosition = tr.localPosition.WithX(h.Evaluate(t));
         }
         
         static void TrackingMoveY(TweeningHandle h, float t)
         {
             if(h.customData == null) return;
-            var tr = h.binding.transform;
-            h.SetTo((h.customData as GameObject).transform.position.y);
-            tr.position = tr.position.WithY(h.Evaluate(t));
+            var tr = (Transform)h.target;
+            h.SetTo((h.customData as Transform).transform.position.y);
+            tr.localPosition = tr.localPosition.WithY(h.Evaluate(t));
         }
         
         static void TrackingMoveZ(TweeningHandle h, float t)
         {
             if(h.customData == null) return;
-            var tr = h.binding.transform;
-            h.SetTo((h.customData as GameObject).transform.position.z);
-            tr.position = tr.position.WithZ(h.Evaluate(t));
+            var tr = (Transform)h.target;
+            h.SetTo((h.customData as Transform).transform.position.z);
+            tr.localPosition = tr.localPosition.WithZ(h.Evaluate(t));
         }
         
     }

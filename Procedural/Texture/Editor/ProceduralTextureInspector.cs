@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 using System.IO;
 
-namespace Prota.Procedural
+namespace Prota.Editor
 {
     [CustomEditor(typeof(Prota.Procedural.ProceduralTexture), false)]
     [ExecuteAlways]
@@ -16,7 +16,7 @@ namespace Prota.Procedural
         {
             var root = new VisualElement();
             
-            var target = this.target as ProceduralTexture;
+            var target = this.target as Prota.Procedural.ProceduralTexture;
             var sTarget = this.serializedObject;
             root.AddChild(new PropertyField(sTarget.FindProperty("type")))
                 .AddChild(new VisualElement().AsHorizontalSeperator(2))

@@ -30,10 +30,11 @@ namespace Prota.Tweening
     public class TweeningHandle
     {
         internal long id;
-        internal GameObject binding;      // duplicated control. cannot be null.
+        internal UnityEngine.Object target;      // duplicated control. cannot be null.
         internal TweeningType type;
         internal ValueTweeningCallback callback;
         
+        public Action<TweeningHandle> onFinish;
         public object customData;
         
         public float from { get; private set; }

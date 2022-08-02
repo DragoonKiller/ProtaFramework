@@ -22,22 +22,22 @@ namespace Prota.Tweening
     
     public static class ScaleTweening
     {
-        public static TweeningHandle TweenScaleX(this GameObject g, float to, float time)
+        public static TweeningHandle TweenScaleX(this Transform g, float to, float time)
         {
             return ProtaTweeningManager.instance.New(TweeningType.ScaleX, g, ScaleX).SetDuration(time).RecordTime();
         }
         
-        public static TweeningHandle TweenScaleY(this GameObject g, float to, float time)
+        public static TweeningHandle TweenScaleY(this Transform g, float to, float time)
         {
             return ProtaTweeningManager.instance.New(TweeningType.ScaleY, g, ScaleY).SetDuration(time).RecordTime();
         }
 
-        public static TweeningHandle TweenScaleZ(this GameObject g, float to, float time)
+        public static TweeningHandle TweenScaleZ(this Transform g, float to, float time)
         {
             return ProtaTweeningManager.instance.New(TweeningType.ScaleZ, g, ScaleZ).SetDuration(time).RecordTime();
         }
         
-        public static TweenComposedScale TweenScale(this GameObject g, Vector3 to, float time)
+        public static TweenComposedScale TweenScale(this Transform g, Vector3 to, float time)
         {
             return new TweenComposedScale(
                 TweenScaleX(g, to.x, time),
@@ -48,50 +48,26 @@ namespace Prota.Tweening
         
         
         
-        public static TweeningHandle TweenTrackingScaleX(this GameObject g, GameObject target, float time)
-        {
-            return ProtaTweeningManager.instance.New(TweeningType.MoveX, g, TrackingScaleX).SetDuration(time).RecordTime().SetCustomData(target);
-        }
         
-        public static TweeningHandle TweenTrackingScaleY(this GameObject g, GameObject target, float time)
-        {
-            return ProtaTweeningManager.instance.New(TweeningType.MoveY, g, TrackingScaleY).SetDuration(time).RecordTime().SetCustomData(target);
-        }
-
-        public static TweeningHandle TweenTrackingScaleZ(this GameObject g, GameObject target, float time)
-        {
-            return ProtaTweeningManager.instance.New(TweeningType.MoveZ, g, TrackingScaleZ).SetDuration(time).RecordTime().SetCustomData(target);
-        }
-        
-        public static TweenComposedScale TweenTrackingScale(this GameObject g, GameObject target, float time)
-        {
-            return new TweenComposedScale(
-                TweenTrackingScaleX(g, target, time),
-                TweenTrackingScaleY(g, target, time),
-                TweenTrackingScaleZ(g, target, time)
-            );
-        }
-        
-        
-        public static GameObject ClearTweenScaleX(this GameObject g)
+        public static Transform ClearTweenScaleX(this Transform g)
         {
             ProtaTweeningManager.instance.Remove(g, TweeningType.ScaleX);
             return g;
         }
         
-        public static GameObject ClearTweenScaleY(this GameObject g)
+        public static Transform ClearTweenScaleY(this Transform g)
         {
             ProtaTweeningManager.instance.Remove(g, TweeningType.ScaleY);
             return g;
         }
         
-        public static GameObject ClearTweenScaleZ(this GameObject g)
+        public static Transform ClearTweenScaleZ(this Transform g)
         {
             ProtaTweeningManager.instance.Remove(g, TweeningType.ScaleZ);
             return g;
         }
         
-        public static GameObject ClearTweenScale(this GameObject g)
+        public static Transform ClearTweenScale(this Transform g)
         {
             g.ClearTweenScaleX();
             g.ClearTweenScaleY();
@@ -157,19 +133,19 @@ namespace Prota.Tweening
         
         static void ScaleX(TweeningHandle h, float t)
         {
-            var tr = h.binding.transform;
+            var tr = (Transform)h.target;
             tr.localScale = tr.localScale.WithX(h.Evaluate(t));
         }
         
         static void ScaleY(TweeningHandle h, float t)
         {
-            var tr = h.binding.transform;
+            var tr = (Transform)h.target;
             tr.localScale = tr.localScale.WithY(h.Evaluate(t));
         }
         
         static void ScaleZ(TweeningHandle h, float t)
         {
-            var tr = h.binding.transform;
+            var tr = (Transform)h.target;
             tr.localScale = tr.localScale.WithZ(h.Evaluate(t));
         }
         
@@ -177,24 +153,24 @@ namespace Prota.Tweening
         static void TrackingScaleX(TweeningHandle h, float t)
         {
             if(h.customData == null) return;
-            var tr = h.binding.transform;
-            h.SetTo((h.customData as GameObject).transform.position.x);
+            var tr = (Transform)h.target;
+            h.SetTo((h.customData as Transform).transform.position.x);
             tr.localScale = tr.localScale.WithX(h.Evaluate(t));
         }
         
         static void TrackingScaleY(TweeningHandle h, float t)
         {
             if(h.customData == null) return;
-            var tr = h.binding.transform;
-            h.SetTo((h.customData as GameObject).transform.position.y);
+            var tr = (Transform)h.target;
+            h.SetTo((h.customData as Transform).transform.position.y);
             tr.localScale = tr.localScale.WithY(h.Evaluate(t));
         }
         
         static void TrackingScaleZ(TweeningHandle h, float t)
         {
             if(h.customData == null) return;
-            var tr = h.binding.transform;
-            h.SetTo((h.customData as GameObject).transform.position.z);
+            var tr = (Transform)h.target;
+            h.SetTo((h.customData as Transform).transform.position.z);
             tr.localScale = tr.localScale.WithZ(h.Evaluate(t));
         }
         

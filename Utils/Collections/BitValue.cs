@@ -119,6 +119,28 @@ namespace Prota
             return sb.ToString();
         }
         
+        
+        
+        public static void UnitTest(Action<string> output = null)
+        {
+            if(output == null) output = System.Console.WriteLine;
+            
+            var x = new BitValue(0).WithBit(12, true).WithBit(14, true);
+            output(x.To01String());
+            output(x.ToString());
+            
+            
+            var y = new BitValue(0).WithBit(16, true).WithBit(19, true);
+            output(y.To01String());
+            output((~x & ~y).To01String());
+            output((x | y).To01String());
+            
+            foreach(var t in (x | y).EnumOnePos())
+            {
+                output(t.ToString());
+            }
+        }
+        
     }
     
     

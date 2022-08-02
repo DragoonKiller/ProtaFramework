@@ -14,6 +14,7 @@ namespace Prota
         }
         
         
+        // dictionary K => H pairing with K => G providing H.
         public static F SetSync<K, G, H, F>(
             this F target,
             IReadOnlyDictionary<K, H> val,
