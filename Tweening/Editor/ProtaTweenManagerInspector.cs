@@ -18,7 +18,7 @@ namespace Prota.Editor
         
         Label countLabel;
         
-        Dictionary<long, VisualElement> runningList = new Dictionary<long, VisualElement>();
+        List<VisualElement> runningList = new List<VisualElement>();
         
         ProtaTweeningManager mgr => target as ProtaTweeningManager;
         
@@ -37,15 +37,15 @@ namespace Prota.Editor
         
         protected override void Update()
         {
-            countLabel.text = UnityEngine.Application.isPlaying ? mgr.idMap.Count.ToString() : "Not Running.";
+            countLabel.text = UnityEngine.Application.isPlaying ? mgr.data.Count.ToString() : "Not Running.";
             
-            runningList.SetSync(mgr.idMap,
+            runningList.SetEnumList<List<VisualElement>, ArrayLinkedList<TweenData>, VisualElement, TweenData>(mgr.data,
                 (id, handle) => {
                     var x = new VisualElement()
                         .AddChild(new VisualElement() { name = "L1" }
                             .SetHorizontalLayout()
                             .AddChild(new Label() { name = "id" })
-                            .AddChild(new EnumField() { name = "type" })
+                            .AddChild(new EnumField(TweeningType.Custom) { name = "type" })
                         )
                         .AddChild(new VisualElement() { name = "L2" }
                             .SetHorizontalLayout()
@@ -54,12 +54,14 @@ namespace Prota.Editor
                     running.Add(x);
                     return x;
                 },
-                (id, element, handle) => {
-                    element.Q<Label>("id").text = handle.id.ToString();
-                    element.Q<EnumField>("type").value = handle.type;
+                (id, element, data) => {
+                    element.SetVisible(data.valid);
+                    if(!data.valid) return;
+                    element.Q<Label>("id").text = data.ToString();
+                    element.Q<EnumField>().value = data.type;
                 },
                 (id, element) => {
-                    running.Remove(element);
+                    element.SetVisible(false);
                 }
             );
         }

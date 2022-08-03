@@ -70,7 +70,7 @@ namespace Prota.Tweening
                 TweenColorR(g, to.r, time),
                 TweenColorG(g, to.g, time),
                 TweenColorB(g, to.b, time),
-                includeTransparency ? TweenColorA(g, to.a, time) : null
+                includeTransparency ? TweenColorA(g, to.a, time) : TweenHandle.none
             );
         
         
@@ -143,7 +143,7 @@ namespace Prota.Tweening
                 TweenColorR(g, to.r, time),
                 TweenColorG(g, to.g, time),
                 TweenColorB(g, to.b, time),
-                includeTransparency ? TweenColorA(g, to.a, time) : null
+                includeTransparency ? TweenColorA(g, to.a, time) : TweenHandle.none
             );
         
         
@@ -219,7 +219,7 @@ namespace Prota.Tweening
                 TweenColorR(g, to.r, time),
                 TweenColorG(g, to.g, time),
                 TweenColorB(g, to.b, time),
-                includeTransparency ? TweenColorA(g, to.a, time) : null
+                includeTransparency ? TweenColorA(g, to.a, time) : TweenHandle.none
             );
         
         
@@ -291,7 +291,7 @@ namespace Prota.Tweening
                 TweenColorR(g, to.r, time),
                 TweenColorG(g, to.g, time),
                 TweenColorB(g, to.b, time),
-                includeTransparency ? TweenColorA(g, to.a, time) : null
+                includeTransparency ? TweenColorA(g, to.a, time) : TweenHandle.none
             );
         
         
@@ -363,7 +363,7 @@ namespace Prota.Tweening
                 TweenColorR(g, to.r, time),
                 TweenColorG(g, to.g, time),
                 TweenColorB(g, to.b, time),
-                includeTransparency ? TweenColorA(g, to.a, time) : null
+                includeTransparency ? TweenColorA(g, to.a, time) : TweenHandle.none
             );
         
         
@@ -414,7 +414,7 @@ namespace Prota.Tweening
             m.r.SetFrom(from.r);
             m.g.SetFrom(from.g);
             m.b.SetFrom(from.b);
-            m.a?.SetFrom(from.a);
+            if(!m.a.isNone) m.a.SetFrom(from.a);
             return ref m;
         }
         
@@ -423,7 +423,7 @@ namespace Prota.Tweening
             m.r.SetTo(to.r);
             m.g.SetTo(to.g);
             m.b.SetTo(to.b);
-            m.a?.SetTo(to.a);
+            if(!m.a.isNone) m.a.SetTo(to.a);
             return ref m;
         }
         
@@ -432,7 +432,7 @@ namespace Prota.Tweening
             m.r.Start(duration, realtime);
             m.g.Start(duration, realtime);
             m.b.Start(duration, realtime);
-            m.a?.Start(duration, realtime);
+            if(!m.a.isNone) m.a.Start(duration, realtime);
             return ref m;
         }
         
@@ -441,7 +441,7 @@ namespace Prota.Tweening
             m.r.SetCurve(curve);
             m.g.SetCurve(curve);
             m.b.SetCurve(curve);
-            m.a?.SetCurve(curve);
+            if(!m.a.isNone) m.a.SetCurve(curve);
             return ref m;
         }
         
@@ -450,7 +450,7 @@ namespace Prota.Tweening
             m.r.SetGuard(guard);
             m.g.SetGuard(guard);
             m.b.SetGuard(guard);
-            m.a?.SetGuard(guard);
+            if(!m.a.isNone) m.a.SetGuard(guard);
             return ref m;
         }
         

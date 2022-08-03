@@ -8,23 +8,11 @@ namespace Prota.Tweening
     
     public class ProtaTweeningManager : Singleton<ProtaTweeningManager>
     {
-        public static long idGen = 0;
-        
-        public Dictionary<long, TweenHandle> idMap = new Dictionary<long, TweenHandle>();
+        internal ArrayLinkedList<TweenData> data = new ArrayLinkedList<TweenData>();
         
         public Dictionary<UnityEngine.Object, BindingList> targetMap = new Dictionary<UnityEngine.Object, BindingList>(); 
         
-        public List<(long, TweenHandle)> toBeRemoved = new List<(long, TweenHandle)>();
-        
-        public ObjectPool<TweenHandle> pool = new ObjectPool<TweenHandle>(() => new TweenHandle(),
-             null,
-             v => {
-                v.customData = null;
-                v.target = null;
-                v.SetGuard(null);
-             },
-             null
-        );
+        public List<ArrayLinkedListKey> toBeRemoved = new List<ArrayLinkedListKey>();
         
         public ObjectPool<BindingList> listPool = new ObjectPool<BindingList>(() => new BindingList()); // TweenType.Count
         
@@ -32,70 +20,60 @@ namespace Prota.Tweening
         {
             ActualDeleteAllTagged();
             
-            foreach(var (k, v) in idMap)
+            foreach(var i in data.EnumerateIndex())
             {
-                v.update(v, v.GetTimeLerp());
+                var v = data[i];
+                v.update(new TweenHandle(i, data), v.GetTimeLerp());
             }
         }
         
         void ActualDeleteAllTagged()
         {
             toBeRemoved.Clear();
-            foreach(var (k, v) in idMap)
+            foreach(var key in data.EnumerateIndex())
             {
-                if(v.target == null || v.guard == null || v.update == null || v.isTimeout)
-                {
-                    toBeRemoved.Add((k, v));
-                }
+                var v = data[key];
+                if(v.invalid || v.isTimeout) toBeRemoved.Add(key);
             }
             
-            foreach(var (k, v) in toBeRemoved)
+            foreach(var key in data.EnumerateIndex())
             {
-                if(v.isTimeout && !(v.target == null || v.guard == null || v.update == null))
-                {
-                    v.update(v, 1);
-                }
+                var v = data[key];
+                if(v.isTimeout && v.valid) v.update(new TweenHandle(key, data), 1);
             }
             
-            foreach(var (k, v) in toBeRemoved)
+            foreach(var key in toBeRemoved)
             {
-                ActualDelete(k, v);
+                ActualDelete(key);
             }
             
             toBeRemoved.Clear();
         }
         
-        void ActualDelete(long key, TweenHandle handle)
+        void ActualDelete(ArrayLinkedListKey key)
         {
-            Debug.Assert(idMap[key] == handle);
-            if(targetMap.TryGetValue(handle.target, out var bindingList) && bindingList[handle.type] == handle)
+            var d = data[key];
+            if(targetMap.TryGetValue(d.target, out var bindingList) && bindingList[d.type].key == key)
             {
-                bindingList[handle.type] = null;
+                bindingList[d.type] = TweenHandle.none;
                 if(bindingList.count == 0)
                 {
                     listPool.Release(bindingList);
-                    targetMap.Remove(handle.target);
+                    targetMap.Remove(d.target);
                 }
             }
-            handle.update = null;
-            handle.onFinish?.Invoke(handle);
-            handle.onFinish = null;
-            pool.Release(handle);
-            idMap.Remove(key);
+            data.Release(key);
         }
         
         public TweenHandle New(TweeningType type, UnityEngine.Object target, ValueTweeningUpdate onUpdate)
         {
             Debug.Assert(target != null);
             
-            var v = pool.Get();
-            v.id = ++idGen;
-            idMap.Add(v.id, v);
-            
+            var id = data.Take();
+            ref TweenData v = ref data[id];
             v.target = target;
-            v.SetGuard(target);
+            v.guard = target;
             v.type = type;
-            
             v.update = onUpdate;
             
             targetMap.TryGetValue(target, out var bindingList);
@@ -107,16 +85,17 @@ namespace Prota.Tweening
             
             var prev = bindingList[type];
             Remove(prev);
-            bindingList[type] = v;
             
-            return v;
+            var newHandle = new TweenHandle(id, data);
+            bindingList[type] = newHandle;
+            return newHandle;
         }
         
         
         public bool Remove(TweenHandle v)
         {
-            if(v == null) return false;
-            if(!idMap.ContainsKey(v.id)) return false;
+            if(v.isNone) return false;
+            if(!data.Valid(v.key)) return false;
             v.update = null;
             return true;
         }

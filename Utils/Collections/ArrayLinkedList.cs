@@ -6,33 +6,78 @@ using System.Collections;
 
 namespace Prota
 {
-    public class ArrayLinkedList<T> : IEnumerable<T>, IReadOnlyCollection<T>
+    public struct ArrayLinkedListKey : IEquatable<ArrayLinkedListKey>
+    {
+        public readonly int id;
+        public readonly int version;
+        public readonly IArrayLinkedList list;
+        public bool valid => list?.Valid(this) ?? false;
+        
+        public ArrayLinkedListKey(int id, int version, IArrayLinkedList list)
+        {
+            this.id = id;
+            this.version = version;
+            this.list = list;
+        }
+
+        public bool Equals(ArrayLinkedListKey other) => this == other;
+        
+        public override bool Equals(object x) => x is ArrayLinkedListKey arrKey && arrKey == this;
+        
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(id, version, list);
+        }
+        
+        public static bool operator==(ArrayLinkedListKey a, ArrayLinkedListKey b)
+        {
+            return a.id == b.id && a.version == b.version && a.list == b.list;
+        }
+        
+        public static bool operator!=(ArrayLinkedListKey a, ArrayLinkedListKey b)
+        {
+            return a.id != b.id || a.version != b.version || a.list != b.list;
+        }
+
+        public override string ToString() => $"key[{ id }:{ version }]";
+    }
+    
+    public interface IArrayLinkedList
+    {
+        bool Valid(ArrayLinkedListKey key);
+    }
+    
+    public class ArrayLinkedList<T> : IEnumerable<T>, IReadOnlyCollection<T>, IArrayLinkedList
         where T: struct
     {
         public T[] arr { get; private set; } = null;
         public int[] next { get; private set; } = null;
         public int[] prev { get; private set; } = null;
         public bool[] inUse { get; private set; } = null;
+        public int[] version { get; private set; } = null;
         public int Count { get; private set; } = 0;         // count in use.
         public int capacity => arr?.Length ?? 0;
         public int head { get; private set; } = -1;
         public int freeHead { get; private set; } = -1;
         public int freeCount => capacity - Count;
-
-
-        public ref T this[int i] => ref arr[i];
         
-        public int Take()
+        public ref T this[ArrayLinkedListKey i] => ref arr[i.id];
+        
+        public ArrayLinkedListKey Take()
         {
             if(freeCount == 0) Resize();
             System.Diagnostics.Debug.Assert(freeCount > 0);
             return Use();
         }
         
-        public void Release(int i)
+        public bool Release(ArrayLinkedListKey i)
         {
-            if(!inUse[i]) return;
-            Free(i);
+            if(this != i.list) return false;
+            if(i.id >= capacity) return false;
+            if(!inUse[i.id]) return false;
+            if(version[i.id] > i.version) return false;
+            Free(i.id);
+            return true;
         }
         
         void Resize()
@@ -46,6 +91,7 @@ namespace Prota
             next = next.Resize(nextSize);
             prev = prev.Resize(nextSize);
             inUse = inUse.Resize(nextSize);
+            version = version.Resize(nextSize);
             
             for(int i = originalSize; i < arr.Length; i++) Free(i);
         }
@@ -72,9 +118,10 @@ namespace Prota
             freeHead = cur;
             
             inUse[cur] = false;
+            version[cur] += 1;
         }
         
-        int Use()
+        ArrayLinkedListKey Use()
         {
             var cur = freeHead;
             freeHead = next[cur];
@@ -87,36 +134,36 @@ namespace Prota
             
             inUse[cur] = true;
             Count += 1;
-            return cur;
+            version[cur] += 1;
+            return new ArrayLinkedListKey(cur, version[cur], this);
         }
         
         
-        public struct IndexEnumerator : IEnumerator<int>
+        public struct IndexEnumerator : IEnumerator<ArrayLinkedListKey>
         {
             public int index;
             public ArrayLinkedList<T> list;
-            public int Current => index;
+            public ArrayLinkedListKey Current => new ArrayLinkedListKey(index, list.version[index], list);
             object IEnumerator.Current => index;
 
             public void Dispose() => index = -1;
 
             public bool MoveNext()
             {
-                if(list.capacity == 0) return false;
-                if(list.head == -1) return false;
                 if(index == -1) index = list.head;
                 else index = list.next[index];
+                if(index == -1) return false;
                 return true;
             }
 
             public void Reset() => index = -1;
         }
 
-        public struct IndexEnumerable : IEnumerable<int>
+        public struct IndexEnumerable : IEnumerable<ArrayLinkedListKey>
         {
             public ArrayLinkedList<T> list;
             
-            public IEnumerator<int> GetEnumerator() => new IndexEnumerator() { index = -1, list = list };
+            public IEnumerator<ArrayLinkedListKey> GetEnumerator() => new IndexEnumerator() { index = -1, list = list };
 
             IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
         }
@@ -127,16 +174,19 @@ namespace Prota
         {
             foreach(var index in EnumerateIndex())
             {
-                yield return arr[index];
+                yield return arr[index.id];
             }
         }
 
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-        
-        
-        
-        
-        
+
+        public bool Valid(ArrayLinkedListKey key)
+        {
+            if(key.list != this) return false;
+            if(key.id >= capacity) return false;
+            if(key.version < version[key.id]) return false;
+            return true;
+        }
     }
     
     public static class ArrayLinkedListUnitTest
@@ -174,6 +224,11 @@ namespace Prota
             log(ax[a1].a.ToString());           // 12
             log(ax[a1].b.ToString());           // 13
             log(ax[a1].c.ToString());           // 14
+            
+            foreach(var i in ax.EnumerateIndex())
+            {
+                log(i.ToString());
+            }
             
             
         }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 namespace Prota
 {
@@ -74,6 +75,28 @@ namespace Prota
             }
             
             for(int i = n; i < l.Count; i++) onDisable(i, l[i]);
+            return l;
+        }
+        
+        // map K => T with i.
+        public static F SetEnumList< F, G, T, K>(this F l, G data, Func<int, K, T> onCreate, Action<int, T, K> onEnable, Action<int, T> onDisable)
+            where F: List<T>
+            where G: IEnumerable<K>
+        {
+            var count = data.Count();
+            int i = 0;
+            foreach(var e in data)
+            {
+                if(i >= l.Count)
+                {
+                    l.Add(onCreate(i, e));
+                }
+                
+                onEnable(i, l[i], e);
+                i++;
+            }
+            
+            for(i = count; i < l.Count; i++) onDisable(i, l[i]);
             return l;
         }
     }
