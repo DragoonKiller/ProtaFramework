@@ -47,7 +47,7 @@ namespace Prota.Editor
                         .AddChild(new VisualElement()
                             .SetHorizontalLayout()
                             .AddChild(new Label() { name = "id" }.SetWidth(200))
-                            .AddChild(new EnumField(TweeningType.Custom) { name = "type" })
+                            .AddChild(new EnumField(TweenType.Custom) { name = "type" })
                             .AddChild(new Button(() => {
                                     x.Q("detail").SetVisible(detailVisible = !detailVisible);
                                 }) { text = "+" }

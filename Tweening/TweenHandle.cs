@@ -5,28 +5,6 @@ using UnityEngine.Pool;
 using Prota.Unity;
 namespace Prota.Tweening
 {
-    public delegate void ValueTweeningUpdate(TweenHandle h, float t);
-    
-    public enum TweeningType
-    {
-        Custom = -1,  // does not counted into duplicate.
-        
-        MoveX = 1,
-        MoveY,
-        MoveZ,
-        ScaleX,
-        ScaleY,
-        ScaleZ,
-        RotateX,
-        RotateY,
-        RotateZ,
-        ColorR,
-        ColorG,
-        ColorB,
-        Transparency,
-        
-    }
-    
     public struct TweenHandle
     {
         internal readonly ArrayLinkedListKey key;
@@ -39,7 +17,7 @@ namespace Prota.Tweening
             set => data[key].target = value;
         }
         
-        public TweeningType type
+        public TweenType type
         {
             get => data[key].type;
             set => data[key].type = value;
@@ -91,6 +69,12 @@ namespace Prota.Tweening
         {
             get => data[key].curve;
             set => data[key].curve = value;
+        }
+        
+        public TweenEase ease
+        {
+            get => data[key].ease;
+            set => data[key].ease = value;
         }
         
         public float timeFrom
@@ -152,8 +136,16 @@ namespace Prota.Tweening
         
         public TweenHandle SetCurve(AnimationCurve curve = null)
         {
-            if(curve == null) curve = AnimationCurve.Linear(0, 0, 1, 1);
             this.curve = curve;
+            this.ease = TweenEase.linear;
+            return this;
+        }
+        
+        public TweenHandle SetEase(TweenEase? ease = null)
+        {
+            if(ease == null) ease = TweenEase.linear;
+            this.curve = null;
+            this.ease = ease.Value;
             return this;
         }
         
@@ -175,7 +167,7 @@ namespace Prota.Tweening
     {
         public int count;
         public TweenHandle[] bindings = new TweenHandle[15];
-        public TweenHandle this[TweeningType type]
+        public TweenHandle this[TweenType type]
         {
             get => type < 0 ? TweenHandle.none : bindings[(int)type];
             set

@@ -8,7 +8,7 @@ namespace Prota.Tweening
     internal struct TweenData
     {
         public UnityEngine.Object target;      // duplicated control. cannot be null.
-        public TweeningType type;
+        public TweenType type;
         public ValueTweeningUpdate update;
         
         public Action<TweenHandle> onFinish;
@@ -19,6 +19,7 @@ namespace Prota.Tweening
         public float from;
         public float to;
         public AnimationCurve curve;
+        public TweenEase ease;
         public float timeFrom;
         public float timeTo;
         public bool realtime;
@@ -29,21 +30,25 @@ namespace Prota.Tweening
         
         public TweenHandle handle { get; private set; }
         
+        // Sample ratio on ease/curve.
         public float EvaluateRatio(float ratio)
         {
-            return curve?.Evaluate(ratio) ?? ratio;
+            return ease.valid ? ease.Evaluate(ratio) : curve?.Evaluate(ratio) ?? ratio;
         }
         
+        // Actual value interpolation.
         public float Evaluate(float ratio)
         {
             return (from, to).Lerp(EvaluateRatio(ratio));
         }
         
+        // Current time ratio in [0, 1].
         public float GetTimeLerp()
         {
             return (timeFrom, timeTo).InvLerp(realtime ? Time.realtimeSinceStartup : Time.time);
         }
         
+        // a handle cache.
         internal void SetHandle(TweenHandle handle)
         {
             this.handle = handle;

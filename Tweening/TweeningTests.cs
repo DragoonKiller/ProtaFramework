@@ -25,7 +25,8 @@ namespace Prota.Tweening
         static IEnumerator R(GameObject a)
         {
             yield return new WaitForSeconds(1);
-            var tt = a.transform.TweenMoveX(-2, 1);
+            var tt = a.transform.TweenMoveX(-4, 1);
+            tt.SetEase(TweenEase.cubeOut);
             tt.onFinish = t => {
                 Debug.Log("finish!!!");
             };

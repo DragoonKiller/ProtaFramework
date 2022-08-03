@@ -23,17 +23,17 @@ namespace Prota.Tweening
     {
         public static TweenHandle TweenRotateX(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.RotateX, g, RotateX).SetFrom(g.rotation.eulerAngles.x).SetTo(to).Start(time);
+            return ProtaTweeningManager.instance.New(TweenType.RotateX, g, RotateX).SetFrom(g.rotation.eulerAngles.x).SetTo(to).Start(time);
         }
         
         public static TweenHandle TweenRotateY(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.RotateY, g, RotateY).SetFrom(g.rotation.eulerAngles.y).SetTo(to).Start(time);
+            return ProtaTweeningManager.instance.New(TweenType.RotateY, g, RotateY).SetFrom(g.rotation.eulerAngles.y).SetTo(to).Start(time);
         }
 
         public static TweenHandle TweenRotateZ(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.RotateZ, g, RotateZ).SetFrom(g.rotation.eulerAngles.z).SetTo(to).Start(time);
+            return ProtaTweeningManager.instance.New(TweenType.RotateZ, g, RotateZ).SetFrom(g.rotation.eulerAngles.z).SetTo(to).Start(time);
         }
         
         public static TweenComposedRotate TweenRotate(this Transform g, Vector3 to, float time)
@@ -48,19 +48,19 @@ namespace Prota.Tweening
         
         public static Transform ClearTweenRotateX(this Transform g)
         {
-            ProtaTweeningManager.instance.Remove(g, TweeningType.RotateX);
+            ProtaTweeningManager.instance.Remove(g, TweenType.RotateX);
             return g;
         }
         
         public static Transform ClearTweenRotateY(this Transform g)
         {
-            ProtaTweeningManager.instance.Remove(g, TweeningType.RotateY);
+            ProtaTweeningManager.instance.Remove(g, TweenType.RotateY);
             return g;
         }
         
         public static Transform ClearTweenRotateZ(this Transform g)
         {
-            ProtaTweeningManager.instance.Remove(g, TweeningType.RotateZ);
+            ProtaTweeningManager.instance.Remove(g, TweenType.RotateZ);
             return g;
         }
         

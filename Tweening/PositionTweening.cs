@@ -22,13 +22,13 @@ namespace Prota.Tweening
     public static class PositionTweening
     {
         public static TweenHandle TweenMoveX(this Transform g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.MoveX, g, SingleMoveX).SetFrom(g.position.x).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.MoveX, g, SingleMoveX).SetFrom(g.position.x).SetTo(to).Start(time);
         
         public static TweenHandle TweenMoveY(this Transform g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.MoveY, g, SingleMoveY).SetFrom(g.position.y).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.MoveY, g, SingleMoveY).SetFrom(g.position.y).SetTo(to).Start(time);
 
         public static TweenHandle TweenMoveZ(this Transform g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.MoveZ, g, SingleMoveZ).SetFrom(g.position.z).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.MoveZ, g, SingleMoveZ).SetFrom(g.position.z).SetTo(to).Start(time);
         
         public static TweenComposedMove TweenMove(this Transform g, Vector3 to, float time)
         {
@@ -42,19 +42,19 @@ namespace Prota.Tweening
         
         public static Transform ClearTweenMoveX(this Transform g)
         {
-            ProtaTweeningManager.instance.Remove(g, TweeningType.MoveX);
+            ProtaTweeningManager.instance.Remove(g, TweenType.MoveX);
             return g;
         }
         
         public static Transform ClearTweenMoveY(this Transform g)
         {
-            ProtaTweeningManager.instance.Remove(g, TweeningType.MoveY);
+            ProtaTweeningManager.instance.Remove(g, TweenType.MoveY);
             return g;
         }
         
         public static Transform ClearTweenMoveZ(this Transform g)
         {
-            ProtaTweeningManager.instance.Remove(g, TweeningType.MoveZ);
+            ProtaTweeningManager.instance.Remove(g, TweenType.MoveZ);
             return g;
         }
         

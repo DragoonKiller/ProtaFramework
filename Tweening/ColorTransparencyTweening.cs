@@ -30,7 +30,7 @@ namespace Prota.Tweening
         // ============================================================================================================
         
         public static TweenHandle TweenColorR(this SpriteRenderer g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.ColorR, g, SpriteRendererColorR).SetFrom(g.color.r).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.ColorR, g, SpriteRendererColorR).SetFrom(g.color.r).SetTo(to).Start(time);
         
         static void SpriteRendererColorR(TweenHandle h, float r)
         {
@@ -39,7 +39,7 @@ namespace Prota.Tweening
         }
         
         public static TweenHandle TweenColorG(this SpriteRenderer g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.ColorG, g, SpriteRendererColorG).SetFrom(g.color.g).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.ColorG, g, SpriteRendererColorG).SetFrom(g.color.g).SetTo(to).Start(time);
         
         static void SpriteRendererColorG(TweenHandle h, float r)
         {
@@ -48,7 +48,7 @@ namespace Prota.Tweening
         }
         
         public static TweenHandle TweenColorB(this SpriteRenderer g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.ColorB, g, SpriteRendererColorB).SetFrom(g.color.b).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.ColorB, g, SpriteRendererColorB).SetFrom(g.color.b).SetTo(to).Start(time);
         
         static void SpriteRendererColorB(TweenHandle h, float r)
         {
@@ -57,7 +57,7 @@ namespace Prota.Tweening
         }
         
         public static TweenHandle TweenColorA(this SpriteRenderer g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.Transparency, g, SpriteRendererColorA).SetFrom(g.color.a).SetTo(to).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.Transparency, g, SpriteRendererColorA).SetFrom(g.color.a).SetTo(to).SetTo(to).Start(time);
         
         static void SpriteRendererColorA(TweenHandle h, float r)
         {
@@ -76,16 +76,16 @@ namespace Prota.Tweening
         
         
         public static void ClearTweenColorR(this SpriteRenderer g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.ColorR);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.ColorR);
         
         public static void ClearTweenColorG(this SpriteRenderer g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.ColorG);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.ColorG);
         
         public static void ClearTweenColorB(this SpriteRenderer g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.ColorB);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.ColorB);
         
         public static void ClearTweenColorA(this SpriteRenderer g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.Transparency);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.Transparency);
         
         public static SpriteRenderer ClearTweenColor(this SpriteRenderer g)
         {
@@ -103,7 +103,7 @@ namespace Prota.Tweening
         
         
         public static TweenHandle TweenColorR(this Material g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.ColorR, g, MaterialColorR).SetFrom(g.color.r).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.ColorR, g, MaterialColorR).SetFrom(g.color.r).SetTo(to).Start(time);
         
         static void MaterialColorR(TweenHandle h, float r)
         {
@@ -112,7 +112,7 @@ namespace Prota.Tweening
         }
         
         public static TweenHandle TweenColorG(this Material g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.ColorG, g, MaterialColorG).SetFrom(g.color.g).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.ColorG, g, MaterialColorG).SetFrom(g.color.g).SetTo(to).Start(time);
         
         static void MaterialColorG(TweenHandle h, float r)
         {
@@ -121,7 +121,7 @@ namespace Prota.Tweening
         }
         
         public static TweenHandle TweenColorB(this Material g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.ColorB, g, MaterialColorB).SetFrom(g.color.b).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.ColorB, g, MaterialColorB).SetFrom(g.color.b).SetTo(to).Start(time);
         
         static void MaterialColorB(TweenHandle h, float r)
         {
@@ -130,7 +130,7 @@ namespace Prota.Tweening
         }
         
         public static TweenHandle TweenColorA(this Material g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.Transparency, g, MaterialColorA).SetFrom(g.color.a).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.Transparency, g, MaterialColorA).SetFrom(g.color.a).SetTo(to).Start(time);
         
         static void MaterialColorA(TweenHandle h, float r)
         {
@@ -149,16 +149,16 @@ namespace Prota.Tweening
         
         
         public static void ClearTweenColorR(this Material g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.ColorR);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.ColorR);
         
         public static void ClearTweenColorG(this Material g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.ColorG);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.ColorG);
         
         public static void ClearTweenColorB(this Material g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.ColorB);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.ColorB);
         
         public static void ClearTweenColorA(this Material g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.Transparency);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.Transparency);
         
         public static Material ClearTweenColor(this Material g)
         {
@@ -175,7 +175,7 @@ namespace Prota.Tweening
         
         
         public static TweenHandle TweenColorR(this MeshRenderer g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.ColorR, g, MeshRendererColorR).SetFrom(g.material.color.r).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.ColorR, g, MeshRendererColorR).SetFrom(g.material.color.r).SetTo(to).Start(time);
         
         static void MeshRendererColorR(TweenHandle h, float r)
         {
@@ -185,7 +185,7 @@ namespace Prota.Tweening
         }
         
         public static TweenHandle TweenColorG(this MeshRenderer g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.ColorG, g, MeshRendererColorG).SetFrom(g.material.color.g).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.ColorG, g, MeshRendererColorG).SetFrom(g.material.color.g).SetTo(to).Start(time);
         
         static void MeshRendererColorG(TweenHandle h, float r)
         {
@@ -195,7 +195,7 @@ namespace Prota.Tweening
         }
         
         public static TweenHandle TweenColorB(this MeshRenderer g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.ColorB, g, MeshRendererColorB).SetFrom(g.material.color.b).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.ColorB, g, MeshRendererColorB).SetFrom(g.material.color.b).SetTo(to).Start(time);
         
         static void MeshRendererColorB(TweenHandle h, float r)
         {
@@ -205,7 +205,7 @@ namespace Prota.Tweening
         }
         
         public static TweenHandle TweenColorA(this MeshRenderer g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.Transparency, g, MeshRendererColorA).SetFrom(g.material.color.a).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.Transparency, g, MeshRendererColorA).SetFrom(g.material.color.a).SetTo(to).Start(time);
         
         static void MeshRendererColorA(TweenHandle h, float r)
         {
@@ -225,16 +225,16 @@ namespace Prota.Tweening
         
         
         public static void ClearTweenColorR(this MeshRenderer g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.ColorR);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.ColorR);
         
         public static void ClearTweenColorG(this MeshRenderer g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.ColorG);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.ColorG);
         
         public static void ClearTweenColorB(this MeshRenderer g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.ColorB);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.ColorB);
         
         public static void ClearTweenColorA(this MeshRenderer g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.Transparency);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.Transparency);
         
         public static MeshRenderer ClearTweenColor(this MeshRenderer g)
         {
@@ -251,7 +251,7 @@ namespace Prota.Tweening
         // ============================================================================================================
         
         public static TweenHandle TweenColorR(this Image g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.ColorR, g, ImageColorR).SetFrom(g.color.r).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.ColorR, g, ImageColorR).SetFrom(g.color.r).SetTo(to).Start(time);
         
         static void ImageColorR(TweenHandle h, float r)
         {
@@ -260,7 +260,7 @@ namespace Prota.Tweening
         }
         
         public static TweenHandle TweenColorG(this Image g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.ColorG, g, ImageColorG).SetFrom(g.color.g).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.ColorG, g, ImageColorG).SetFrom(g.color.g).SetTo(to).Start(time);
         
         static void ImageColorG(TweenHandle h, float r)
         {
@@ -269,7 +269,7 @@ namespace Prota.Tweening
         }
         
         public static TweenHandle TweenColorB(this Image g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.ColorB, g, ImageColorB).SetFrom(g.color.b).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.ColorB, g, ImageColorB).SetFrom(g.color.b).SetTo(to).Start(time);
         
         static void ImageColorB(TweenHandle h, float r)
         {
@@ -278,7 +278,7 @@ namespace Prota.Tweening
         }
         
         public static TweenHandle TweenColorA(this Image g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.Transparency, g, ImageColorA).SetFrom(g.color.a).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.Transparency, g, ImageColorA).SetFrom(g.color.a).SetTo(to).Start(time);
         
         static void ImageColorA(TweenHandle h, float r)
         {
@@ -297,16 +297,16 @@ namespace Prota.Tweening
         
         
         public static void ClearTweenColorR(this Image g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.ColorR);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.ColorR);
         
         public static void ClearTweenColorG(this Image g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.ColorG);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.ColorG);
         
         public static void ClearTweenColorB(this Image g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.ColorB);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.ColorB);
         
         public static void ClearTweenColorA(this Image g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.Transparency);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.Transparency);
         
         public static Image ClearTweenColor(this Image g)
         {
@@ -323,7 +323,7 @@ namespace Prota.Tweening
         // ============================================================================================================
         
         public static TweenHandle TweenColorR(this RawImage g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.ColorR, g, RawImageColorR).SetFrom(g.color.r).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.ColorR, g, RawImageColorR).SetFrom(g.color.r).SetTo(to).Start(time);
         
         static void RawImageColorR(TweenHandle h, float r)
         {
@@ -332,7 +332,7 @@ namespace Prota.Tweening
         }
         
         public static TweenHandle TweenColorG(this RawImage g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.ColorG, g, RawImageColorG).SetFrom(g.color.g).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.ColorG, g, RawImageColorG).SetFrom(g.color.g).SetTo(to).Start(time);
         
         static void RawImageColorG(TweenHandle h, float r)
         {
@@ -341,7 +341,7 @@ namespace Prota.Tweening
         }
         
         public static TweenHandle TweenColorB(this RawImage g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.ColorB, g, RawImageColorB).SetFrom(g.color.b).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.ColorB, g, RawImageColorB).SetFrom(g.color.b).SetTo(to).Start(time);
         
         static void RawImageColorB(TweenHandle h, float r)
         {
@@ -350,7 +350,7 @@ namespace Prota.Tweening
         }
         
         public static TweenHandle TweenColorA(this RawImage g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.Transparency, g, RawImageColorA).SetFrom(g.color.a).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.Transparency, g, RawImageColorA).SetFrom(g.color.a).SetTo(to).Start(time);
         
         static void RawImageColorA(TweenHandle h, float r)
         {
@@ -369,16 +369,16 @@ namespace Prota.Tweening
         
         
         public static void ClearTweenColorR(this RawImage g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.ColorR);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.ColorR);
         
         public static void ClearTweenColorG(this RawImage g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.ColorG);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.ColorG);
         
         public static void ClearTweenColorB(this RawImage g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.ColorB);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.ColorB);
         
         public static void ClearTweenColorA(this RawImage g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.Transparency);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.Transparency);
         
         public static RawImage ClearTweenColor(this RawImage g)
         {
@@ -395,7 +395,7 @@ namespace Prota.Tweening
         // ============================================================================================================
         
         public static TweenHandle TweenTransparency(this CanvasGroup g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweeningType.Transparency, g, CanvasGroupTweenTransparency).SetFrom(g.alpha).SetTo(to).Start(time);
+            => ProtaTweeningManager.instance.New(TweenType.Transparency, g, CanvasGroupTweenTransparency).SetFrom(g.alpha).SetTo(to).Start(time);
         
         static void CanvasGroupTweenTransparency(TweenHandle h, float r)
         {
@@ -403,7 +403,7 @@ namespace Prota.Tweening
             res.alpha = h.Evaluate(r);
         }
         public static void ClearTweenTransparency(this CanvasGroup g)
-            => ProtaTweeningManager.instance.Remove(g, TweeningType.Transparency);
+            => ProtaTweeningManager.instance.Remove(g, TweenType.Transparency);
         
         // ============================================================================================================
         // ============================================================================================================

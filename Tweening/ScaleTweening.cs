@@ -24,17 +24,17 @@ namespace Prota.Tweening
     {
         public static TweenHandle TweenScaleX(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.ScaleX, g, ScaleX).SetFrom(g.localScale.x).SetTo(to).Start(time);
+            return ProtaTweeningManager.instance.New(TweenType.ScaleX, g, ScaleX).SetFrom(g.localScale.x).SetTo(to).Start(time);
         }
         
         public static TweenHandle TweenScaleY(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.ScaleY, g, ScaleY).SetFrom(g.localScale.y).SetTo(to).Start(time);
+            return ProtaTweeningManager.instance.New(TweenType.ScaleY, g, ScaleY).SetFrom(g.localScale.y).SetTo(to).Start(time);
         }
 
         public static TweenHandle TweenScaleZ(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.ScaleZ, g, ScaleZ).SetFrom(g.localScale.z).SetTo(to).Start(time);
+            return ProtaTweeningManager.instance.New(TweenType.ScaleZ, g, ScaleZ).SetFrom(g.localScale.z).SetTo(to).Start(time);
         }
         
         public static TweenComposedScale TweenScale(this Transform g, Vector3 to, float time)
@@ -51,19 +51,19 @@ namespace Prota.Tweening
         
         public static Transform ClearTweenScaleX(this Transform g)
         {
-            ProtaTweeningManager.instance.Remove(g, TweeningType.ScaleX);
+            ProtaTweeningManager.instance.Remove(g, TweenType.ScaleX);
             return g;
         }
         
         public static Transform ClearTweenScaleY(this Transform g)
         {
-            ProtaTweeningManager.instance.Remove(g, TweeningType.ScaleY);
+            ProtaTweeningManager.instance.Remove(g, TweenType.ScaleY);
             return g;
         }
         
         public static Transform ClearTweenScaleZ(this Transform g)
         {
-            ProtaTweeningManager.instance.Remove(g, TweeningType.ScaleZ);
+            ProtaTweeningManager.instance.Remove(g, TweenType.ScaleZ);
             return g;
         }
         

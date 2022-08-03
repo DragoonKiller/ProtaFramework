@@ -4,10 +4,25 @@ namespace Prota
 {
     public static partial class MethodExtensions
     {
+        public static float Sqr(this float x) => x * x;
+        public static int Sqr(this int x) => x * x;
+        public static double Sqr(this double x) => x * x;
+        public static long Sqr(this long x) => x * x;
+        
+        public static float Cube(this float x) => x * x * x;
+        public static int Cube(this int x) => x * x * x;
+        public static double Cube(this double x) => x * x * x;
+        public static long Cube(this long x) => x * x * x;
+        
         public static int Abs(this int x) => Math.Abs(x);
         public static long Abs(this long x) => Math.Abs(x);
         public static double Abs(this double x) => Math.Abs(x);
         public static float Abs(this float x) => Math.Abs(x);
+        
+        public static double Sin(this double x) => Math.Sin(x);
+        public static double Cos(this double x) => Math.Cos(x);
+        public static double Tan(this double x) => Math.Tan(x);
+        
         
         public static int Max(this int a, int b) => Math.Max(a, b);
         public static long Max(this long a, long b) => Math.Max(a, b);

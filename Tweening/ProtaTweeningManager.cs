@@ -77,7 +77,7 @@ namespace Prota.Tweening
             data.Release(key);
         }
         
-        public TweenHandle New(TweeningType type, UnityEngine.Object target, ValueTweeningUpdate onUpdate)
+        public TweenHandle New(TweenType type, UnityEngine.Object target, ValueTweeningUpdate onUpdate)
         {
             Debug.Assert(target != null);
             
@@ -113,7 +113,7 @@ namespace Prota.Tweening
             return true;
         }
         
-        public bool Remove(UnityEngine.Object target, TweeningType type)
+        public bool Remove(UnityEngine.Object target, TweenType type)
         {
             if(!targetMap.TryGetValue(target, out var list)) return false;
             return Remove(list[type]);
