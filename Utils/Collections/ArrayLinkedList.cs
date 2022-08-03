@@ -75,7 +75,7 @@ namespace Prota
             if(this != i.list) return false;
             if(i.id >= capacity) return false;
             if(!inUse[i.id]) return false;
-            if(version[i.id] > i.version) return false;
+            if(version[i.id] != i.version) return false;
             Free(i.id);
             return true;
         }
@@ -118,7 +118,7 @@ namespace Prota
             freeHead = cur;
             
             inUse[cur] = false;
-            version[cur] += 1;
+            unchecked { version[cur] += 1; }
         }
         
         ArrayLinkedListKey Use()
@@ -134,7 +134,7 @@ namespace Prota
             
             inUse[cur] = true;
             Count += 1;
-            version[cur] += 1;
+            unchecked { version[cur] += 1; }
             return new ArrayLinkedListKey(cur, version[cur], this);
         }
         
@@ -168,11 +168,11 @@ namespace Prota
             IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
         }
 
-        public IndexEnumerable EnumerateIndex() => new IndexEnumerable() { list = this };
+        public IndexEnumerable EnumerateKey() => new IndexEnumerable() { list = this };
 
         public IEnumerator<T> GetEnumerator()
         {
-            foreach(var index in EnumerateIndex())
+            foreach(var index in EnumerateKey())
             {
                 yield return arr[index.id];
             }
@@ -225,7 +225,7 @@ namespace Prota
             log(ax[a1].b.ToString());           // 13
             log(ax[a1].c.ToString());           // 14
             
-            foreach(var i in ax.EnumerateIndex())
+            foreach(var i in ax.EnumerateKey())
             {
                 log(i.ToString());
             }

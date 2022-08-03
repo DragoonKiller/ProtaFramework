@@ -24,17 +24,17 @@ namespace Prota.Tweening
     {
         public static TweenHandle TweenScaleX(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.ScaleX, g, ScaleX).SetFrom(g.localScale.x).Start(time);
+            return ProtaTweeningManager.instance.New(TweeningType.ScaleX, g, ScaleX).SetFrom(g.localScale.x).SetTo(to).Start(time);
         }
         
         public static TweenHandle TweenScaleY(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.ScaleY, g, ScaleY).SetFrom(g.localScale.y).Start(time);
+            return ProtaTweeningManager.instance.New(TweeningType.ScaleY, g, ScaleY).SetFrom(g.localScale.y).SetTo(to).Start(time);
         }
 
         public static TweenHandle TweenScaleZ(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.ScaleZ, g, ScaleZ).SetFrom(g.localScale.z).Start(time);
+            return ProtaTweeningManager.instance.New(TweeningType.ScaleZ, g, ScaleZ).SetFrom(g.localScale.z).SetTo(to).Start(time);
         }
         
         public static TweenComposedScale TweenScale(this Transform g, Vector3 to, float time)

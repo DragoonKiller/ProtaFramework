@@ -161,7 +161,7 @@ namespace Prota.Tweening
             return this;
         }
         
-        public TweenHandle SetTo(float from)
+        public TweenHandle SetTo(float to)
         {
             this.to = to;
             return this;

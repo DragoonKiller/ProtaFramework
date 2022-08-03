@@ -20,26 +20,24 @@ namespace Prota.Tweening
         {
             ActualDeleteAllTagged();
             
-            foreach(var i in data.EnumerateIndex())
+            foreach(var key in data.EnumerateKey())
             {
-                var v = data[i];
-                v.update(new TweenHandle(i, data), v.GetTimeLerp());
+                Debug.Log($"Update { key }");
+                data[key].update(new TweenHandle(key, data), data[key].GetTimeLerp());
             }
         }
         
         void ActualDeleteAllTagged()
         {
             toBeRemoved.Clear();
-            foreach(var key in data.EnumerateIndex())
+            foreach(var key in data.EnumerateKey())
             {
-                var v = data[key];
-                if(v.invalid || v.isTimeout) toBeRemoved.Add(key);
+                if(data[key].invalid || data[key].isTimeout) toBeRemoved.Add(key);
             }
             
-            foreach(var key in data.EnumerateIndex())
+            foreach(var key in data.EnumerateKey())
             {
-                var v = data[key];
-                if(v.isTimeout && v.valid) v.update(new TweenHandle(key, data), 1);
+                if(data[key].isTimeout && data[key].valid) data[key].update(new TweenHandle(key, data), 1);
             }
             
             foreach(var key in toBeRemoved)
@@ -52,7 +50,7 @@ namespace Prota.Tweening
         
         void ActualDelete(ArrayLinkedListKey key)
         {
-            var d = data[key];
+            ref var d = ref data[key];
             if(targetMap.TryGetValue(d.target, out var bindingList) && bindingList[d.type].key == key)
             {
                 bindingList[d.type] = TweenHandle.none;
@@ -63,14 +61,16 @@ namespace Prota.Tweening
                 }
             }
             data.Release(key);
+            
+            Debug.Log($"Delete { key }");
         }
         
         public TweenHandle New(TweeningType type, UnityEngine.Object target, ValueTweeningUpdate onUpdate)
         {
             Debug.Assert(target != null);
             
-            var id = data.Take();
-            ref TweenData v = ref data[id];
+            var key = data.Take();
+            ref var v = ref data[key];
             v.target = target;
             v.guard = target;
             v.type = type;
@@ -86,8 +86,9 @@ namespace Prota.Tweening
             var prev = bindingList[type];
             Remove(prev);
             
-            var newHandle = new TweenHandle(id, data);
+            var newHandle = new TweenHandle(key, data);
             bindingList[type] = newHandle;
+            Debug.Log($"New { key }");
             return newHandle;
         }
         

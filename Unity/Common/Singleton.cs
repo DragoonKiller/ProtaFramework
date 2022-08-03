@@ -12,8 +12,8 @@ namespace Prota
         static T _instance;
         public static T Get()
         {
-            if(!Application.isPlaying) return null;
             if(_instance != null) return _instance;
+            if(_instance == null && !object.ReferenceEquals(null, _instance)) return null;
             var g = new GameObject("#" + typeof(T).Name);
             GameObject.DontDestroyOnLoad(g);
             return _instance = g.AddComponent<T>();

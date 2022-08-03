@@ -39,28 +39,67 @@ namespace Prota.Editor
         {
             countLabel.text = UnityEngine.Application.isPlaying ? mgr.data.Count.ToString() : "Not Running.";
             
-            runningList.SetEnumList<List<VisualElement>, ArrayLinkedList<TweenData>, VisualElement, TweenData>(mgr.data,
-                (id, handle) => {
-                    var x = new VisualElement()
-                        .AddChild(new VisualElement() { name = "L1" }
+            runningList.SetEnumList<List<VisualElement>, ArrayLinkedList<TweenData>.IndexEnumerable, VisualElement, ArrayLinkedListKey>(mgr.data.EnumerateKey(),
+                (i, handle) => {
+                    VisualElement x = null;
+                    bool detailVisible = false;
+                    x = new VisualElement()
+                        .AddChild(new VisualElement()
                             .SetHorizontalLayout()
-                            .AddChild(new Label() { name = "id" })
+                            .AddChild(new Label() { name = "id" }.SetWidth(200))
                             .AddChild(new EnumField(TweeningType.Custom) { name = "type" })
+                            .AddChild(new Button(() => {
+                                    x.Q("detail").SetVisible(detailVisible = !detailVisible);
+                                }) { text = "+" }
+                            )
                         )
-                        .AddChild(new VisualElement() { name = "L2" }
-                            .SetHorizontalLayout()
+                        .AddChild(new VisualElement() { name = "detail" }
+                            .SetVisible(false)
+                            .AddChild(new TextField("Current Ratio") { name = "curRatio" }.SetGrow().SetNoInteraction())
+                            .AddChild(new TextField("Current Value") { name = "curValue" }.SetGrow().SetNoInteraction())
+                            .AddChild(new TextField("Current Time") { name = "curTime" }.SetGrow().SetNoInteraction())
+                            .AddChild(new Toggle("Valid") { name = "valid" }.SetGrow())
+                            .AddChild(new VisualElement().SetHorizontalLayout()
+                                .AddChild(new Label("Value").SetWidth(100))
+                                .AddChild(new TextField() { name = "valueFrom" }.SetWidth(200))
+                                .AddChild(new TextField() { name = "valueTo" }.SetWidth(200))
+                            )
+                            .AddChild(new VisualElement().SetHorizontalLayout()
+                                .AddChild(new Label("Time").SetWidth(100))
+                                .AddChild(new TextField() { name = "timeFrom" }.SetWidth(200))
+                                .AddChild(new TextField() { name = "timeTo" }.SetWidth(200))
+                            )
+                            .AddChild(new ObjectField("Target") { name = "target" })
+                            .AddChild(new ObjectField("Guard") { name = "guard" })
+                            .AddChild(new CurveField("Curve") { name = "curve" }.SetGrow())
                         )
-                        .AddChild(new VisualElement().AsHorizontalSeperator(1));
+                        .AddChild(new VisualElement().AsHorizontalSeperator(1))
+                        ;
                     running.Add(x);
                     return x;
                 },
-                (id, element, data) => {
+                (i, element, key) => {
+                    var data = mgr.data[key];
                     element.SetVisible(data.valid);
                     if(!data.valid) return;
-                    element.Q<Label>("id").text = data.ToString();
-                    element.Q<EnumField>().value = data.type;
+                    element.Q<Label>("id").text = key.ToString();
+                    element.Q<EnumField>("type").value = data.type;
+                    if(element.Q("detail").visible)
+                    {
+                        element.Q<TextField>("curRatio").value = data.EvaluateRatio(data.GetTimeLerp()).ToString();
+                        element.Q<TextField>("curValue").value = data.Evaluate(data.GetTimeLerp()).ToString();
+                        element.Q<TextField>("curTime").value = data.GetTimeLerp().ToString();
+                        element.Q<TextField>("valueFrom").value = data.from.ToString();
+                        element.Q<TextField>("valueTo").value = data.to.ToString();
+                        element.Q<TextField>("timeFrom").value = data.timeFrom.ToString();
+                        element.Q<TextField>("timeTo").value = data.timeTo.ToString();
+                        element.Q<CurveField>("curve").value = data.curve;
+                        element.Q<ObjectField>("target").value = data.target;
+                        element.Q<ObjectField>("guard").value = data.guard;
+                        element.Q<Toggle>("valid").value = data.valid;
+                    }
                 },
-                (id, element) => {
+                (i, element) => {
                     element.SetVisible(false);
                 }
             );

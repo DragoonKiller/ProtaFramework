@@ -23,17 +23,17 @@ namespace Prota.Tweening
     {
         public static TweenHandle TweenRotateX(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.RotateX, g, RotateX).SetFrom(g.rotation.eulerAngles.x).Start(time);
+            return ProtaTweeningManager.instance.New(TweeningType.RotateX, g, RotateX).SetFrom(g.rotation.eulerAngles.x).SetTo(to).Start(time);
         }
         
         public static TweenHandle TweenRotateY(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.RotateY, g, RotateY).SetFrom(g.rotation.eulerAngles.y).Start(time);
+            return ProtaTweeningManager.instance.New(TweeningType.RotateY, g, RotateY).SetFrom(g.rotation.eulerAngles.y).SetTo(to).Start(time);
         }
 
         public static TweenHandle TweenRotateZ(this Transform g, float to, float time)
         {
-            return ProtaTweeningManager.instance.New(TweeningType.RotateZ, g, RotateZ).SetFrom(g.rotation.eulerAngles.z).Start(time);
+            return ProtaTweeningManager.instance.New(TweeningType.RotateZ, g, RotateZ).SetFrom(g.rotation.eulerAngles.z).SetTo(to).Start(time);
         }
         
         public static TweenComposedRotate TweenRotate(this Transform g, Vector3 to, float time)
