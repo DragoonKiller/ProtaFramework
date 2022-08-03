@@ -12,17 +12,25 @@ namespace Prota.Tweening
         public static void TestA()
         {
             var a = GameObject.Find("Test1");
-            a.transform.TweenMoveX(4, 2);
+            var tt = a.transform.TweenMoveX(4, 2);
+            tt.onInterrupted = t => {
+                Debug.Log("interrupt!!");
+            };
             ProtaTweeningManager.Get().StartCoroutine(R(a));
         }
         
         static IEnumerator R(GameObject a)
         {
             yield return new WaitForSeconds(1);
-            a.transform.TweenMoveX(-2, 1);
-            yield return new WaitForEndOfFrame();
-            yield return new WaitForEndOfFrame();
-            Debug.Break();
+            var tt = a.transform.TweenMoveX(-2, 1);
+            tt.onFinish = t => {
+                Debug.Log("finish!!!");
+            };
+            
+            // yield return new WaitForEndOfFrame();
+            // yield return new WaitForEndOfFrame();
+            // Debug.Break();
+            
             yield break;
         }
         

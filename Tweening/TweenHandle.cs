@@ -34,6 +34,7 @@ namespace Prota.Tweening
         public ValueTweeningUpdate update;
         
         public Action<TweenHandle> onFinish;
+        public Action<TweenHandle> onInterrupted;
         public object customData;
         
         public float from;
@@ -92,6 +93,12 @@ namespace Prota.Tweening
         {
             get => data[key].onFinish;
             set => data[key].onFinish = value;
+        }
+        
+        public Action<TweenHandle> onInterrupted
+        {
+            get => data[key].onInterrupted;
+            set => data[key].onInterrupted = value;
         }
         
         public object customData

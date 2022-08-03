@@ -22,7 +22,6 @@ namespace Prota.Tweening
             
             foreach(var key in data.EnumerateKey())
             {
-                Debug.Log($"Update { key }");
                 data[key].update(new TweenHandle(key, data), data[key].GetTimeLerp());
             }
         }
@@ -35,9 +34,19 @@ namespace Prota.Tweening
                 if(data[key].invalid || data[key].isTimeout) toBeRemoved.Add(key);
             }
             
-            foreach(var key in data.EnumerateKey())
+            foreach(var key in toBeRemoved)
             {
-                if(data[key].isTimeout && data[key].valid) data[key].update(new TweenHandle(key, data), 1);
+                if(data[key].isTimeout && data[key].valid)          // valid but timeout, set to final position.
+                {
+                    data[key].update(new TweenHandle(key, data), 1);
+                    data[key].onFinish?.Invoke(new TweenHandle(key, data));
+                }
+                else        // to be removed but not timeout, so it's invalid.
+                {
+                    Debug.Assert(!data[key].isTimeout);
+                    Debug.Assert(data[key].invalid);
+                    data[key].onInterrupted?.Invoke(new TweenHandle(key, data));
+                }
             }
             
             foreach(var key in toBeRemoved)
@@ -61,8 +70,6 @@ namespace Prota.Tweening
                 }
             }
             data.Release(key);
-            
-            Debug.Log($"Delete { key }");
         }
         
         public TweenHandle New(TweeningType type, UnityEngine.Object target, ValueTweeningUpdate onUpdate)
@@ -88,7 +95,6 @@ namespace Prota.Tweening
             
             var newHandle = new TweenHandle(key, data);
             bindingList[type] = newHandle;
-            Debug.Log($"New { key }");
             return newHandle;
         }
         
