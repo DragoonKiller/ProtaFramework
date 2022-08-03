@@ -16,6 +16,9 @@ namespace Prota.Tweening
             tt.onInterrupted = t => {
                 Debug.Log("interrupt!!");
             };
+            tt.onRemove = t => {
+                Debug.Log("remove 1 !!!");
+            };
             ProtaTweeningManager.Get().StartCoroutine(R(a));
         }
         
@@ -25,6 +28,9 @@ namespace Prota.Tweening
             var tt = a.transform.TweenMoveX(-2, 1);
             tt.onFinish = t => {
                 Debug.Log("finish!!!");
+            };
+            tt.onRemove = t => {
+                Debug.Log("remove 2 !!!");
             };
             
             // yield return new WaitForEndOfFrame();

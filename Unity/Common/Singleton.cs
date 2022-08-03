@@ -12,6 +12,10 @@ namespace Prota
         static T _instance;
         public static T Get()
         {
+            #if UNITY_EDITOR
+            if(!Application.isPlaying) throw new InvalidOperationException("Cannot create singletion in edit mode!");
+            #endif
+            
             if(_instance != null) return _instance;
             if(_instance == null && !object.ReferenceEquals(null, _instance)) return null;
             var g = new GameObject("#" + typeof(T).Name);

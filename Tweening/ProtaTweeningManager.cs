@@ -22,7 +22,8 @@ namespace Prota.Tweening
             
             foreach(var key in data.EnumerateKey())
             {
-                data[key].update(new TweenHandle(key, data), data[key].GetTimeLerp());
+                ref var v = ref data[key];
+                v.update(v.handle, v.GetTimeLerp());
             }
         }
         
@@ -31,22 +32,26 @@ namespace Prota.Tweening
             toBeRemoved.Clear();
             foreach(var key in data.EnumerateKey())
             {
-                if(data[key].invalid || data[key].isTimeout) toBeRemoved.Add(key);
+                ref var v = ref data[key];
+                if(v.invalid || v.isTimeout) toBeRemoved.Add(key);
             }
             
             foreach(var key in toBeRemoved)
             {
-                if(data[key].isTimeout && data[key].valid)          // valid but timeout, set to final position.
+                ref var v = ref data[key];
+                if(v.isTimeout && v.valid)          // valid but timeout, set to final position.
                 {
-                    data[key].update(new TweenHandle(key, data), 1);
-                    data[key].onFinish?.Invoke(new TweenHandle(key, data));
+                    v.update(v.handle, 1);
+                    v.onFinish?.Invoke(v.handle);
                 }
                 else        // to be removed but not timeout, so it's invalid.
                 {
-                    Debug.Assert(!data[key].isTimeout);
-                    Debug.Assert(data[key].invalid);
-                    data[key].onInterrupted?.Invoke(new TweenHandle(key, data));
+                    Debug.Assert(!v.isTimeout);
+                    Debug.Assert(v.invalid);
+                    v.onInterrupted?.Invoke(v.handle);
                 }
+                
+                v.onRemove(v.handle);
             }
             
             foreach(var key in toBeRemoved)
@@ -82,6 +87,7 @@ namespace Prota.Tweening
             v.guard = target;
             v.type = type;
             v.update = onUpdate;
+            v.SetHandle(new TweenHandle(key, data));
             
             targetMap.TryGetValue(target, out var bindingList);
             if(bindingList == null)
