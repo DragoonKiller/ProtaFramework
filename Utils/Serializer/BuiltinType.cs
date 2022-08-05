@@ -1,14 +1,6 @@
 using System;
 using System.Collections.Generic;
 
-
-#if UNITY_2017_1_OR_NEWER
-
-using UnityEngine;
-
-#endif
-
-
 namespace Prota
 {
     public struct BuiltinType : IEquatable<BuiltinType>, IComparable<BuiltinType>
