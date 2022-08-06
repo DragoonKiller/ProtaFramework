@@ -28,7 +28,14 @@ namespace Prota
         {
             IsCompleted = true;
             if(continuation == null) return;
-            context.Post(o => continuation(), null);
+            if(context == null)
+            {
+                Task.Run(continuation);
+            }
+            else
+            {
+                context.Post(o => continuation(), null);
+            }
         }
     }
 }

@@ -7,6 +7,12 @@ namespace Prota
 {
     public static partial class MethodExtensions
     {
+        public static void InvokeAll<G>(this IEnumerable<G> list, object[] args = null)
+            where G: Delegate
+        {
+            foreach(var i in list) i?.DynamicInvoke(args);
+        }
+        
         public static void GetAndModify<T>(this List<T> a, int i, Func<T, T> f)
         {
             a[i] = f(a[i]);

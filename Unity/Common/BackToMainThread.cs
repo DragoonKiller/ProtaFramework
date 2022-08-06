@@ -22,8 +22,15 @@ namespace Prota.Unity
         public SynchronizationContextAwaiter GetAwaiter()
         {
             if(context == null) throw new Exception("BackToMainThread should not use in Awake.");
-            UnityEngine.Debug.Log(context);
             return context.GetAwaiter();
+        }
+    }
+    
+    public struct SwitchToWorkerThread
+    {   
+        public SynchronizationContextAwaiter GetAwaiter()
+        {
+            return (null as SynchronizationContext).GetAwaiter();
         }
     }
 }
