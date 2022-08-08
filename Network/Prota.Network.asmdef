@@ -2,12 +2,10 @@
     "name": "Prota.Network",
     "rootNamespace": "Prota.Net",
     "references": [
-        "GUID:16c3d94ababbe324f8cdb5633c462e9c",
         "GUID:7835e8a469ec9924f85b3c83aea11639",
-        "GUID:2d059907b7430604fac462e74f6f55fb",
+        "GUID:4af5db39d74318c4fa1288b56207dbe1",
         "GUID:1d01d2fa0687c4240ac5dc6551db391a",
-        "GUID:02ace0c7d57a09d45931d112dc8d7adc",
-        "GUID:4af5db39d74318c4fa1288b56207dbe1"
+        "GUID:02ace0c7d57a09d45931d112dc8d7adc"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
