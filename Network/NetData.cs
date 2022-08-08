@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using LiteNetLib.Utils;
 using Prota.Data;
 using UnityEngine;
-using XLua;
 
 
 /*

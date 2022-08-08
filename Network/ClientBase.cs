@@ -2,10 +2,8 @@ using System;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using UnityEngine;
-using XLua;
 using System.Net;
 
-using Prota.Lua;
 using System.Collections.Generic;
 
 using NetCallback = System.Action<Prota.Net.NetId, LiteNetLib.Utils.NetDataReader, LiteNetLib.DeliveryMethod>;

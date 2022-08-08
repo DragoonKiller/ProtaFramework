@@ -46,6 +46,11 @@ namespace Prota.Tweening
         
         // builtin ease functions https://easings.net/#
         
+        public static TweenEase Step(Func<float, float> f, int stepCount = 1)
+        {
+            return new TweenEase(x => f(Mathf.Ceil(x * stepCount)));
+        }
+        
         public static readonly TweenEase linear = new TweenEase(x => x);
         public static readonly TweenEase sinIn = new TweenEase(x => 1 - Mathf.Cos(x * Mathf.PI / 2));
         public static readonly TweenEase sinOut = new TweenEase(x => (x * Mathf.PI / 2).Sin());
