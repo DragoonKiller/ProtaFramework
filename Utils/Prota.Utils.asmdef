@@ -1,12 +1,17 @@
 {
     "name": "Prota.Utils",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "GUID:5a46ad82eac024e4fbb6a0516a5def17"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
-    "overrideReferences": false,
-    "precompiledReferences": [],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "System.Runtime.CompilerServices.Unsafe.dll",
+        "Microsoft.NET.StringTools.dll"
+    ],
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
