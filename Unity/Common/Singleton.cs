@@ -9,6 +9,7 @@ namespace Prota
     {
         public static T instance => Get();
         
+        public static bool exists => _instance != null;
         static T _instance;
         public static T Get()
         {

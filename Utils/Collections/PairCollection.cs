@@ -4,6 +4,7 @@ using System.Text;
 using System.Buffers.Binary;
 using System.Runtime.Serialization;
 using System.Collections;
+using System.Collections.Concurrent;
 
 namespace Prota
 {

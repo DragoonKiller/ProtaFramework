@@ -49,6 +49,8 @@ namespace Prota
         public static float Mod(this float x, float y) => x - (x / y).Floor() * y;
         public static double Mod(this double x, double y) => x - Math.Floor(x / y) * y;
         
+        public static int ModSys(this int x, int y) => x % y < 0 ? x % y + Math.Abs(y) : x % y;
+        public static long ModSys(this long x, long y) => x % y < 0 ? x % y + Math.Abs(y) : x % y;
         
         public static float Div(this float x, float y)
         {
