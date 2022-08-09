@@ -8,6 +8,13 @@ using LiteNetLib.Utils;
 
 namespace Prota.Net
 {
+    public class SerializePrioritryAttribute : Attribute
+    {
+        public int priority;
+
+        public SerializePrioritryAttribute(int priority) => this.priority = priority;
+    }
+    
     public static class NetUtils
     {
         public static void Error(this CommonHeader header, string desc)

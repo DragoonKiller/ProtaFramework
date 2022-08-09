@@ -1,17 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using LiteNetLib.Utils;
 
 namespace Prota.Net
 {
     using InternalType = System.UInt16;
     
     [StructLayout(LayoutKind.Sequential)]
-    public struct NetId : IEquatable<NetId>, IComparable<NetId>
+    public struct NetId : IEquatable<NetId>, IComparable<NetId>, INetSerializable
     {
         public const int internalSize = sizeof(InternalType);
         
-        public readonly InternalType id;
+        public InternalType id { get; private set; }
         
         public static NetId none => new NetId(0);
         public bool isNone => id == 0;
@@ -23,6 +24,10 @@ namespace Prota.Net
         public override bool Equals(object obj) => obj is NetId nid && nid.id == this.id;
         public override int GetHashCode() => id.GetHashCode();
         public override string ToString() => $"NetId[{ id }]";
+
+        public void Serialize(NetDataWriter writer) => writer.Put(id);
+        public void Deserialize(NetDataReader reader) => id = reader.GetUShort();
+
         public static bool operator <(NetId left, NetId right) => left.CompareTo(right) < 0;
         public static bool operator >(NetId left, NetId right) => left.CompareTo(right) > 0;
         public static bool operator <=(NetId left, NetId right) => left.CompareTo(right) <= 0;
@@ -70,6 +75,5 @@ namespace Prota.Net
             used.Remove(id);
             return this;
         }
-        
     }
 }

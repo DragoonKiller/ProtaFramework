@@ -183,7 +183,7 @@ namespace Prota
             return res;
         }
         
-        public void PushNext(T v)
+        public void PushBack(T v)
         {
             if(pointers.count == data.Length) Resize();
             data[pointers.front] = v;

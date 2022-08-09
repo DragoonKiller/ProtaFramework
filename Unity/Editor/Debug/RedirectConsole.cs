@@ -12,6 +12,7 @@ namespace Prota.Editor
             public override void Write(string value)
             {
                 base.Write(value);
+                value = value.Replace("\0", "");
                 if(string.IsNullOrWhiteSpace(value)) return;
                 if(value.StartsWith("[Exception]") || value.StartsWith("[Error]"))
                     Debug.LogError(value);

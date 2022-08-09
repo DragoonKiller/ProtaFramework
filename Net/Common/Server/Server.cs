@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
 
@@ -26,6 +27,7 @@ namespace Prota.Net
             usedRoom.GetOrCreate(roomId, out var playersInRoom);
             playersInRoom.Add(id);
             roomMap[id] = roomId;
+            Console.WriteLine($"[Info] { id } Enter room { roomId }");
             return true;
         }
         
@@ -36,6 +38,7 @@ namespace Prota.Net
             var playersInRoom = usedRoom[roomId];
             playersInRoom.Remove(id);
             if(playersInRoom.Count == 0) usedRoom.Remove(roomId);
+            Console.WriteLine($"[Info] { id } Leave room { roomId }");
             return true;
         }
     }
@@ -64,11 +67,6 @@ namespace Prota.Net
         public static NetDataWriter _writer;
         static NetDataWriter writer => _writer == null ? _writer = new NetDataWriter() : _writer;
         
-        [ThreadStatic]
-        static NetSerializer _serializer;
-        static NetSerializer serializer => _serializer == null ? _serializer = new NetSerializer() : _serializer;
-        
-        
         public Server(int port, int maxConnection)
         {
             NetId.ValidRange(maxConnection).Assert();
@@ -96,19 +94,25 @@ namespace Prota.Net
             {
                 var header = reader.GetCommonHeader();
                 
+                // 检查发送方是否还连着.
                 if(!peers.TryGetValue(header.src, out var srcPeer))
                 {
                     header.Error($"source invalid");
                     return;
                 }
                 
+                
+                // 检查发送方是否是真正的发送方.
                 if(srcPeer != peer)
                 {
                     header.Error($"source validation fail, actual source: { peers.GetKeyByValue(peer) }");
                     return;
                 }
                 
-                if(header.protoId == ProtoId.C2SReqClientList)   // 客户端请求已连接客户端列表.
+                // ====================================================================================================
+                // 客户端请求已连接客户端列表.
+                // ====================================================================================================
+                if(header.protoId == ProtoId.C2SReqClientList)
                 {
                     writer.Reset();
                     var newHeader = new CommonHeader(header.seq.response, NetId.none, peers.GetKeyByValue(peer), ProtoId.S2CRspClientList);
@@ -116,11 +120,19 @@ namespace Prota.Net
                     writer.Put(peers.Count);
                     foreach(var (netId, p) in peers)
                     {
+                        var roomValid = rooms.roomMap.TryGetValue(netId, out var roomId);
                         writer.Put(netId.id);
+                        writer.Put(roomId);
+                        writer.Put(roomValid);
                     }
                     peer.Send(writer, deliveryMethod);
+                    return;
                 }
-                else if(header.protoId == ProtoId.C2SReqEnterRoom)     // 客户端请求加入房间.
+                
+                // ====================================================================================================
+                // 客户端请求加入房间.
+                // ====================================================================================================
+                if(header.protoId == ProtoId.C2SReqEnterRoom)
                 {
                     if(!header.dst.isNone)
                     {
@@ -135,7 +147,7 @@ namespace Prota.Net
                         // 报告失败.
                         writer.Reset();
                         writer.WriteHeader(new CommonHeader(header.seq.response, NetId.none, header.src, ProtoId.S2CRspExitRoom));
-                        writer.Put(false);
+                        writer.Put(S2CRspEnterRoom.fail);
                         peer.Send(writer, deliveryMethod);
                     }
                     
@@ -145,20 +157,25 @@ namespace Prota.Net
                         if(playerId == header.src) continue;        // 不会发送给自己.
                         var dstPeer = peers[playerId];
                         writer.Reset();
-                        writer.WriteHeader(new CommonHeader(NetSequenceId.notify, header.src, peers.GetKeyByValue(dstPeer), ProtoId.S2CNtfOtherEnterRoom));
-                        writer.Put(reader.RawData, reader.UserDataOffset + CommonHeader.size, reader.UserDataSize - CommonHeader.size);
+                        writer.WriteHeader(new CommonHeader(NetSequenceId.notify, header.src, peers.GetKeyByValue(dstPeer), ProtoId.S2CNtfOtherEnterExitRoom));
+                        writer.Put(new S2CNtfOtherEnterExitRoom(true));
                         dstPeer.Send(writer, deliveryMethod);
                     }
                     
-                    
-                    // 向请求加入房间的客户端报告成功.
+                    // 向请求加入房间的客户端报告成功. 另外要报告该房间内其他人.
                     writer.Reset();
                     writer.WriteHeader(new CommonHeader(header.seq.response, NetId.none, header.src, ProtoId.S2CRspEnterRoom));
-                    writer.Put(true);
+                    var room = rooms[roomId];
+                    writer.Put(new S2CRspEnterRoom(roomId, room.ToArray()));
                     peer.Send(writer, deliveryMethod);
                     
+                    return;
                 }
-                else if(header.protoId == ProtoId.C2SReqExitRoom)     // 客户端请求退出房间.
+                
+                // ====================================================================================================
+                // // 客户端请求退出房间.
+                // ====================================================================================================
+                if(header.protoId == ProtoId.C2SReqExitRoom)
                 {
                     if(!header.dst.isNone)
                     {
@@ -166,7 +183,7 @@ namespace Prota.Net
                         // 报告失败.
                         writer.Reset();
                         writer.WriteHeader(new CommonHeader(header.seq.response, NetId.none, header.src, ProtoId.S2CRspExitRoom));
-                        writer.Put(false);
+                        writer.Put(new S2CRspExitRoom(false));
                         peer.Send(writer, deliveryMethod);
                         return;
                     }
@@ -177,7 +194,7 @@ namespace Prota.Net
                         // 报告失败.
                         writer.Reset();
                         writer.WriteHeader(new CommonHeader(header.seq.response, NetId.none, header.src, ProtoId.S2CRspExitRoom));
-                        writer.Put(false);
+                        writer.Put(new S2CRspExitRoom(false));
                         peer.Send(writer, deliveryMethod);
                         return;
                     }
@@ -186,18 +203,35 @@ namespace Prota.Net
                     {
                         writer.Reset();
                         writer.WriteHeader(new CommonHeader(header.seq.response, NetId.none, header.src, ProtoId.S2CRspExitRoom));
-                        writer.Put(false);
+                        writer.Put(new S2CRspExitRoom(false));
                         peer.Send(writer, deliveryMethod);
+                        return;
                     }
-                    else        // 报告成功.
+                    
+                    // 向其它客户端报告有人退出房间了. 注意客户端信息填在源id里, 只需要发送一个 header 就好了.
+                    var roomId = rooms.roomMap[header.src];
+                    foreach(var playerId in rooms[roomId])
                     {
+                        if(playerId == header.src) continue;        // 不会发送给自己.
+                        var dstPeer = peers[playerId];
                         writer.Reset();
-                        writer.WriteHeader(new CommonHeader(header.seq.response, NetId.none, header.src, ProtoId.S2CRspExitRoom));
-                        writer.Put(true);
-                        peer.Send(writer, deliveryMethod);
+                        writer.WriteHeader(new CommonHeader(NetSequenceId.notify, header.src, peers.GetKeyByValue(dstPeer), ProtoId.S2CNtfOtherEnterExitRoom));
+                        writer.Put(new S2CNtfOtherEnterExitRoom(false));
+                        dstPeer.Send(writer, deliveryMethod);
                     }
+                    
+                    // 报告成功.
+                    writer.Reset();
+                    writer.WriteHeader(new CommonHeader(header.seq.response, NetId.none, header.src, ProtoId.S2CRspExitRoom));
+                    writer.Put(new S2CRspExitRoom(true));
+                    peer.Send(writer, deliveryMethod);
+                    return;
                 }
-                else if(!header.dst.isNone)     // 这条消息发送给客户端; 客户端请求数据转发.
+                
+                // ====================================================================================================
+                // 客户端请求数据转发给另一个客户端.
+                // ====================================================================================================
+                if(!header.dst.isNone)
                 {
                     if(!peers.TryGetValue(header.dst, out var dstPeer))
                     {
@@ -206,8 +240,13 @@ namespace Prota.Net
                     }
                     
                     dstPeer.Send(reader.RawData, reader.UserDataOffset, reader.UserDataSize, deliveryMethod);
+                    return;
                 }
-                else if(header.dst.isNone)      // 客户端想广播这条消息.
+                
+                // ====================================================================================================
+                // 客户端想给房间内的人广播这条消息.
+                // ====================================================================================================
+                if(header.dst.isNone)
                 {
                     if(rooms.TryGetRoom(header.src, out var roomId))
                     {
@@ -224,12 +263,12 @@ namespace Prota.Net
                         writer.Put(reader.RawData, reader.UserDataOffset + CommonHeader.size, reader.UserDataSize - CommonHeader.size);
                         dstPeer.Send(writer, deliveryMethod);
                     }
-                    
+                
+                    return;    
                 }
-                else
-                {
-                    header.Error($"unknown delivery pattern");
-                }
+                
+                
+                header.Error($"unknown delivery pattern");
             }
         }
         
