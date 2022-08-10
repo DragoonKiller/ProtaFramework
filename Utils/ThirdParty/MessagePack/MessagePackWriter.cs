@@ -29,7 +29,7 @@ namespace MessagePack
         /// <summary>
         /// The writer to use.
         /// </summary>
-        private BufferWriter writer;
+        internal BufferWriter writer;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MessagePackWriter"/> struct.
@@ -1123,6 +1123,30 @@ namespace MessagePack
                 byte[] result = this.writer.SequenceRental.Value.AsReadOnlySequence.ToArray();
                 this.writer.SequenceRental.Dispose();
                 return result;
+            }
+        }
+        
+        // Prota framework new added.
+        public long FlushAndGetArray(byte[] arr, int start)
+        {
+            if (this.writer.TryGetUncommittedSpan(out ReadOnlySpan<byte> span))
+            {
+                span.CopyTo(arr.AsSpan(start));
+                return span.Length;
+            }
+            else
+            {
+                if (this.writer.SequenceRental.Value == null)
+                {
+                    throw new NotSupportedException("This instance was not initialized to support this operation.");
+                }
+
+                this.Flush();
+                var seq = this.writer.SequenceRental.Value.AsReadOnlySequence;
+                var len = seq.Length;
+                seq.CopyTo(arr.AsSpan(start));
+                this.writer.SequenceRental.Dispose();
+                return len;
             }
         }
 

@@ -21,5 +21,6 @@ namespace Prota
             return arr;
         }
         
+        public static ArraySegment<T> AsSegment<T>(this T[] arr, int start = 0, int? count = null) => new ArraySegment<T>(arr, start, count ?? arr.Length - start);
     }
 }
