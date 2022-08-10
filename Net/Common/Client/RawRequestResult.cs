@@ -38,7 +38,7 @@ namespace Prota.Net
                 {
                     sleepCount++;
                     // 最多等待 0.1s.
-                    if(sleepCount > 100) await Task.Delay(Math.Min(100, sleepCount / 100));
+                    if(sleepCount > 100) await Task.Delay(Math.Min(100, sleepCount / 100), this.cancellationToken);
                     else Thread.Yield();
                 }
                 
@@ -50,7 +50,7 @@ namespace Prota.Net
                     var segment = reader.RawData.AsSegment(reader.Position);
                     return segment.Deserialize<T>();
                 }
-            });
+            }, cancellationToken);
         }
     }
 }

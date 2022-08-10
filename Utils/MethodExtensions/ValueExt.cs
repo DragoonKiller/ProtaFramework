@@ -17,11 +17,9 @@ namespace Prota
             public AssertionFailedException(string message, Exception innerException) : base(message, innerException) { }
         }
 
-        public static T AssertNotNull<T>(this T value, string message = null)
-            where T: class
+        public static void AssertNotNull(this object value, string message = null)
         {
             if(value == null) throw new AssertionFailedException(message);
-            return value;
         }
         
         public static bool Assert(this bool value, string message = null)

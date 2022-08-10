@@ -9,7 +9,7 @@ using LiteNetLib.Utils;
 
 namespace Prota.Net
 {
-    public class Client
+    public class Client : IDisposable
     {
         // 管理房间.
         public class Room
@@ -43,6 +43,8 @@ namespace Prota.Net
         // 序列号的滑动区间. 序列号取值是 ushort, 范围是 1 ~ maxSeq. 序列号 0 表示没有序列号.
         readonly CircleDualPointer pointers;
         
+        readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
+        
         public Client(bool setAsMain = true, int maxSeq = 1000000)
         {
             if(setAsMain) local = this;
@@ -51,7 +53,6 @@ namespace Prota.Net
             connection.RegisterCallbacks(callbackList.Receive);
             connection.Start();
             connection.onDisconnect += () => room = null;
-            
             AddCallback<S2CNtfOtherEnterExitRoom>(PlayerEnterExitRoom);
         }
         
@@ -77,25 +78,24 @@ namespace Prota.Net
         {
             if(connection?.peer == null)  throw new InvalidOperationException("Connect not initialized!");
             
-            var writer = NetWriterWithHeader(NetSequenceId.notify, target, ProtocolInfoCollector.GetId(typeof(T)));
+            var writer = NetWriterWithHeader(NetSequenceId.notify, target, typeof(T).GetProtocolId());
             writer.PutProtaSerialize(data);
             
-            connection.peer.Send(writer, ProtocolInfoCollector.GetMethod(typeof(T)));
+            connection.peer.Send(writer, typeof(T).GetProtocolMethod());
         }
         
         void SendRequest<T>(NetId target, T data, OnReceiveFunction frsp)
         {
             var seq = new NetSequenceId(pointers.BackMoveNext() + 1);
-            var writer = NetWriterWithHeader(seq, target, ProtocolInfoCollector.GetId(typeof(T)));
+            var writer = NetWriterWithHeader(seq, target, typeof(T).GetProtocolId());
             writer.PutProtaSerialize(data);
-            
+            connection.peer.Send(writer, typeof(T).GetProtocolMethod());
             pendings.Add(seq, frsp);
         }
         
-        public RawRequestResult Request<T>(NetId target, T data, CancellationToken? cancellationToken = null)
+        public RawRequestResult Request<T>(NetId target, T data)
         {
-            var token = cancellationToken ?? CancellationToken.None;
-            var res = new RawRequestResult() { cancellationToken = token };
+            var res = new RawRequestResult() { cancellationToken = cancelSource.Token };
             SendRequest(target, data, res.OnResponse);
             return res;
         }
@@ -145,5 +145,17 @@ namespace Prota.Net
         
         void RemoveCallback(NetCallbackManager.CallbackHandle handle) => handle.Dispose();
         
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        
+        public void Dispose()
+        {
+            cancelSource.Cancel();
+            room = null;
+            callbackList = null;
+            connection.Dispose();
+            connection = null;
+        }
     }
 }

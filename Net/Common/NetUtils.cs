@@ -30,6 +30,14 @@ namespace Prota.Net
             return ori;
         }
         
+        public static T GetProtaSerialized<T>(this NetDataReader reader)
+        {
+            var seg = reader.SegmentToTheEnd();
+            var res = seg.Deserialize<T>(out int bytesRead);
+            reader.SkipBytes(bytesRead);
+            return res;
+        }
+        
         
         [ThreadStatic]
         static byte[] _tempBuffer;

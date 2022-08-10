@@ -45,7 +45,7 @@ namespace Prota.Net
         
         
         
-    public class Server
+    public class Server : IDisposable
     {
         readonly EventBasedNetListener listener;
         
@@ -61,7 +61,7 @@ namespace Prota.Net
         
         public int latency { get; private set; }
         
-        public string accpetKey = "ProtaClient";
+        public string accpetKey = ClientConnection.defaultKey;
         
         [ThreadStatic]
         public static NetDataWriter _writer;
@@ -87,8 +87,10 @@ namespace Prota.Net
             listener.NetworkReceiveUnconnectedEvent += ReceiveUnconnectedEvent;
             listener.NetworkLatencyUpdateEvent += UpdateLatency;
             listener.NetworkReceiveEvent += Receive;
+            mgr = new NetManager(listener);
             mgr.UnsyncedEvents = true;
-            mgr.Start(port);
+            bool success = mgr.Start(port);
+            Console.WriteLine($"[Info] Prota server start [{ (success ? "success" : "fail") }] at port { mgr.LocalPort }");
         }
         
         
@@ -327,6 +329,10 @@ namespace Prota.Net
         }
 
         void UpdateLatency(NetPeer peer, int latency) => this.latency = latency;
-        
+
+        public void Dispose()
+        {
+            mgr.DisconnectAll();
+        }
     }
 }

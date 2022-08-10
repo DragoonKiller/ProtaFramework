@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using LiteNetLib;
 
@@ -8,7 +9,7 @@ namespace Prota.Net
     // ====================================================================================================
     // 管理与服务器建立的连接.
     // ====================================================================================================
-    public class ClientConnection
+    public class ClientConnection : IDisposable
     {
         public const string defaultKey = "ProtaClient";
         
@@ -26,7 +27,12 @@ namespace Prota.Net
         
         public Action onDisconnect;
         
-        public ClientConnection() => mgr = new NetManager(this.listener = new EventBasedNetListener());
+        readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
+        
+        public ClientConnection()
+        {
+            mgr = new NetManager(this.listener = new EventBasedNetListener());
+        }
         
         public void RegisterCallbacks(EventBasedNetListener.OnNetworkReceive onReceive)
         {
@@ -37,7 +43,11 @@ namespace Prota.Net
             listener.NetworkReceiveEvent += onReceive;
         }
         
-        public void Start() => mgr.Start();
+        public void Start()
+        {
+            bool success = mgr.Start();
+            Console.WriteLine($"[Info] Prota client start [{ (success ? "success" : "fail") }] at port { mgr.LocalPort }");
+        }
         
         public async Task ConnectToServer(IPEndPoint endpoint, string connectionKey = defaultKey)
         {
@@ -45,8 +55,12 @@ namespace Prota.Net
             
             // 等待连接成功.
             await Task.Run(async () => {
-                while(peer != null) await Task.Delay(Client.threadCheckDelay);
-            });
+                while(peer == null)
+                {
+                    Console.WriteLine("waiting...");
+                    await Task.Delay(Client.threadCheckDelay, cancelSource.Token);
+                }
+            }, cancelSource.Token);
         }
         
         public void UpdateLatency(NetPeer peer, int latency) => this.latency = latency;
@@ -62,6 +76,13 @@ namespace Prota.Net
         void ReceiveUnconnectedEvent(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
         {
             Console.WriteLine($"[Error] cannot deal with unconnected message. [{ remoteEndPoint }]");
+        }
+
+        public void Dispose()
+        {
+            cancelSource.Cancel();
+            mgr.DisconnectAll();
+            
         }
     }
 }
