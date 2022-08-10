@@ -3,7 +3,8 @@
     "rootNamespace": "Prota.Net",
     "references": [
         "GUID:7835e8a469ec9924f85b3c83aea11639",
-        "GUID:4af5db39d74318c4fa1288b56207dbe1"
+        "GUID:4af5db39d74318c4fa1288b56207dbe1",
+        "GUID:5a46ad82eac024e4fbb6a0516a5def17"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

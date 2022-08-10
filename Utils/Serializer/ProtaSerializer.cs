@@ -12,6 +12,14 @@ namespace Prota
         public ProtaSerializeAttribute(bool keyAsPropertyName = true) : base(keyAsPropertyName) { }
     }
     
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
+    public class IgnoreSerializeAttribute : IgnoreMemberAttribute
+    {
+        
+    }
+
+    
+    
     // Simple wrap to MessagePack.
     // Serialize/Deserialize have only as simple interface.
     public static class ProtaSerializer
@@ -62,21 +70,17 @@ namespace Prota
         
         
         
-        [MessagePackObject]
+        [ProtaSerialize]
         public struct StructForUnitTest
         {
-            [Key(0)]
             public int a;
-            [Key(1)]
             public int b;
         }
         
-        [MessagePackObject]
+        [ProtaSerialize]
         public struct StructForUnitTestSec
         {
-            [Key(0)]
             public int b;
-            [Key(1)]
             public int a;
         }
         
@@ -94,8 +98,8 @@ namespace Prota
             Console.WriteLine($"data: { string.Join(" ", segment.Take(size).Select(x => x.ToString("X2"))) }");
             
             var g = segment.Deserialize<StructForUnitTestSec>();
-            (g.a == v.b).Assert();
-            (g.b == v.a).Assert();
+            (g.a == v.a).Assert();
+            // (g.b == v.b).Assert();
             
             Console.WriteLine("done!");
             

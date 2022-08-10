@@ -8,6 +8,7 @@ namespace Prota.Net
     using InternalType = System.UInt16;
     
     [StructLayout(LayoutKind.Sequential)]
+    [ProtaSerialize]
     public struct NetId : IEquatable<NetId>, IComparable<NetId>, INetSerializable
     {
         public const int internalSize = sizeof(InternalType);

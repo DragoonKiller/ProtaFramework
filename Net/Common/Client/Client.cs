@@ -9,113 +9,50 @@ using LiteNetLib.Utils;
 
 namespace Prota.Net
 {
-    // 管理房间.
-    public class Room
-    {
-        public readonly int roomId;
-        
-        public readonly HashSet<NetId> players = new HashSet<NetId>();
-        
-        public Room(S2CRspEnterRoom room)
-        {
-            this.roomId = room.id;
-            foreach(var s in room.players) players.Add(s);
-        }
-    }
-    
-    // 管理与服务器建立的连接.
-    public class ClientConnection
-    {
-        public const string defaultKey = "ProtaClient";
-        
-        public readonly string connectionKey;
-        
-        public NetId id { get; private set; }
-        
-        public NetPeer peer { get; private set; }       // 到服务器的连接.
-        
-        public int latency { get; private set; }
-        
-        public readonly EventBasedNetListener listener;
-        
-        public readonly NetManager mgr;
-        
-        public Action onDisconnect;
-        
-        public ClientConnection() => mgr = new NetManager(this.listener = new EventBasedNetListener());
-        
-        public void RegisterCallbacks(EventBasedNetListener.OnNetworkReceive onReceive)
-        {
-            listener.PeerConnectedEvent += PeerConnectedEvent;
-            listener.PeerDisconnectedEvent += PeerDisconnectEvent;
-            listener.NetworkLatencyUpdateEvent += UpdateLatency;
-            listener.NetworkReceiveUnconnectedEvent += ReceiveUnconnectedEvent;
-            listener.NetworkReceiveEvent += onReceive;
-        }
-        
-        public void Start() => mgr.Start();
-        
-        public async Task ConnectToServer(IPEndPoint endpoint, string connectionKey = defaultKey)
-        {
-            mgr.Connect(endpoint, connectionKey);
-            
-            // 等待连接成功.
-            await Task.Run(async () => {
-                while(peer != null) await Task.Delay(Client.threadCheckDelay);
-            });
-        }
-        
-        public void UpdateLatency(NetPeer peer, int latency) => this.latency = latency;
-        
-        void PeerConnectedEvent(NetPeer peer) => this.peer = peer;
-        
-        void PeerDisconnectEvent(NetPeer peer, DisconnectInfo disconnectInfo)
-        {
-            this.peer = null;
-            onDisconnect?.Invoke();
-        }
-        
-        void ReceiveUnconnectedEvent(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
-        {
-            Console.WriteLine($"[Error] cannot deal with unconnected message. [{ remoteEndPoint }]");
-        }
-    }
-    
-    
     public class Client
     {
+        // 管理房间.
+        public class Room
+        {
+            public readonly int roomId;
+            
+            public readonly HashSet<NetId> players = new HashSet<NetId>();
+            
+            public Room(S2CRspEnterRoom room)
+            {
+                this.roomId = room.id;
+                foreach(var s in room.players) players.Add(s);
+            }
+        }
+    
         public const int threadCheckDelay = 50;
         
-        public delegate void OnSendFunction(CommonHeader headear, NetDataWriter writer);
-        
-        public delegate void OnReceiveFunction(CommonHeader header, NetDataReader reader);
-        
         public static Client local;
+                
+        // 自身的 NetId.
+        public NetId id => connection?.id ?? NetId.none;
         
         public Room room { get; private set; }
         
         public ClientConnection connection { get; private set; }
         
-        // 自身的 NetId.
-        public NetId id => connection?.id ?? NetId.none;
-        
-        // 序列号的滑动区间. 序列号取值是 ushort, 范围是 1 ~ maxSeq. 序列号 0 表示没有序列号.
-        readonly CircleDualPointer pointers;
+        public NetCallbackManager callbackList { get; private set; } = new NetCallbackManager();
         
         readonly Dictionary<NetSequenceId, OnReceiveFunction> pendings = new Dictionary<NetSequenceId, OnReceiveFunction>();
-        
-        readonly Dictionary<int, List<OnReceiveFunction>> processOnReceive = new Dictionary<int, List<OnReceiveFunction>>();
+
+        // 序列号的滑动区间. 序列号取值是 ushort, 范围是 1 ~ maxSeq. 序列号 0 表示没有序列号.
+        readonly CircleDualPointer pointers;
         
         public Client(bool setAsMain = true, int maxSeq = 1000000)
         {
             if(setAsMain) local = this;
             this.pointers = new CircleDualPointer(maxSeq);
             connection = new ClientConnection();
-            connection.RegisterCallbacks(Receive);
+            connection.RegisterCallbacks(callbackList.Receive);
             connection.Start();
             connection.onDisconnect += () => room = null;
             
-            AddCallback(ProtoId.S2CNtfOtherEnterExitRoom, PlayerEnterExitRoom);
+            AddCallback<S2CNtfOtherEnterExitRoom>(PlayerEnterExitRoom);
         }
         
         public void PollEvents() => connection?.mgr?.PollEvents();
@@ -126,40 +63,41 @@ namespace Prota.Net
         // 发送消息通用逻辑
         // ====================================================================================================
         
-        // target 填对应 NetId 则发送给客户端; target 填 NetId.none 广播.
-        // 一些服务器会特护处理的内置协议类型除外.
-        public void SendNotify(NetId target, int protoId, OnSendFunction freq)
+        NetDataWriter NetWriterWithHeader(NetSequenceId seq, NetId target, int protoId)
         {
             var writer = new NetDataWriter();
-            var seq = new NetSequenceId(pointers.BackMoveNext() + 1);
             var header = new CommonHeader(NetSequenceId.notify, this.id, target, protoId);
-            writer.WriteHeader(header);
-            freq(header, writer);
+            writer.Put(header);
+            return writer;
         }
         
-        // target 填对应 NetId 则发送给客户端; target 填 NetId.none 则广播.
-        // 一些服务器会特护处理的内置协议类型除外, target 填 NetId.none 会由服务器处理.
-        public void SendRequest(NetId target, int protoId, OnSendFunction freq, OnReceiveFunction frsp)
+        // target 填对应 NetId 则发送给客户端; target 填 NetId.none 广播.
+        // 一些服务器会特护处理的内置协议类型除外.
+        public void SendNotify<T>(NetId target, T data)
         {
-            var writer = new NetDataWriter();
+            if(connection?.peer == null)  throw new InvalidOperationException("Connect not initialized!");
+            
+            var writer = NetWriterWithHeader(NetSequenceId.notify, target, ProtocolInfoCollector.GetId(typeof(T)));
+            writer.PutProtaSerialize(data);
+            
+            connection.peer.Send(writer, ProtocolInfoCollector.GetMethod(typeof(T)));
+        }
+        
+        void SendRequest<T>(NetId target, T data, OnReceiveFunction frsp)
+        {
             var seq = new NetSequenceId(pointers.BackMoveNext() + 1);
-            var header = new CommonHeader(new NetSequenceId(seq), this.id, target, protoId);
-            writer.WriteHeader(header);
-            freq(header, writer);
+            var writer = NetWriterWithHeader(seq, target, ProtocolInfoCollector.GetId(typeof(T)));
+            writer.PutProtaSerialize(data);
+            
             pendings.Add(seq, frsp);
         }
         
-        public async void SendRequest(NetId target, int protoId, OnSendFunction freq)
+        public RawRequestResult Request<T>(NetId target, T data, CancellationToken? cancellationToken = null)
         {
-            CommonHeader header = new CommonHeader();
-            NetDataReader reader = null;
-            int completed = 0;
-            SendRequest(target, protoId, freq, (h, r) => {
-                header = h;
-                reader = r;
-                Interlocked.Increment(ref completed);
-            });
-            while(completed == 0) await Task.Delay(threadCheckDelay);
+            var token = cancellationToken ?? CancellationToken.None;
+            var res = new RawRequestResult() { cancellationToken = token };
+            SendRequest(target, data, res.OnResponse);
+            return res;
         }
         
         // ====================================================================================================
@@ -168,24 +106,22 @@ namespace Prota.Net
         
         public async Task<bool> EnterRoom(int roomId)
         {
-            int completed = 0;
-            int success = 0;
-            SendRequest(NetId.none, ProtoId.C2SReqEnterRoom, (header, writer) => {
-                writer.Put(roomId);
-            }, (header, reader) => {
-                Interlocked.Increment(ref completed);
-                if(!reader.GetBool()) return;
-                Interlocked.Increment(ref success);
-                var roomInfo = reader.Get<S2CRspEnterRoom>();
-                room = new Room(roomInfo);
-            });
-            while(completed == 0) await Task.Delay(threadCheckDelay);
-            return success != 0;
+            var res = await Request(NetId.none, new C2SReqEnterRoom(roomId)).ExpectResult<S2CRspEnterRoom>();
+            if(!res.success) return false;
+            lock(this) room = new Room(res);
+            return true;
         }
         
-        void PlayerEnterExitRoom(CommonHeader header, NetDataReader reader)
+        public async Task<bool> LeaveRoom()
         {
-            var info = reader.Get<S2CNtfOtherEnterExitRoom>();
+            var res = await Request(NetId.none, new C2SReqExitRoom()).ExpectResult<S2CRspExitRoom>();
+            if(!res.success) return false;
+            lock(this) room = null;
+            return true;
+        }
+        
+        void PlayerEnterExitRoom(CommonHeader header, S2CNtfOtherEnterExitRoom info)
+        {
             if(info.isEnter)
             {
                 room.AssertNotNull();
@@ -205,63 +141,9 @@ namespace Prota.Net
         // 接收消息通用逻辑
         // ====================================================================================================
         
-        public void AddCallback(int protoId, OnReceiveFunction f)
-        {
-            processOnReceive.GetOrCreate(protoId, out var list);
-            list.Add(f);
-        }
+        public NetCallbackManager.CallbackHandle AddCallback<T>(ProcessFunction<T> f) => callbackList.AddProcessor<T>(f);
         
-        void Receive(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)
-        {
-            
-            var header = reader.GetCommonHeader();
-            var s = header.seq;
-            
-            // 这个消息是 notify.
-            if(s == 0)
-            {
-                ExecuteCallback(header, reader);
-                return;
-            }
-            
-            // 这个消息是 response.
-            if(s < 0)
-            {
-                var reqId = new NetSequenceId(-s);
-                
-                if(!pendings.TryGetValue(reqId, out var frsp))
-                {
-                    header.Error($"{ this.id } a response with sequence[{ s }] received, but it is not listening.");
-                    return;
-                }
-                
-                // 全局注册函数和 Response 注册函数都要执行.
-                ExecuteCallback(header, reader);
-                frsp(header, reader);
-                
-                pendings.Remove(reqId); // 注册时的时候是按照 request 序号注册.
-                
-                for(int i = 0; i < pendings.Count && pointers.count != 0; i++)
-                {
-                    // 没有这个元素说明已经执行过了, 可以增加计数.
-                    if(!pendings.ContainsKey(new NetSequenceId(pointers[0]))) pointers.FrontMoveNext();
-                }
-                return;
-            }
-            
-            // 这个消息是 request.
-            ExecuteCallback(header, reader);
-        }
+        void RemoveCallback(NetCallbackManager.CallbackHandle handle) => handle.Dispose();
         
-        void ExecuteCallback(in CommonHeader header, in NetDataReader reader)
-        {
-            if(!processOnReceive.TryGetValue(header.protoId, out var list))
-            {
-                header.Error($"receiving packet of type [{ header.protoId }] not listening.");
-                return;
-            }
-            
-            foreach(var c in list) c(header, reader);
-        }
     }
 }

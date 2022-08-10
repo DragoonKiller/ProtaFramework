@@ -6,77 +6,43 @@ using LiteNetLib.Utils;
 
 namespace Prota.Net
 {
-    public static partial class ProtoId
-    {
-        // 客户端进入和退出房间.
-        public const int C2SReqEnterRoom = -3;
-        public const int S2CRspEnterRoom = -4;
-        public const int S2CNtfOtherEnterExitRoom = -5;
-        public const int C2SReqExitRoom = -6;
-        public const int S2CRspExitRoom = -7;
-    }
     
-    public struct C2SReqEnterRoom : INetSerializable
+    [ProtaProtocol(-1)]
+    public struct C2SReqEnterRoom
     {
-        public int roomId { get; private set; }
-
+        public readonly int roomId;
         public C2SReqEnterRoom(int roomId) => this.roomId = roomId;
-
-        public void Deserialize(NetDataReader reader) => roomId = reader.GetInt();
-
-        public void Serialize(NetDataWriter writer) => writer.Put(roomId);
     }
     
-    public struct C2SReqExitRoom : INetSerializable
+    [ProtaProtocol(-2)]
+    public struct C2SReqExitRoom
     {
-        public void Deserialize(NetDataReader reader) { }
-
-        public void Serialize(NetDataWriter writer) { }
     }
     
-    public struct S2CRspExitRoom : INetSerializable
+    [ProtaProtocol(-3)]
+    public struct S2CRspExitRoom
     {
-        public bool success { get; private set; }
+        public readonly bool success;
+        public S2CRspExitRoom(bool success) => this.success = success;
+    }
+    
+    [ProtaProtocol(-4)]
+    public struct S2CNtfOtherEnterExitRoom
+    {
+        public readonly bool isEnter;
         
-        public S2CRspExitRoom(bool success)
-        {
-            this.success = success;
-        }
-
-        public void Deserialize(NetDataReader reader) => success = reader.GetBool();
-
-        public void Serialize(NetDataWriter writer) => writer.Put(success);
-    }
-    
-    public struct S2CNtfOtherEnterExitRoom : INetSerializable
-    {
-        public bool isEnter { get; private set; }
-        
+        [IgnoreSerialize]
         public bool isLeave => !isEnter;
         
-        public S2CNtfOtherEnterExitRoom(bool enter)
-        {
-            this.isEnter = enter;
-        }
-
-        public void Deserialize(NetDataReader reader)
-        {
-            isEnter = reader.GetBool();
-        }
-
-        public void Serialize(NetDataWriter writer)
-        {
-            writer.Put(isEnter);
-        }
+        public S2CNtfOtherEnterExitRoom(bool isEnter) => this.isEnter = isEnter;
     }
     
-    public struct S2CRspEnterRoom : INetSerializable
+    [ProtaProtocol(-5)]
+    public struct S2CRspEnterRoom
     {
-        public int id { get; private set; }
-        
-        public NetId[] players { get; private set; }
-        
-        public bool success { get; private set; }
+        public readonly int id;
+        public readonly NetId[] players;
+        public readonly bool success;
         
         public S2CRspEnterRoom(int roomId, NetId[] players)
         {
@@ -85,25 +51,7 @@ namespace Prota.Net
             success = true;
         }
         
-        public static S2CRspEnterRoom fail => new S2CRspEnterRoom() { success = false };
-        
-        public void Deserialize(NetDataReader reader)
-        {
-            players = new NetId[reader.GetInt()];
-            for(int i = 0; i < players.Length; i++)
-            {
-                players[i] = reader.Get<NetId>();
-            }
-        }
-        
-        public void Serialize(NetDataWriter writer)
-        {
-            writer.Put(players.Length);
-            for(int i = 0; i < players.Length; i++)
-            {
-                writer.Put(players[i]);
-            }
-        }
+        public static S2CRspEnterRoom fail => new S2CRspEnterRoom();
     }
 
     

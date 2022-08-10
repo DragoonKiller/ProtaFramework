@@ -41,7 +41,7 @@ namespace Prota.Net
             return new CommonHeader(seq, src, dst, protoType);
         }
         
-        public static NetDataWriter WriteHeader(this NetDataWriter writer, CommonHeader header, bool reset = false)
+        public static NetDataWriter Put(this NetDataWriter writer, CommonHeader header, bool reset = false)
         {
             var curPos = writer.SetPosition(0);     // get original position by Set.
             writer.SetPosition(curPos);             // recover original position.
