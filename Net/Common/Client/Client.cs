@@ -9,7 +9,7 @@ using LiteNetLib.Utils;
 
 namespace Prota.Net
 {
-    public class Client : IDisposable
+    public partial class Client : IDisposable
     {
         // 管理房间.
         public class Room
@@ -34,31 +34,36 @@ namespace Prota.Net
         
         public Room room { get; private set; }
         
-        public ClientConnection connection { get; private set; }
+        internal NetCallbackManager callbackList { get; private set; } = new NetCallbackManager();
         
-        public NetCallbackManager callbackList { get; private set; } = new NetCallbackManager();
+        ClientConnection connection { get; set; }
         
-        readonly Dictionary<NetSequenceId, OnReceiveFunction> pendings = new Dictionary<NetSequenceId, OnReceiveFunction>();
-
         // 序列号的滑动区间. 序列号取值是 ushort, 范围是 1 ~ maxSeq. 序列号 0 表示没有序列号.
         readonly CircleDualPointer pointers;
         
         readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
         
+        readonly object lockobj = new object();
+        
         public Client(bool setAsMain = true, int maxSeq = 1000000)
         {
             if(setAsMain) local = this;
             this.pointers = new CircleDualPointer(maxSeq);
-            connection = new ClientConnection();
-            connection.RegisterCallbacks(callbackList.Receive);
+            connection = new ClientConnection(callbackList.Receive);
             connection.Start();
-            connection.onDisconnect += () => room = null;
             AddCallback<S2CNtfOtherEnterExitRoom>(PlayerEnterExitRoom);
         }
+
+        public void PollEvents()
+        {
+            lock(lockobj) connection?.mgr?.PollEvents();
+        }
         
-        public void PollEvents() => connection?.mgr?.PollEvents();
+        // ====================================================================================================
+        // 连接到服务器
+        // ====================================================================================================
         
-        public async Task ConnectToServer(IPEndPoint endpoint, string key = ClientConnection.defaultKey) => await connection.ConnectToServer(endpoint, key);
+        public Task ConnectToServer(IPEndPoint endpoint, string key = ClientConnection.defaultKey) => connection.ConnectToServer(endpoint, key);
         
         // ====================================================================================================
         // 发送消息通用逻辑
@@ -67,38 +72,23 @@ namespace Prota.Net
         NetDataWriter NetWriterWithHeader(NetSequenceId seq, NetId target, int protoId)
         {
             var writer = new NetDataWriter();
-            var header = new CommonHeader(NetSequenceId.notify, this.id, target, protoId);
-            writer.Put(header);
+            writer.PutProtaSerialize(new CommonHeader(seq, this.id, target, protoId));
             return writer;
         }
         
         // target 填对应 NetId 则发送给客户端; target 填 NetId.none 广播.
         // 一些服务器会特护处理的内置协议类型除外.
-        public void SendNotify<T>(NetId target, T data)
+        public void Send<T>(NetId target, T data)
         {
             if(connection?.peer == null)  throw new InvalidOperationException("Connect not initialized!");
             
             var writer = NetWriterWithHeader(NetSequenceId.notify, target, typeof(T).GetProtocolId());
             writer.PutProtaSerialize(data);
             
-            connection.peer.Send(writer, typeof(T).GetProtocolMethod());
+            lock(lockobj) connection.peer.Send(writer, typeof(T).GetProtocolMethod());
         }
         
-        void SendRequest<T>(NetId target, T data, OnReceiveFunction frsp)
-        {
-            var seq = new NetSequenceId(pointers.BackMoveNext() + 1);
-            var writer = NetWriterWithHeader(seq, target, typeof(T).GetProtocolId());
-            writer.PutProtaSerialize(data);
-            connection.peer.Send(writer, typeof(T).GetProtocolMethod());
-            pendings.Add(seq, frsp);
-        }
-        
-        public RawRequestResult Request<T>(NetId target, T data)
-        {
-            var res = new RawRequestResult() { cancellationToken = cancelSource.Token };
-            SendRequest(target, data, res.OnResponse);
-            return res;
-        }
+        public RawRequestHandle<T> ExpectResult<T>() => new RawRequestHandle<T>(this);
         
         // ====================================================================================================
         // 房间相关
@@ -106,32 +96,35 @@ namespace Prota.Net
         
         public async Task<bool> EnterRoom(int roomId)
         {
-            var res = await Request(NetId.none, new C2SReqEnterRoom(roomId)).ExpectResult<S2CRspEnterRoom>();
+            var res = await ExpectResult<S2CRspEnterRoom>().Request(NetId.none, new C2SReqEnterRoom(roomId));
             if(!res.success) return false;
-            lock(this) room = new Room(res);
+            lock(lockobj) room = new Room(res.data);
             return true;
         }
         
         public async Task<bool> LeaveRoom()
         {
-            var res = await Request(NetId.none, new C2SReqExitRoom()).ExpectResult<S2CRspExitRoom>();
+            var res = await ExpectResult<S2CRspExitRoom>().Request(NetId.none, new C2SReqExitRoom());
             if(!res.success) return false;
-            lock(this) room = null;
+            lock(lockobj) room = null;
             return true;
         }
         
         void PlayerEnterExitRoom(CommonHeader header, S2CNtfOtherEnterExitRoom info)
         {
-            if(info.isEnter)
+            lock(lockobj)
             {
-                room.AssertNotNull();
-                room.players.Add(header.src);
-            }
-            else
-            {
-                // 自己已经退出了.
-                if(room == null) return;
-                room.players.Remove(header.src);
+                if(info.isEnter)
+                {
+                    room.AssertNotNull();
+                    room.players.Add(header.src);
+                }
+                else
+                {
+                    // 自己已经退出了.
+                    if(room == null) return;
+                    room.players.Remove(header.src);
+                }
             }
         }
         
@@ -141,9 +134,21 @@ namespace Prota.Net
         // 接收消息通用逻辑
         // ====================================================================================================
         
-        public NetCallbackManager.CallbackHandle AddCallback<T>(ProcessFunction<T> f) => callbackList.AddProcessor<T>(f);
+        public NetCallbackManager.CallbackHandle AddCallback<T>(ProcessFunction<T> f)
+        {
+            lock(lockobj)
+            {
+                return callbackList.AddProcessor<T>(f);
+            }
+        }
         
-        void RemoveCallback(NetCallbackManager.CallbackHandle handle) => handle.Dispose();
+        void RemoveCallback(NetCallbackManager.CallbackHandle handle)
+        {
+            lock(lockobj)
+            {
+                handle.Dispose();
+            }
+        }
         
         // ====================================================================================================
         // ====================================================================================================
@@ -151,11 +156,14 @@ namespace Prota.Net
         
         public void Dispose()
         {
-            cancelSource.Cancel();
-            room = null;
-            callbackList = null;
-            connection.Dispose();
-            connection = null;
+            lock(lockobj)
+            {
+                cancelSource.Cancel();
+                room = null;
+                callbackList = null;
+                connection.Dispose();
+                connection = null;
+            }
         }
     }
 }

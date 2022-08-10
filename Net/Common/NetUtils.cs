@@ -32,6 +32,7 @@ namespace Prota.Net
         
         public static T GetProtaSerialized<T>(this NetDataReader reader)
         {
+            // Console.WriteLine($"Serialize [[\n{ MessagePack.MessagePackSerializer.ConvertToJson(reader.RawData.AsSegment(reader.UserDataOffset), ProtaSerializer.options) }\n]]");
             var seg = reader.SegmentToTheEnd();
             var res = seg.Deserialize<T>(out int bytesRead);
             reader.SkipBytes(bytesRead);

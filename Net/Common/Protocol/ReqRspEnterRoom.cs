@@ -51,6 +51,14 @@ namespace Prota.Net
             success = true;
         }
         
+        [MessagePack.SerializationConstructor]
+        public S2CRspEnterRoom(int id, NetId[] players, bool success)
+        {
+            this.id = id;
+            this.players = players;
+            this.success = success;
+        }
+
         public static S2CRspEnterRoom fail => new S2CRspEnterRoom();
     }
 

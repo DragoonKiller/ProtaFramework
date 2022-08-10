@@ -18,30 +18,64 @@ namespace Prota.Net
             var clientA = new Client(false);
             var clientB = new Client(false);
             
+            
             Task.Run(async () => {
-                await clientA.ConnectToServer(serverEndpoint);
-                await clientA.EnterRoom(3);
-                clientA.room.AssertNotNull();
-                Console.WriteLine($"client A enter room: { clientA.room.roomId }");
+                try
+                {
+                    await clientA.ConnectToServer(serverEndpoint);
+                    $"client A [[{ clientA.id }]] connect to server success!".Log();
+                    await clientA.EnterRoom(3);
+                    clientA.room.AssertNotNull();
+                    $"client A enter room: { clientA.room.roomId }".Log();
+                }
+                catch(Exception e)
+                {
+                    e.ToString().LogError();
+                }
             });
             
             Task.Run(async () => {
-                await clientB.ConnectToServer(serverEndpoint);
-                await new SystemTimer(2);
-                await clientB.EnterRoom(3);
-                clientB.room.AssertNotNull();
-                Console.WriteLine($"client B enter room: { clientB.room.roomId }");
-                Console.WriteLine($"client B roommates: { string.Join(",", clientB.room.players.Select(x => x.ToString())) }");
+                try
+                {
+                    await clientB.ConnectToServer(serverEndpoint);
+                    $"client B [[{ clientB.id }]] connect to server success!".Log();
+                    await new SystemTimer(1);
+                    $"client B start room!".Log();
+                    await clientB.EnterRoom(3);
+                    clientB.room.AssertNotNull();
+                    $"client B enter room: { clientB.room.roomId }".Log();
+                    $"client B roommates: { string.Join(",", clientB.room.players.Select(x => x.ToString())) }".Log();
+                }
+                catch(Exception e)
+                {
+                    Console.Error.WriteLine(e.ToString());
+                }
+            });
+            
+            Task.Run(async () => {
+                try
+                {
+                    while(true)
+                    {
+                        clientA.PollEvents();
+                        clientB.PollEvents();
+                        await Task.Delay(1);
+                    }
+                }
+                catch(Exception e)
+                {
+                    Console.Error.WriteLine(e.ToString());
+                }
             });
             
             Task.Run(async () => {
                 await new SystemTimer(6);
-                Console.WriteLine("Client Destroy!");
+                "Client Destroy!".Log();
                 clientA.Dispose();
                 clientB.Dispose();
                 await new SystemTimer(2);
                 server.Dispose();
-                Console.WriteLine("Server Destroy!");
+                "Server Destroy!".Log();
             });
             
             

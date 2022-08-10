@@ -19,7 +19,7 @@ namespace Prota.Net
         public bool isNone => id == 0;
         public static bool ValidRange(int i) => InternalType.MinValue <= i && i <= InternalType.MaxValue;
         
-        public NetId(InternalType netId) => this.id = netId;
+        public NetId(InternalType id) => this.id = id;
         public int CompareTo(NetId other) => id.CompareTo(other.id);
         public bool Equals(NetId other) => id == other.id;
         public override bool Equals(object obj) => obj is NetId nid && nid.id == this.id;

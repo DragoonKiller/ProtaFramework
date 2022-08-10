@@ -20,12 +20,9 @@ namespace Prota.Net
         
         public void OnResponse(CommonHeader header, NetDataReader reader)
         {
-            lock(this)
-            {
-                this.header = header;
-                this.reader = reader;
-                Interlocked.Increment(ref _completed);
-            }
+            this.header = header;
+            this.reader = reader;
+            Interlocked.Increment(ref _completed);
         }
         
         public Task<T> ExpectResult<T>()
@@ -45,11 +42,9 @@ namespace Prota.Net
                 if(header.protoId != expectingProtoId)
                     throw new ArgumentException($"Expecting message type [{ typeof(T).Name }] with ProtocolId [{ expectingProtoId }] but receive [{ header.protoId }]");
                 
-                lock(this)
-                {
-                    var segment = reader.RawData.AsSegment(reader.Position);
-                    return segment.Deserialize<T>();
-                }
+                var segment = reader.RawData.AsSegment(reader.Position);
+                return segment.Deserialize<T>();
+                    
             }, cancellationToken);
         }
     }

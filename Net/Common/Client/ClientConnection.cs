@@ -29,18 +29,21 @@ namespace Prota.Net
         
         readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
         
-        public ClientConnection()
-        {
-            mgr = new NetManager(this.listener = new EventBasedNetListener());
-        }
+        readonly EventBasedNetListener.OnNetworkReceive onReceive;
         
-        public void RegisterCallbacks(EventBasedNetListener.OnNetworkReceive onReceive)
+        public ClientConnection(EventBasedNetListener.OnNetworkReceive onReceive)
         {
+            this.listener = new EventBasedNetListener();
             listener.PeerConnectedEvent += PeerConnectedEvent;
             listener.PeerDisconnectedEvent += PeerDisconnectEvent;
             listener.NetworkLatencyUpdateEvent += UpdateLatency;
             listener.NetworkReceiveUnconnectedEvent += ReceiveUnconnectedEvent;
-            listener.NetworkReceiveEvent += onReceive;
+
+            // 临时的 receive event. 当收到 id 协议后会改换成参数中的 onReceive.
+            listener.NetworkReceiveEvent += OnIdReceive;
+            this.onReceive = onReceive;
+            
+            mgr = new NetManager(listener);
         }
         
         public void Start()
@@ -49,15 +52,15 @@ namespace Prota.Net
             Console.WriteLine($"[Info] Prota client start [{ (success ? "success" : "fail") }] at port { mgr.LocalPort }");
         }
         
-        public async Task ConnectToServer(IPEndPoint endpoint, string connectionKey = defaultKey)
+        public Task ConnectToServer(IPEndPoint endpoint, string connectionKey = defaultKey)
         {
             mgr.Connect(endpoint, connectionKey);
             
             // 等待连接成功.
-            await Task.Run(async () => {
-                while(peer == null)
+            return Task.Run(async () => {
+                while(peer == null || this.id == NetId.none)
                 {
-                    Console.WriteLine("waiting...");
+                    // Console.WriteLine($"waiting... { peer != null }");
                     await Task.Delay(Client.threadCheckDelay, cancelSource.Token);
                 }
             }, cancelSource.Token);
@@ -65,12 +68,30 @@ namespace Prota.Net
         
         public void UpdateLatency(NetPeer peer, int latency) => this.latency = latency;
         
-        void PeerConnectedEvent(NetPeer peer) => this.peer = peer;
+        public void OnIdReceive(NetPeer peer, NetPacketReader reader, DeliveryMethod method)
+        {
+            var header = reader.GetProtaSerialized<CommonHeader>();
+            if(header.protoId == typeof(S2CNtfClientId).GetProtocolId())
+            {
+                this.id = header.dst;
+                listener.NetworkReceiveEvent -= OnIdReceive;
+                listener.NetworkReceiveEvent += onReceive;
+                return;
+            }
+            Console.WriteLine($"[Warn] Prota client receive packege [{ header.protoId }] before id is set is not allowed.");
+        }
+        
+        void PeerConnectedEvent(NetPeer peer)
+        {
+            this.peer = peer;
+            Console.WriteLine($"[Info] Prota client connected to server [{ peer.EndPoint }]");
+        }
         
         void PeerDisconnectEvent(NetPeer peer, DisconnectInfo disconnectInfo)
         {
             this.peer = null;
             onDisconnect?.Invoke();
+            Console.WriteLine($"[Info] Prota client disconnect to server [{ peer.EndPoint }]");
         }
         
         void ReceiveUnconnectedEvent(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)

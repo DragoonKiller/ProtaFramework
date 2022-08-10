@@ -83,8 +83,6 @@ namespace Prota.Net
         
         readonly Dictionary<int, Dictionary<NetSequenceId, CallbackHandle>> processOnResponse = new Dictionary<int, Dictionary<NetSequenceId, CallbackHandle>>();
         
-        public NetPeer currentProcessingPeer { get; private set; }
-        
         readonly object lockobj = new object();
         
         // 默认是 notify. 接收 Request 时也可以使用该接口注册函数.
@@ -118,56 +116,51 @@ namespace Prota.Net
         static List<CallbackHandle> tempList => _tempList == null ? _tempList = new List<CallbackHandle>() : _tempList;
         public void Receive(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)
         {
-            var header = reader.GetCommonHeader();
+            var header = reader.GetProtaSerialized<CommonHeader>();
             var s = header.seq;
             
-            currentProcessingPeer = peer;
-            try
+            if(s.isNotify || s.isRequest)
             {
-                if(s.isNotify || s.isRequest)
+                lock(lockobj)
                 {
-                    lock(lockobj)
+                    if(!processOnReceive.TryGetValue(header.protoId, out var list))
                     {
-                        if(!processOnReceive.TryGetValue(header.protoId, out var list))
-                        {
-                            header.Error($"receiving packet of type [{ header.protoId }] not listening.");
-                            return;
-                        }
-                        
-                        tempList.Clear();
-                        foreach(var handle in list) tempList.Add(handle);
+                        header.Error($"receiving packet of type [{ header.protoId }] not listening.");
+                        return;
                     }
                     
-                    foreach(var handle in tempList)
-                    {
-                        handle.actualCallback(header, reader);
-                    }
                     tempList.Clear();
-            
+                    foreach(var handle in list) tempList.Add(handle);
                 }
-                else
-                {
-                    lock(lockobj)
-                    {
-                        if(!processOnResponse.TryGetValue(header.protoId, out var dict))
-                        {
-                            header.Error($"receiving packet of type [{ header.protoId }] not listening.");
-                            return;
-                        }
-                        if(!dict.TryGetValue(s, out var handle))
-                        {
-                            header.Error($"receiving packet with [{ s }] but it's not listening.");
-                            return;
-                        }
-                        
-                        handle.actualCallback(header, reader);
-                        handle.Dispose();
-                    }
-                }
+                
+                foreach(var handle in tempList) handle.actualCallback(header, reader);
+                tempList.Clear();
+        
             }
-            finally
+            else
             {
-                currentProcessingPeer = null;
+                CallbackHandle handle = default;
+                OnReceiveFunction callback = null;
+                
+                lock(lockobj)
+                {
+                    if(!processOnResponse.TryGetValue(header.protoId, out var dict))
+                    {
+                        header.Error($"receiving packet of type [{ header.protoId }] not listening.");
+                        return;
+                    }
+                    if(!dict.TryGetValue(s, out handle))
+                    {
+                        header.Error($"receiving packet with [{ s }] but it's not listening.");
+                        return;
+                    }
+                    
+                    dict.Remove(handle.seq);
+                    callback = handle.actualCallback;
+                }
+                
+                handle.Dispose();
+                callback(header, reader);
             }
         }
         

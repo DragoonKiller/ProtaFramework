@@ -24,7 +24,7 @@ namespace Prota
     // Serialize/Deserialize have only as simple interface.
     public static class ProtaSerializer
     {
-        static MessagePackSerializerOptions options;
+        public readonly static MessagePackSerializerOptions options;
         
         [ThreadStatic]
         static byte[] _serializeTempBuffer;
@@ -43,7 +43,8 @@ namespace Prota
         {
             var writer = new MessagePackWriter(SequencePool.Shared, serializeTempBuffer);
             MessagePackSerializer.Serialize(ref writer, target, options);
-            return (int)writer.FlushAndGetArray(arr.Array, arr.Offset);
+            var cnt = (int)writer.FlushAndGetArray(arr.Array, arr.Offset);
+            return cnt;
         }
         
         public static T Deserialize<T>(this byte[] arr) => Deserialize<T>(arr, 0, arr.Length);
@@ -59,7 +60,7 @@ namespace Prota
             return MessagePackSerializer.Deserialize<T>(deserializeTempBuffer, options, out bytesRead);
         }
         
-        
+        public static string SerializeToJson<T>(this T data) => MessagePack.MessagePackSerializer.SerializeToJson(data, ProtaSerializer.options);
         
         static ProtaSerializer()
         {

@@ -27,7 +27,7 @@ namespace Prota.Net
             usedRoom.GetOrCreate(roomId, out var playersInRoom);
             playersInRoom.Add(id);
             roomMap[id] = roomId;
-            Console.WriteLine($"[Info] { id } Enter room { roomId }");
+            Console.WriteLine($"[Info] Prota server { id } Enter room { roomId }");
             return true;
         }
         
@@ -99,7 +99,8 @@ namespace Prota.Net
         {
             lock(this)
             {
-                var header = reader.GetCommonHeader();
+                var header = reader.GetProtaSerialized<CommonHeader>();
+                Console.WriteLine($"[Info] Prota server Receive from [{ peer.EndPoint }]{ header.src } protoId [{ header.protoId }] seq [{ header.seq }]");
                 
                 // 检查发送方是否还连着.
                 if(!peers.TryGetValue(header.src, out var srcPeer))
@@ -119,6 +120,7 @@ namespace Prota.Net
                 // 服务器注册了专用数据结构的协议比较特殊, 优先处理.
                 if(this.callbackList.IsListening(header.protoId))
                 {
+                    reader.SkipBytes(-(reader.Position - reader.UserDataOffset));       // 复位到 UserDataOffset
                     this.callbackList.Receive(peer, reader, deliveryMethod);
                 }
                 else
@@ -160,7 +162,7 @@ namespace Prota.Net
                 if(playerId == header.src) continue;        // 不会发送给自己.
                 var dstPeer = peers[playerId];
                 writer.Reset();
-                writer.Put(new CommonHeader(header.seq, header.src, peers.GetKeyByValue(dstPeer), header.protoId));
+                writer.PutProtaSerialize(new CommonHeader(header.seq, header.src, peers.GetKeyByValue(dstPeer), header.protoId));
                 writer.Put(reader.RawData, reader.UserDataOffset + CommonHeader.size, reader.UserDataSize - CommonHeader.size);
                 dstPeer.Send(writer, deliveryMethod);
             }
@@ -196,7 +198,8 @@ namespace Prota.Net
             }
             
             // 向请求加入房间的客户端报告成功. 另外要报告该房间内其他人.
-            SendDataWithWriter(header.seq.response, NetId.none, header.src, new S2CRspEnterRoom(data.roomId, rooms[data.roomId].ToArray()));
+            var value = new S2CRspEnterRoom(data.roomId, rooms[data.roomId].ToArray());
+            SendDataWithWriter(header.seq.response, NetId.none, header.src, value);
             
             return;
         }
@@ -247,51 +250,12 @@ namespace Prota.Net
             return;
         }
         
-        //         
-        //         // ====================================================================================================
-        //         // 客户端请求已连接客户端列表.
-        //         // ====================================================================================================
-        //         if(header.protoId == ProtoId.C2SReqClientList)
-        //         {
-        //             writer.Reset();
-        //             var newHeader = new CommonHeader(header.seq.response, NetId.none, peers.GetKeyByValue(peer), ProtoId.S2CRspClientList);
-        //             writer.Put(newHeader);
-        //             writer.Put(peers.Count);
-        //             foreach(var (netId, p) in peers)
-        //             {
-        //                 var roomValid = rooms.roomMap.TryGetValue(netId, out var roomId);
-        //                 writer.Put(netId.id);
-        //                 writer.Put(roomId);
-        //                 writer.Put(roomValid);
-        //             }
-        //             peer.Send(writer, deliveryMethod);
-        //             return;
-        //         }
-        //         
-        //         
-        //         if(header.protoId == ProtoId.C2SReqEnterRoom)
-        //         {
-        //         }
-        //         
-        //         // ====================================================================================================
-        //         // // 客户端请求退出房间.
-        //         // ====================================================================================================
-        //         if(header.protoId == ProtoId.C2SReqExitRoom)
-        //         {
-        //             
-        //         }
-        //         
-        //         
-        //         header.Error($"unknown delivery pattern");
-        //     }
-        // }
-        
         
         void SendDataWithWriter<T>(NetSequenceId seq, NetId src, NetId dst, T data)
         {
             writer.Reset();
-            writer.Put(new CommonHeader(seq, src, dst, typeof(T).GetProtocolId()));
-            writer.PutProtaSerialize(new S2CRspExitRoom(true));
+            writer.PutProtaSerialize(new CommonHeader(seq, src, dst, typeof(T).GetProtocolId()));
+            writer.PutProtaSerialize(data);
             peers[dst].Send(writer, typeof(T).GetProtocolMethod());
         }
         
@@ -299,9 +263,22 @@ namespace Prota.Net
         {
             lock(this)
             {
-                if(idPool.usableCount <= 0) request.Reject();
+                Console.WriteLine($"[Info] Prota server get connection request from [{ request.RemoteEndPoint }]");
+                if(idPool.usableCount <= 0)
+                {
+                    Console.WriteLine($"[Info] Prota server reject [{ request.RemoteEndPoint }] connection because there's no usable slot.");
+                    request.Reject();
+                }
                 
-                request.AcceptIfKey("accpetKey");
+                var peer = request.AcceptIfKey(accpetKey);
+                if(peer == null)
+                {
+                    Console.WriteLine($"[Info] Prota server reject [{ request.RemoteEndPoint }] connection request because key is not correct.");
+                }
+                else
+                {
+                    Console.WriteLine($"[Info] Prota server accept [{ request.RemoteEndPoint }] connection request.");
+                }
             }
         }
 
@@ -309,7 +286,10 @@ namespace Prota.Net
         {
             lock(this)
             {
-                peers.Add(idPool.Get(), peer);
+                var id = idPool.Get();
+                peers.Add(id, peer);
+                SendDataWithWriter(NetSequenceId.notify, NetId.none, id, new S2CNtfClientId(id));
+                Console.WriteLine($"[Info] Prota server connect to [{ peer.EndPoint }] established. Id { id }");
             }
         }
 
@@ -318,8 +298,10 @@ namespace Prota.Net
             lock(this)
             {
                 var id = peers.GetKeyByValue(peer);
+                if(rooms.roomMap.TryGetValue(id, out var roomId)) rooms.TryLeaveRoom(id);
                 peers.Remove(id);
                 idPool.Return(id);
+                Console.WriteLine($"[Info] Prota server disconnect to [{ peer.EndPoint }].");
             }
         }
 
