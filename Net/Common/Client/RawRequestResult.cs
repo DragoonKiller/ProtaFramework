@@ -31,13 +31,14 @@ namespace Prota.Net
         public Task<T> ExpectResult<T>()
         {
             var expectingProtoId = ProtocolInfoCollector.GetId(typeof(T));
-            return Task.Run(() => {
+            return Task.Run(async () => {
                 
                 int sleepCount = 0;
                 while(!completed && !this.cancellationToken.IsCancellationRequested)
                 {
                     sleepCount++;
-                    if(sleepCount > 10) Thread.Sleep(1);
+                    // 最多等待 0.1s.
+                    if(sleepCount > 100) await Task.Delay(Math.Min(100, sleepCount / 100));
                     else Thread.Yield();
                 }
                 
