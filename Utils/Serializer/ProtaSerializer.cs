@@ -62,6 +62,8 @@ namespace Prota
         
         public static string SerializeToJson<T>(this T data) => MessagePack.MessagePackSerializer.SerializeToJson(data, ProtaSerializer.options);
         
+        public static string DeserializeToJson(this ArraySegment<byte> data) => MessagePack.MessagePackSerializer.ConvertToJson(data, ProtaSerializer.options);
+        
         static ProtaSerializer()
         {
             options = MessagePackSerializerOptions.Standard

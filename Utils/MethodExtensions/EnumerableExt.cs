@@ -13,5 +13,8 @@ namespace Prota
             if(!s.MoveNext()) throw new ArgumentException("collecetion doesn't have element.");
             return s.Current;
         }
+        
+        public static string ToListString<T>(this IEnumerable<T> list, Func<T, string> f, string seperator = null)
+            => string.Join(seperator ?? ",",  list.Select(x => $"[{f(x)}]"));
     }
 }

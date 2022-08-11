@@ -117,10 +117,11 @@ namespace Prota.Net
                     return;
                 }
                 
+                reader.SkipBytes(-(reader.Position - reader.UserDataOffset));       // 复位到 UserDataOffset
+                
                 // 服务器注册了专用数据结构的协议比较特殊, 优先处理.
                 if(this.callbackList.IsListening(header.protoId))
                 {
-                    reader.SkipBytes(-(reader.Position - reader.UserDataOffset));       // 复位到 UserDataOffset
                     this.callbackList.Receive(peer, reader, deliveryMethod);
                 }
                 else
@@ -151,7 +152,7 @@ namespace Prota.Net
         // ====================================================================================================
         void BroadcastMessage(CommonHeader header, NetDataReader reader, DeliveryMethod deliveryMethod)
         {
-            if(rooms.TryGetRoom(header.src, out var roomId))
+            if(!rooms.TryGetRoom(header.src, out var roomId))
             {
                 header.Error($"doing boradcast needs to be in a room");
                 return;
@@ -161,10 +162,7 @@ namespace Prota.Net
             {
                 if(playerId == header.src) continue;        // 不会发送给自己.
                 var dstPeer = peers[playerId];
-                writer.Reset();
-                writer.PutProtaSerialize(new CommonHeader(header.seq, header.src, peers.GetKeyByValue(dstPeer), header.protoId));
-                writer.Put(reader.RawData, reader.UserDataOffset + CommonHeader.size, reader.UserDataSize - CommonHeader.size);
-                dstPeer.Send(writer, deliveryMethod);
+                dstPeer.Send(reader.RawData, reader.UserDataOffset, reader.UserDataSize, deliveryMethod);
             }
         
             return;

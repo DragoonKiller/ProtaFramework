@@ -9,6 +9,13 @@ namespace Prota.Net
 {
     public static class UnitTest
     {
+        [ProtaProtocol(int.MinValue, method = LiteNetLib.DeliveryMethod.ReliableUnordered)]
+        public struct NtfUnitTest
+        {
+            public NetId srcId;
+            public string info;
+        }
+        
         public static void Test()
         {
             var serverEndpoint = new IPEndPoint(IPAddress.Parse("192.168.1.3"), 39793);
@@ -24,9 +31,27 @@ namespace Prota.Net
                 {
                     await clientA.ConnectToServer(serverEndpoint);
                     $"client A [[{ clientA.id }]] connect to server success!".Log();
+                    clientA.AddCallback<NtfUnitTest>((header, data) => {
+                        $"Client A tells: { data.info }".Log();
+                    });
                     await clientA.EnterRoom(3);
                     clientA.room.AssertNotNull();
                     $"client A enter room: { clientA.room.roomId }".Log();
+                    await new SystemTimer(3);
+                    $"client A roommates: { clientA.room.players.ToListString(x => x.ToString()) }".Log();
+                    clientA.Send(NetId.none, new NtfUnitTest(){ srcId = clientA.id, info = "info sent from client a" });
+                    
+                    var list = new List<Task>();
+                    for(int i = 0; i < 100; i++)
+                    {
+                        int g = i;
+                        list.Add(Task.Run(() => {
+                            $"client A send{ g }".Log();
+                            clientA.Send(NetId.none, new NtfUnitTest(){ srcId = clientA.id, info = $"number { g } sent from client a" });
+                        }));
+                    }
+                    
+                    await Task.WhenAll(list);
                 }
                 catch(Exception e)
                 {
@@ -41,10 +66,14 @@ namespace Prota.Net
                     $"client B [[{ clientB.id }]] connect to server success!".Log();
                     await new SystemTimer(1);
                     $"client B start room!".Log();
+                    clientB.AddCallback<NtfUnitTest>((header, data) => {
+                        $"Client B tells: { data.info }".Log();
+                    });
                     await clientB.EnterRoom(3);
                     clientB.room.AssertNotNull();
                     $"client B enter room: { clientB.room.roomId }".Log();
-                    $"client B roommates: { string.Join(",", clientB.room.players.Select(x => x.ToString())) }".Log();
+                    $"client B roommates: { clientB.room.players.ToListString(x => x.ToString()) }".Log();
+                    clientB.Send(NetId.none, new NtfUnitTest(){ srcId = clientA.id, info = "info sent from client b" });
                 }
                 catch(Exception e)
                 {
