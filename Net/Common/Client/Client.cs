@@ -176,6 +176,12 @@ namespace Prota.Net
             }
         }
         
+        public async Task<ResultType> Request<ParamType, ResultType>(NetId? id = null, ParamType val = default)
+        {
+            id = id ?? NetId.none;
+            return (await ExpectResult<ResultType>().Request(id.Value, val)).data;
+        }
+        
         // ====================================================================================================
         // ====================================================================================================
         
