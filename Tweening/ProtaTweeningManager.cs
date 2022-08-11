@@ -8,13 +8,13 @@ namespace Prota.Tweening
     
     public class ProtaTweeningManager : Singleton<ProtaTweeningManager>
     {
-        internal ArrayLinkedList<TweenData> data = new ArrayLinkedList<TweenData>();
+        public readonly ArrayLinkedList<TweenData> data = new ArrayLinkedList<TweenData>();
         
-        public Dictionary<UnityEngine.Object, BindingList> targetMap = new Dictionary<UnityEngine.Object, BindingList>(); 
+        public readonly Dictionary<UnityEngine.Object, BindingList> targetMap = new Dictionary<UnityEngine.Object, BindingList>(); 
         
-        public List<ArrayLinkedListKey> toBeRemoved = new List<ArrayLinkedListKey>();
+        public readonly List<ArrayLinkedListKey> toBeRemoved = new List<ArrayLinkedListKey>();
         
-        public ObjectPool<BindingList> listPool = new ObjectPool<BindingList>(() => new BindingList()); // TweenType.Count
+        public readonly ObjectPool<BindingList> listPool = new ObjectPool<BindingList>(() => new BindingList()); // TweenType.Count
         
         void Update()
         {

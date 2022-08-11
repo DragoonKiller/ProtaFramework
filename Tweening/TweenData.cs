@@ -5,7 +5,7 @@ using UnityEngine.Pool;
 using Prota.Unity;
 namespace Prota.Tweening
 {
-    internal struct TweenData
+    public struct TweenData
     {
         public UnityEngine.Object target;      // duplicated control. cannot be null.
         public TweenType type;

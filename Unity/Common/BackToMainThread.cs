@@ -11,7 +11,9 @@ namespace Prota.Unity
     {
         static SynchronizationContext context;
         
+        #if UNITY_EDITOR
         [InitializeOnLoadMethod]
+        #endif
         [RuntimeInitializeOnLoadMethod]
         static void Init()
         {

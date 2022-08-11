@@ -1,0 +1,21 @@
+{
+    "name": "Prota.UI.Editor",
+    "rootNamespace": "Prota.Editor",
+    "references": [
+        "GUID:1d01d2fa0687c4240ac5dc6551db391a",
+        "GUID:4af5db39d74318c4fa1288b56207dbe1",
+        "GUID:ed55c1bd9f006f447971218e893b30b7",
+        "GUID:c3ab656e00727a944bc1a3d0c357dcc1"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,21 @@
+{
+    "name": "Prota.SimpleAnimation.Editor",
+    "rootNamespace": "Prota.Editor",
+    "references": [
+        "GUID:1d01d2fa0687c4240ac5dc6551db391a",
+        "GUID:4af5db39d74318c4fa1288b56207dbe1",
+        "GUID:ed55c1bd9f006f447971218e893b30b7",
+        "GUID:8041a6c6f485f0e45b7d108399db2cfc"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

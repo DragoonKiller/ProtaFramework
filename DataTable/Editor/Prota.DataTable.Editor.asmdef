@@ -1,0 +1,21 @@
+{
+    "name": "Prota.DataTable.Editor",
+    "rootNamespace": "Prota.Editor",
+    "references": [
+        "GUID:1d01d2fa0687c4240ac5dc6551db391a",
+        "GUID:4af5db39d74318c4fa1288b56207dbe1",
+        "GUID:ed55c1bd9f006f447971218e893b30b7",
+        "GUID:02ace0c7d57a09d45931d112dc8d7adc"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,24 @@
+{
+    "name": "Prota.Lua.Editor",
+    "rootNamespace": "Prota.Editor",
+    "references": [
+        "GUID:1d01d2fa0687c4240ac5dc6551db391a",
+        "GUID:4af5db39d74318c4fa1288b56207dbe1",
+        "GUID:ed55c1bd9f006f447971218e893b30b7",
+        "GUID:16c3d94ababbe324f8cdb5633c462e9c",
+        "GUID:2d059907b7430604fac462e74f6f55fb",
+        "GUID:c5ecc461727906345a35491a0440694f",
+        "GUID:5c1ff9bd975acec488150743d53a93ca"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
