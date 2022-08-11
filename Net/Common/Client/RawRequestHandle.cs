@@ -31,7 +31,7 @@ namespace Prota.Net
             public RawRequestHandle<T> Request<G>(NetId target, G data)
             {
                 var res = new RawRequestResult() { cancellationToken = client.cancelSource.Token };
-                requestSeq = new NetSequenceId(client.pointers.BackMoveNext() + 1);
+                requestSeq = new NetSequenceId(client.seqPool.Get());
                 var writer = client.NetWriterWithHeader(requestSeq, target, typeof(G).GetProtocolId());
                 writer.PutProtaSerialize(data);
                 this.requestTime = DateTime.Now;
@@ -49,6 +49,7 @@ namespace Prota.Net
             {
                 (!responseSeq.isNotify && !responseSeq.isRequest).Assert();
                 client.callbackList.AddProcessor<T>(responseSeq, (header, data) => {
+                    client.seqPool.Return(responseSeq.request);
                     this.responseTime = DateTime.Now;
                     this.header = header;
                     this.data = data;

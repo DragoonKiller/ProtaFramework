@@ -38,17 +38,15 @@ namespace Prota.Net
         
         ClientConnection connection { get; set; }
         
-        // 序列号的滑动区间. 序列号取值是 ushort, 范围是 1 ~ maxSeq. 序列号 0 表示没有序列号.
-        readonly CircleDualPointer pointers;
+        readonly PooledValue<NetSequenceId> seqPool = new PooledValue<NetSequenceId>(i => new NetSequenceId(i));
         
         readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
         
         readonly object lockobj = new object();
         
-        public Client(bool setAsMain = true, int maxSeq = 1000000)
+        public Client(bool setAsMain = true)
         {
             if(setAsMain) local = this;
-            this.pointers = new CircleDualPointer(maxSeq);
             connection = new ClientConnection(callbackList.Receive);
             connection.Start();
             AddCallback<S2CNtfOtherEnterExitRoom>(OnPlayerEnterExitRoom);
