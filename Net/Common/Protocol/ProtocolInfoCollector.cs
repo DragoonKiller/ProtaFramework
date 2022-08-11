@@ -3,11 +3,30 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Reflection;
 using LiteNetLib;
+using System.Linq;
 
 namespace Prota.Net
 {
     public static class ProtocolInfoCollector
     {
+        public static void ValidateAllProtocols()
+        {
+            var arr = AppDomain.CurrentDomain
+                .GetAssemblies()
+                .Aggregate(new List<Type>(), (list, a) => { list.AddRange(a.GetTypes()); return list; })
+                .Where(x => x.GetCustomAttribute<ProtaProtocol>() != null)
+                .ToList();
+            
+            try
+            {
+                foreach(var type in arr) GetInfo(type);
+            }
+            finally { }
+            
+            // ids = new PairDictionary<Type, int>();
+            // methods = new Dictionary<Type, DeliveryMethod>();
+        }
+        
         static PairDictionary<Type, int> ids = new PairDictionary<Type, int>();
         static Dictionary<Type, DeliveryMethod> methods = new Dictionary<Type, DeliveryMethod>();
         

@@ -77,8 +77,9 @@ namespace Prota.Net
             
             idPool = new NetIdPool(maxConnection);
             
-            callbackList.AddProcessor<C2SReqEnterRoom>(PlayerReqEnterRoom);
-            callbackList.AddProcessor<C2SReqExitRoom>(PlayerReqExitRoom);
+            callbackList.AddProcessor<C2SReqEnterRoom>(OnPlayerReqEnterRoom);
+            callbackList.AddProcessor<C2SReqExitRoom>(OnPlayerReqExitRoom);
+            callbackList.AddProcessor<C2AReqPing>(OnPing);
             
             listener = new EventBasedNetListener();
             listener.ConnectionRequestEvent += ConnectionRequestEvent;
@@ -100,7 +101,7 @@ namespace Prota.Net
             lock(this)
             {
                 var header = reader.GetProtaSerialized<CommonHeader>();
-                Console.WriteLine($"[Info] Prota server Receive from [{ peer.EndPoint }]{ header.src } protoId [{ header.protoId }] seq [{ header.seq }]");
+                // Console.WriteLine($"[Info] Prota server Receive from [{ peer.EndPoint }]{ header.src } protoId [{ header.protoId }] seq [{ header.seq }]");
                 
                 // 检查发送方是否还连着.
                 if(!peers.TryGetValue(header.src, out var srcPeer))
@@ -169,9 +170,19 @@ namespace Prota.Net
         }
         
         // ====================================================================================================
+        // Ping.
+        // ====================================================================================================
+        
+        void OnPing(CommonHeader header, C2AReqPing data)
+        {
+            SendDataWithWriter(header.seq.response, NetId.none, header.src, new A2CRspPing() { info = data.info });
+        }
+        
+        
+        // ====================================================================================================
         // 客户端请求加入房间.
         // ====================================================================================================
-        void PlayerReqEnterRoom(CommonHeader header, C2SReqEnterRoom data)
+        void OnPlayerReqEnterRoom(CommonHeader header, C2SReqEnterRoom data)
         {
             if(!header.dst.isNone)
             {
@@ -206,7 +217,7 @@ namespace Prota.Net
         // ====================================================================================================
         // 客户端请求退出房间.
         // ====================================================================================================
-        void PlayerReqExitRoom(CommonHeader header, C2SReqExitRoom data)
+        void OnPlayerReqExitRoom(CommonHeader header, C2SReqExitRoom data)
         {
             var peer = peers[header.src];
             

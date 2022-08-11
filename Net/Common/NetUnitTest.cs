@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Prota.Net
@@ -18,6 +19,8 @@ namespace Prota.Net
         
         public static void Test()
         {
+            ProtocolInfoCollector.ValidateAllProtocols();
+            
             var serverEndpoint = new IPEndPoint(IPAddress.Parse("192.168.1.3"), 39793);
             
             var server = new Server(serverEndpoint.Port, 1000);
@@ -52,6 +55,16 @@ namespace Prota.Net
                     }
                     
                     await Task.WhenAll(list);
+                    
+                    var pingStr = $">>> ClientA ping ClientB <<<";
+                    var echoStr = await clientA.Ping(clientB.id, pingStr);
+                    (pingStr == echoStr).Assert();
+                    
+                    var t = await clientA.GetRoundTripTime(NetId.none);
+                    $"ClientA => Server => A rtt : { t }".Log();
+                    
+                    t = await clientA.GetRoundTripTime(clientB.id);
+                    $"ClientA => B => A rtt : { t }".Log();
                 }
                 catch(Exception e)
                 {
@@ -74,6 +87,17 @@ namespace Prota.Net
                     $"client B enter room: { clientB.room.roomId }".Log();
                     $"client B roommates: { clientB.room.players.ToListString(x => x.ToString()) }".Log();
                     clientB.Send(NetId.none, new NtfUnitTest(){ srcId = clientA.id, info = "info sent from client b" });
+                    
+                    var pingStr = $">>> ClientB ping ClientA <<<";
+                    var echoStr = await clientB.Ping(clientA.id, pingStr);
+                    (pingStr == echoStr).Assert();
+                    
+                    var t = await clientB.GetRoundTripTime(NetId.none);
+                    $"ClientB => Server => B rtt : { t }".Log();
+                    
+                    t = await clientB.GetRoundTripTime(clientA.id);
+                    $"ClientB => A => B rtt : { t }".Log();
+                
                 }
                 catch(Exception e)
                 {
@@ -81,6 +105,7 @@ namespace Prota.Net
                 }
             });
             
+            var cc = new CancellationTokenSource();
             Task.Run(async () => {
                 try
                 {
@@ -95,7 +120,7 @@ namespace Prota.Net
                 {
                     Console.Error.WriteLine(e.ToString());
                 }
-            });
+            }, cc.Token);
             
             Task.Run(async () => {
                 await new SystemTimer(6);
@@ -105,6 +130,7 @@ namespace Prota.Net
                 await new SystemTimer(2);
                 server.Dispose();
                 "Server Destroy!".Log();
+                cc.Cancel();
             });
             
             

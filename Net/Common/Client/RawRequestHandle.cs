@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace Prota.Net
 {
@@ -21,12 +22,19 @@ namespace Prota.Net
             
             public bool IsCompleted { get; private set; }
             
+            public DateTime? requestTime { get; private set; }
+            
+            public DateTime? responseTime { get; private set; }
+            
+            public float roundTripTime => requestTime == null || responseTime == null ? 0 : (float)(requestTime.Value - responseTime.Value).TotalMilliseconds / 1000;
+            
             public RawRequestHandle<T> Request<G>(NetId target, G data)
             {
                 var res = new RawRequestResult() { cancellationToken = client.cancelSource.Token };
                 requestSeq = new NetSequenceId(client.pointers.BackMoveNext() + 1);
                 var writer = client.NetWriterWithHeader(requestSeq, target, typeof(G).GetProtocolId());
                 writer.PutProtaSerialize(data);
+                this.requestTime = DateTime.Now;
                 client.connection.peer.Send(writer, typeof(G).GetProtocolMethod());
                 return this;
             }
@@ -41,6 +49,7 @@ namespace Prota.Net
             {
                 (!responseSeq.isNotify && !responseSeq.isRequest).Assert();
                 client.callbackList.AddProcessor<T>(responseSeq, (header, data) => {
+                    this.responseTime = DateTime.Now;
                     this.header = header;
                     this.data = data;
                     this.IsCompleted = true;

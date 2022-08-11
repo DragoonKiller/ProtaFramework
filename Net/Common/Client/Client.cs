@@ -51,9 +51,10 @@ namespace Prota.Net
             this.pointers = new CircleDualPointer(maxSeq);
             connection = new ClientConnection(callbackList.Receive);
             connection.Start();
-            AddCallback<S2CNtfOtherEnterExitRoom>(PlayerEnterExitRoom);
+            AddCallback<S2CNtfOtherEnterExitRoom>(OnPlayerEnterExitRoom);
+            AddCallback<C2AReqPing>(OnPing);
         }
-
+        
         public void PollEvents()
         {
             lock(lockobj) connection?.mgr?.PollEvents();
@@ -110,7 +111,7 @@ namespace Prota.Net
             return true;
         }
         
-        void PlayerEnterExitRoom(CommonHeader header, S2CNtfOtherEnterExitRoom info)
+        void OnPlayerEnterExitRoom(CommonHeader header, S2CNtfOtherEnterExitRoom info)
         {
             lock(lockobj)
             {
@@ -128,6 +129,31 @@ namespace Prota.Net
             }
         }
         
+        // ====================================================================================================
+        // 时间相关.
+        // ====================================================================================================
+        
+        
+        public async Task<string> Ping(NetId? target = null, string info = null)
+        {
+            target = target ?? NetId.none;
+            var res = await ExpectResult<A2CRspPing>().Request(target.Value, new C2AReqPing() { info = info });
+            return res.data.info;
+        }
+        
+        
+        void OnPing(CommonHeader header, C2AReqPing data)
+        {
+            Send(header.src, new A2CRspPing() { info = data.info });
+        }
+        
+        // Ping operation with info == null.
+        public async Task<float> GetRoundTripTime(NetId? target = null)
+        {
+            target = target ?? NetId.none;
+            var res = await ExpectResult<A2CRspPing>().Request(target.Value, new C2AReqPing() { });
+            return res.roundTripTime;
+        }
         
         
         // ====================================================================================================
