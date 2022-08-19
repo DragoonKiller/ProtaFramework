@@ -32,25 +32,26 @@ namespace Prota
                 }
             }
             
-            var temp = StaticTempList<K>.Get();
-            
-            foreach(var e in target)
+            using(var temp = TempList<K>.Get())
             {
-                // 有 key 的更新.
-                if(val.ContainsKey(e.Key))
+                foreach(var e in target)
                 {
-                    updateFunc(e.Key, e.Value, val[e.Key]);
+                    // 有 key 的更新.
+                    if(val.ContainsKey(e.Key))
+                    {
+                        updateFunc(e.Key, e.Value, val[e.Key]);
+                    }
+                    // 没 key 的取消.
+                    else
+                    {
+                        removeFunc(e.Key, e.Value);
+                        temp.value.Add(e.Key);
+                    }
                 }
-                // 没 key 的取消.
-                else
-                {
-                    removeFunc(e.Key, e.Value);
-                    temp.Add(e.Key);
-                }
+                
+                // 没有的删除.
+                foreach(var k in temp.value) target.Remove(k);
             }
-            
-            // 没有的删除.
-            foreach(var k in temp) target.Remove(k);
             
             return target;
         }

@@ -22,5 +22,16 @@ namespace Prota
         }
         
         public static ArraySegment<T> AsSegment<T>(this T[] arr, int start = 0, int? count = null) => new ArraySegment<T>(arr, start, count ?? arr.Length - start);
+        
+        
+        public static T[] Fill<T>(this T[] list, Func<int, T> content)
+        {
+            for(int i = 0; i < list.Length; i++)
+            {
+                list[i] = content(i);
+            }
+            return list;
+        }
+        
     }
 }

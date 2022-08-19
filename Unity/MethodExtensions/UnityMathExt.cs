@@ -100,8 +100,8 @@ namespace Prota
         public static Vector2 ToVec2(this Vector4 p) => new Vector2(p.x, p.y);
         public static Vector3 ToVec3(this Vector2 p, float z = 0) => new Vector3(p.x, p.y, z);
         public static Vector3 ToVec3(this Vector4 p) => new Vector3(p.x, p.y, p.z);
-        public static Vector3 ToVec4(this Vector2 p, float z = 0, float w = 0) => new Vector4(p.x, p.y, z, w);
-        public static Vector3 ToVec4(this Vector3 p, float w = 0) => new Vector4(p.x, p.y, p.z, w);
+        public static Vector4 ToVec4(this Vector2 p, float z = 0, float w = 0) => new Vector4(p.x, p.y, z, w);
+        public static Vector4 ToVec4(this Vector3 p, float w = 0) => new Vector4(p.x, p.y, p.z, w);
         
         public static int Diff(this (Color32 a, Color32 b) x) => (x.a.r - x.b.r).Abs()
             + (x.a.g - x.b.g).Abs()

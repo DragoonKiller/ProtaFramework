@@ -1,0 +1,20 @@
+{
+    "name": "Prota.WorldTree",
+    "rootNamespace": "Prota.WorldTree",
+    "references": [
+        "GUID:4af5db39d74318c4fa1288b56207dbe1",
+        "GUID:1d01d2fa0687c4240ac5dc6551db391a",
+        "GUID:2665a8d13d1b3f18800f46e256720795",
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:3a10a300735ec734e9626d18cb90e8d0"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

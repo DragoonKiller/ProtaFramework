@@ -105,5 +105,15 @@ namespace Prota
             for(i = count; i < l.Count; i++) onDisable(i, l[i]);
             return l;
         }
+        
+        public static List<T> Fill<T>(this List<T> list, int n, Func<int, T> content)
+        {
+            for(int i = 0; i < n; i++)
+            {
+                list.Add(content(i));
+            }
+            return list;
+        }
+        
     }
 }

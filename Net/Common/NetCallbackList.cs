@@ -111,9 +111,6 @@ namespace Prota.Net
             }
         }
         
-        [ThreadStatic]
-        static List<CallbackHandle> _tempList;
-        static List<CallbackHandle> tempList => _tempList == null ? _tempList = new List<CallbackHandle>() : _tempList;
         public void Receive(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)
         {
             var header = reader.GetProtaSerialized<CommonHeader>();
@@ -121,21 +118,21 @@ namespace Prota.Net
             
             if(s.isNotify || s.isRequest)
             {
-                lock(lockobj)
+                using (var tempList = TempList<CallbackHandle>.Get())
                 {
-                    if(!processOnReceive.TryGetValue(header.protoId, out var list))
+                    lock(lockobj)
                     {
-                        header.Error($"receiving packet of type [{ header.protoId }] not listening.");
-                        return;
+                        if(!processOnReceive.TryGetValue(header.protoId, out var list))
+                        {
+                            header.Error($"receiving packet of type [{ header.protoId }] not listening.");
+                            return;
+                        }
+                        
+                        foreach(var handle in list) tempList.value.Add(handle);
                     }
                     
-                    tempList.Clear();
-                    foreach(var handle in list) tempList.Add(handle);
+                    foreach(var handle in tempList.value) handle.actualCallback(header, reader);
                 }
-                
-                foreach(var handle in tempList) handle.actualCallback(header, reader);
-                tempList.Clear();
-        
             }
             else
             {

@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace Prota.Editor
+namespace Prota.Unity
 {
     public struct GizmosContext : IDisposable
     {
