@@ -76,6 +76,10 @@ namespace Prota
         public static float4 ToFloat4(this float2 p, float z = 0, float w = 0) => new float4(p.x, p.y, z, w);
         public static float4 ToFloat4(this float3 p, float w = 0) => new float4(p.x, p.y, p.z, w);
         
+        public static Vector2 ToVec(this float2 p) => (Vector2)p;
+        public static Vector3 ToVec(this float3 p) => (Vector3)p;
+        public static Vector4 ToVec(this float4 p) => (Vector4)p;
+        
         public static Vector2Int ToVec(this int2 p) => new Vector2Int(p.x, p.y);
         public static Vector3Int ToVec(this int3 p) => new Vector3Int(p.x, p.y, p.z);
         public static int2 ToSIMD(this Vector2Int p) => new int2(p.x, p.y);

@@ -87,7 +87,7 @@ namespace Prota.Editor
             
             rootVisualElement.AddChild(activateCountField = new IntegerField("active count"));
             rootVisualElement.AddChild(toBeAddCountField = new IntegerField("to be add count"));
-            rootVisualElement.AddChild(tobeDeactiveCountField = new IntegerField("to be remove count"));
+            rootVisualElement.AddChild(tobeDeactiveCountField = new IntegerField("to be disable count"));
             inited = true;
             
             rootVisualElement.AddChild(new Button(() => {
@@ -111,6 +111,11 @@ namespace Prota.Editor
             updateCount.value = updateCount.value + 1;
             
             
+            if(updateCount.value % (updateSpeedField.value * 10) == 0)
+            {
+                chunk.ApplyRemove();
+            }
+            
             if(updateCount.value % updateSpeedField.value != 0) return;
             stepHandle.MoveNext();
             
@@ -127,31 +132,44 @@ namespace Prota.Editor
             using(var c = HandleContext.Get())
             {
                 Handles.color = Color.black;
-                new WorldNode(0, chunk.rootSize, chunk.rootPosition, new Vector2Int(0, 0)).rect.DrawHandles(Vector2.zero, Vector3.one * 0.8f);
+                new WorldNode(0, new Vector2Int(0, 0)).Rect(chunk.rootPosition, chunk.rootSize).DrawHandles(Vector2.zero, Vector3.one * 0.8f);
                 
                 Handles.color = Color.green;
-                foreach(var node in chunk.activeNodes) node.rect.DrawHandles(Vector2.zero, Vector3.one * 0.8f);
+                foreach(var node in chunk.activeNodes) node.Rect(chunk.rootPosition, chunk.rootSize).DrawHandles(Vector2.zero, Vector3.one * 0.8f);
+                
+                Handles.color = new Color(0.8f, 0.2f, 0.8f, 1);
+                foreach(var node in chunk.toBeRemovedNodes) node.Rect(chunk.rootPosition, chunk.rootSize).DrawHandles(Vector2.zero, Vector3.one * 0.7f);
                 
                 Handles.color = Color.green;
-                foreach(var node in chunk.edgeNodes) node.rect.DrawHandlesCross();
+                foreach(var node in chunk.edgeNodes) node.Rect(chunk.rootPosition, chunk.rootSize).DrawHandlesCross();
                 
                 Handles.color = Color.cyan;
-                foreach(var node in chunk.toBeActiveNodes) node.rect.DrawHandles();
+                foreach(var node in chunk.toBeActiveNodes) node.Rect(chunk.rootPosition, chunk.rootSize).DrawHandles();
                 
                 Handles.color = Color.yellow;
-                foreach(var node in chunk.toBeDeactiveNodes) node.rect.DrawHandlesCross();
+                foreach(var node in chunk.toBeDeactiveNodes) node.Rect(chunk.rootPosition, chunk.rootSize).DrawHandlesCross();
                 
                 Handles.color = Color.cyan;
-                foreach(var node in chunk.targetNodes) node.rect.DrawHandlesCross();
+                foreach(var node in chunk.targetNodes) node.Rect(chunk.rootPosition, chunk.rootSize).DrawHandlesCross();
                 
                 Handles.color = Color.red;
-                for(int i = chunk.processedExtendCount; i < chunk.processingExtends.Count; i++) chunk.processingExtends[i].rect.DrawHandles();
+                for(int i = chunk.processedExtendCount; i < chunk.processingExtends.Count; i++) chunk.processingExtends[i].Rect(chunk.rootPosition, chunk.rootSize).DrawHandles();
                 
                 Handles.color = Color.red;
-                for(int i = chunk.processedShrinkCount; i < chunk.processingShrinks.Count; i++) chunk.processingShrinks[i].rect.DrawHandles();
+                for(int i = chunk.processedShrinkCount; i < chunk.processingShrinks.Count; i++) chunk.processingShrinks[i].Rect(chunk.rootPosition, chunk.rootSize).DrawHandles();
             }
             
         }
+        
+        
+        
+        
+        // [MenuItem("Kartoga/Chunk Layer Playground")]
+        // public static void ChunkLayerPlaygound()
+        // {
+        //     var window = EditorWindow.GetWindow<Prota.Editor.ChunkLayerPlaygound>();
+        //     window.Show();
+        // }
     }
     
 }

@@ -55,6 +55,8 @@ namespace Prota.WorldTree
         
         public IReadOnlyCollection<WorldNode> toBeDeactiveNodes => toBeDeactivate;
         
+        public IReadOnlyCollection<WorldNode> toBeRemovedNodes => toBeRemoved;
+        
         public IReadOnlyCollection<WorldNode> targetNodes => targets;
         
         public float activeDistance;
@@ -96,13 +98,13 @@ namespace Prota.WorldTree
         void SetInitialNodesExtend(List<WorldNode> list)
         {
             list.AddRange(targets);
-            
-            foreach(var enodes in edges)
+            foreach(var enode in edges)
             {
-                if(activated.Contains(enodes.left)) list.Add(enodes.left);
-                if(activated.Contains(enodes.right)) list.Add(enodes.right);
-                if(activated.Contains(enodes.up)) list.Add(enodes.up);
-                if(activated.Contains(enodes.down)) list.Add(enodes.down);
+                WorldNode left = enode.left, right = enode.right, up = enode.up, down = enode.down;
+                if(activated.Contains(left)) list.Add(left);
+                if(activated.Contains(right)) list.Add(right);
+                if(activated.Contains(up)) list.Add(up);
+                if(activated.Contains(down)) list.Add(down);
             }
         }
         
@@ -191,9 +193,15 @@ namespace Prota.WorldTree
         }
         
         
-        void ApplayActivateList(OnWorldNodeActivate f = null)
+        void ApplyActivateList(OnWorldNodeActivate f = null)
         {
             (state == State.Complete).Assert();
+            
+            // activating nodes that are to be deleted. resume the node.
+            toBeRemoved.RemoveRange(toBeActivate);
+            
+            // new nodes to be deactive.
+            foreach(var enode in toBeDeactivate) if(activated.Contains(enode)) toBeRemoved.Add(enode);
             
             // update activate nodes.
             activated.AddRange(toBeActivate);
@@ -206,10 +214,11 @@ namespace Prota.WorldTree
             // new edge nodes.
             foreach(var node in toBeActivate)
             {
-                if(!activated.Contains(node.left)) edges.Add(node.left);
-                if(!activated.Contains(node.right)) edges.Add(node.right);
-                if(!activated.Contains(node.up)) edges.Add(node.up);
-                if(!activated.Contains(node.down)) edges.Add(node.down);
+                WorldNode left = node.left, right = node.right, up = node.up, down = node.down;
+                if(!activated.Contains(left)) edges.Add(left);
+                if(!activated.Contains(right)) edges.Add(right);
+                if(!activated.Contains(up)) edges.Add(up);
+                if(!activated.Contains(down)) edges.Add(down);
             }
             
             foreach(var node in toBeDeactivate)
@@ -228,12 +237,6 @@ namespace Prota.WorldTree
                 }
             }
             
-            // activating nodes that are to be deleted. resume the node.
-            toBeRemoved.RemoveRange(toBeActivate);
-            
-            // new nodes to be deactive.
-            toBeRemoved.AddRange(toBeDeactivate);
-            
             foreach(var node in toBeActivate) f?.Invoke(true, node, CancellationToken.None);
             
             toBeDeactivate.Clear();
@@ -242,9 +245,10 @@ namespace Prota.WorldTree
             state = State.None;
         }
         
-        void ApplyRemove(OnWorldNodeActivate f = null)
+        public void ApplyRemove(int maxIteration = 200, OnWorldNodeActivate f = null)
         {
-            while(toBeRemoved.Count > cacheCount)
+            int i = 0;
+            while(i++ < maxIteration && toBeRemoved.Count > cacheCount)
             {
                 var e = toBeRemoved.FirstElement();
                 toBeRemoved.Remove(e);
@@ -258,26 +262,32 @@ namespace Prota.WorldTree
             {
                 (state == State.None).Assert();
                 getTargets(this);
-                Console.WriteLine($"Get Targets. count { targets.Count }");
+                // Console.WriteLine($"Get Targets. count { targets.Count }");
                 yield return this;
                 
                 (state == State.None).Assert();
+                getTargets(this);
                 StartCompute();
-                Console.WriteLine($"Start compute.");
+                // Console.WriteLine($"Start compute.");
                 yield return this;
                 
                 (state == State.Computing).Assert();
+                int addition = 0;
                 while(state != State.Complete)
                 {
-                    ComputeActivateListStep(stepIteration);
-                    Console.WriteLine($"Computing [{ bfsExtend.processed } rest { bfsExtend.processing }] [{ bfsShrink.processed } rest { bfsShrink.processing }]");
+                    getTargets(this);
+                    ComputeActivateListStep(stepIteration + addition);
+                    addition += 5;
+                    // Console.WriteLine($"Computing [{ bfsExtend.processed } rest { bfsExtend.processing }] [{ bfsShrink.processed } rest { bfsShrink.processing }]");
                     yield return this;
                 }
                 
-                Console.WriteLine($"Done to be added [{ toBeActivate.Count }] to be removed [{ toBeDeactivate.Count }]");
+                // Console.WriteLine($"Done to be added [{ toBeActivate.Count }] to be removed [{ toBeDeactivate.Count }]");
                 
-                ApplayActivateList();
-                Console.WriteLine($"Done [{ activated.Count }]");
+                getTargets(this);
+                
+                ApplyActivateList();
+                // Console.WriteLine($"Done [{ activated.Count }]");
                 yield return this;
             }
         }
@@ -310,8 +320,7 @@ namespace Prota.WorldTree
             
             foreach(var point in targetPoints)
             {
-                var rpos = WorldNode.RelativePosition(level, rootPosition, rootSize, point);
-                var node = new WorldNode(level, rootSize, rootPosition, rpos); 
+                var node = WorldNode.GetNodeFromPoint(point, level, rootPosition, rootSize); 
                 targets.Add(node);
             }
         }
@@ -320,9 +329,10 @@ namespace Prota.WorldTree
         // Utils
         // ====================================================================================================
         
-        static float GetMinDistance(List<Vector2> targetList, WorldNode node)
+        
+        float GetMinDistance(List<Vector2> targetList, WorldNode node)
         {
-            var rect = node.rect;
+            var rect = node.Rect(rootPosition, rootSize);
             var distance = float.MaxValue;
             foreach(var p in targetList) distance = distance.Min(rect.EdgeDistanceToPoint(p));
             return distance;
