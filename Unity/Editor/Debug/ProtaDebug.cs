@@ -19,7 +19,7 @@ namespace Prota.Editor
                 a = 1 - (1 - a) * 0.5f;
                 Debug.DrawLine((from, to).Lerp((f + a) / 2), (from, to).Lerp(a), color.Value, duration.Value);
             }
-            
         }
+        
     }
 }

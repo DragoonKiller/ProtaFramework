@@ -18,7 +18,7 @@ namespace Prota.WorldTree
         
         readonly int2 _relativeCoord;
         
-        public readonly float2 centerPosition;
+        public readonly float2 basePosition;
         
         public readonly float2 size;
         
@@ -37,7 +37,8 @@ namespace Prota.WorldTree
         // level 2 is extend with scale as topLeft(-2, -2), topRight(2, 2) etc. the inner nodes are located at (-1, -1), (1, -1) and so on.
         public Vector2Int relativeCoord => new Vector2Int(_relativeCoord.x, _relativeCoord.y);
         
-        public Rect rect => new Rect(centerPosition, size);
+        // in world position.
+        public Rect rect => new Rect(basePosition, size);
         
         public bool isRoot => level == 0;
         
@@ -74,18 +75,10 @@ namespace Prota.WorldTree
             this._rootPosition = rootPosition;
             this._relativeCoord = relativeCoord.ToSIMD();
             
-            #if UNITY_EDITOR
-            var maxSize = 1 << level;
-            (relativeCoord.x < maxSize).Assert();
-            (relativeCoord.y < maxSize).Assert();
-            #endif
-            
             BurstAcceleration.GetHalfSize(out var size, level, ref this._rootSize);
             this.size = size;
             
-            var rootPos = (float2)rootPosition;
-            BurstAcceleration.GetCenterPosition(out var centerPosition, level, ref rootPos, ref size, ref _relativeCoord);
-            this.centerPosition = centerPosition;
+            BurstAcceleration.GetBasePosition(out this.basePosition, level, ref this._rootPosition, ref this._rootSize, ref _relativeCoord);
         }
         
         public Vector2Int GetRelativePositionForPoint(Vector2 point)
@@ -108,16 +101,6 @@ namespace Prota.WorldTree
         
         static int Upper(int x) => x * 2 + 1;
         
-        public WorldNode ChildContainsPoint(Vector2 a)
-        {
-            var p = centerPosition;
-            if(p.x <= a.x && p.y <= a.y) return bottomLeft;
-            if(p.x >= a.x && p.y <= a.y) return bottomRight;
-            if(p.x <= a.x && p.y >= a.y) return topLeft;
-            if(p.x >= a.x && p.y >= a.y) return topRight;
-            throw new InvalidOperationException();
-        }
-        
         public bool Equals(WorldNode other)
             => _level == other._level
             && math.all(_rootSize == other._rootSize)
@@ -136,7 +119,7 @@ namespace Prota.WorldTree
         
         public override int GetHashCode() => HashCode.Combine(_level, _rootSize, _rootPosition, _relativeCoord);
 
-        public override string ToString() => $"WorldNode[{ level }:{ relativeCoord.x },{ relativeCoord.y }|{centerPosition}]";
+        public override string ToString() => $"WorldNode[{ level }:{ relativeCoord.x },{ relativeCoord.y }|{basePosition}]";
         
         public static void UnitTest()
         {
@@ -203,28 +186,11 @@ namespace Prota.WorldTree
             }
             
             [BurstCompile]
-            public static unsafe void GetCenterPosition(out float2 result, int level, ref float2 rootPosition, ref float2 halfSize, ref int2 relativeCoord)
+            public static unsafe void GetBasePosition(out float2 result, int level, ref float2 rootPosition, ref float2 rootSize, ref int2 relativeCoord)
             {
-                float2 res = float2.zero;
-                if(level == 0) 
-                {
-                    res = rootPosition;
-                }
-                else
-                {
-                    res = float2.zero;
-                    var size = halfSize;
-                    var coord = relativeCoord;
-                    for(int lv = level; lv > 0; lv--)
-                    {
-                        res += coord * size;
-                        size *= 2;
-                        int2 tempRes = int2.zero;
-                        coord = coord / 2;
-                    }
-                    res += rootPosition;
-                }
-                result = res;
+                var size = 1 << level;
+                var coord = new float2(relativeCoord) / size;  // normalized to [0, 1] relative coordinates.
+                result = rootPosition + rootSize * coord;
             }
         }
     }

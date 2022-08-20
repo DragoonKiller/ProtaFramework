@@ -14,7 +14,7 @@ namespace Prota.Editor
         public static HandleContext Get()
         {
             return new HandleContext() {
-                color = Gizmos.color
+                color = Handles.color
             };
         }
         

@@ -73,7 +73,11 @@ namespace Prota
         public static int FloorToInt(this float x) => (int)Math.Floor(x);
         public static int CeilToInt(this float x) => (int)Math.Ceiling(x);
         
+        public static double Clamp(this double x, double a, double b) => x < a ? a : x > b ? b : x;
         public static float Clamp(this float x, float a, float b) => x < a ? a : x > b ? b : x;
+        public static long Clamp(this long x, long a, long b) => x < a ? a : x > b ? b : x;
+        public static int Clamp(this int x, int a, int b) => x < a ? a : x > b ? b : x;
+        
         
         
         public static float XMap(this float x, float a, float b) => (x - a) / (b - a);
