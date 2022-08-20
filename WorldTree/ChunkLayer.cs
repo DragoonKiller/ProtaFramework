@@ -197,6 +197,9 @@ namespace Prota.WorldTree
         {
             (state == State.Complete).Assert();
             
+            // notice: toBeDeactivate collection contains edges that might be activated soon.
+            // this inforamtion are kept for edge removing.
+            
             // activating nodes that are to be deleted. resume the node.
             toBeRemoved.RemoveRange(toBeActivate);
             
@@ -209,9 +212,9 @@ namespace Prota.WorldTree
             toBeDeactivate.RemoveRange(toBeActivate);
             activated.RemoveRange(toBeDeactivate);
             
+            // process edges.
             edges.RemoveRange(toBeActivate);
             
-            // new edge nodes.
             foreach(var node in toBeActivate)
             {
                 WorldNode left = node.left, right = node.right, up = node.up, down = node.down;
