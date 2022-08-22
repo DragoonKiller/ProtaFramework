@@ -26,6 +26,31 @@ namespace Prota.WorldTree
             Complete = 2,
         }
         
+        class Lock : IDisposable
+        {
+            public int count;
+            
+            public Lock Get()
+            {
+                var newValue = Interlocked.Increment(ref count);
+                if(newValue != 1)
+                {
+                    Interlocked.Decrement(ref count);
+                    throw new InvalidOperationException("Thread safety broken!");
+                }
+                
+                return this;
+            }
+            
+            void Release() 
+            {
+                var v = Interlocked.Decrement(ref count);
+                (v == 0).Assert();
+            }
+            
+            public void Dispose() => Release();
+        }
+        
         public readonly int level;
         
         public Vector2 rootPosition;
@@ -75,8 +100,15 @@ namespace Prota.WorldTree
         
         public int processedShrinkCount => bfsShrink.head;
         
+        public int maxIterationOnRemove = 200;
+        
+        public int stepIteration = 200;
+        
+        public OnWorldNodeActivate onActiveDeactive;
         
         public State state { get; private set; }
+        
+        readonly Lock lockobj = new Lock(); 
         
         public ChunkLayer(int level, Vector2 rootPosition, Vector2 rootHalfSize, float activeDistance)
         {
@@ -97,7 +129,8 @@ namespace Prota.WorldTree
         
         void SetInitialNodesExtend(List<WorldNode> list)
         {
-            list.AddRange(targets);
+            lock(targets) list.AddRange(targets);
+            
             foreach(var enode in edges)
             {
                 WorldNode left = enode.left, right = enode.right, up = enode.up, down = enode.down;
@@ -169,34 +202,60 @@ namespace Prota.WorldTree
         
         public void ComputeActivateList()
         {
-            if(state == State.Complete) return;
-            if(state == State.None) StartCompute();
-            
-            bfsShrink.Execute();
-            bfsExtend.Execute();
-            
-            SetToComplete();
+            using(lockobj.Get())
+            {
+                if(state == State.Complete) return;
+                if(state == State.None) StartCompute();
+                
+                bfsShrink.Execute();
+                bfsExtend.Execute();
+                
+                SetToComplete();
+            }
         }
         
-        public void ComputeActivateListStep(int stepIteration)
+        public void ComputeStep(int? iteraiton = null)
         {
+            using(lockobj.Get())
+            {
+                ComputeActivateListStep(iteraiton);
+            }
+        }
+        
+        void ComputeActivateListStep(int? stepIteration = null)
+        {
+            var iteration = stepIteration ?? this.stepIteration;
+            
             if(state == State.Complete) return;
             if(state == State.None) StartCompute();
             
-            bool extendComplete = bfsExtend.ExecuteStep(stepIteration / 2 + 1);
-            bool shrinkComplete = bfsShrink.ExecuteStep(stepIteration / 2 + 1);
+            bool extendComplete = bfsExtend.ExecuteStep(iteration / 2 + 1);
+            bool shrinkComplete = bfsShrink.ExecuteStep(iteration / 2 + 1);
             
-            if(extendComplete) bfsShrink.ExecuteStep(stepIteration / 2);
-            if(shrinkComplete) bfsExtend.ExecuteStep(stepIteration / 2);
+            if(extendComplete) bfsShrink.ExecuteStep(iteration / 2);
+            if(shrinkComplete) bfsExtend.ExecuteStep(iteration / 2);
             
             if(extendComplete && shrinkComplete) SetToComplete();
         }
         
         
-        void ApplyActivateList(OnWorldNodeActivate f = null)
+        void ApplyActivateList()
         {
             (state == State.Complete).Assert();
             
+            ApplyActivates();
+            ApplyEdges();
+            
+            foreach(var node in toBeActivate) onActiveDeactive?.Invoke(true, node, CancellationToken.None);
+            
+            toBeDeactivate.Clear();
+            toBeActivate.Clear();
+            
+            state = State.None;
+        }
+        
+        void ApplyActivates()
+        {
             // notice: toBeDeactivate collection contains edges that might be activated soon.
             // this inforamtion are kept for edge removing.
             
@@ -212,7 +271,10 @@ namespace Prota.WorldTree
             toBeDeactivate.RemoveRange(toBeActivate);
             activated.RemoveRange(toBeDeactivate);
             
-            // process edges.
+        }
+        
+        void ApplyEdges()
+        {
             edges.RemoveRange(toBeActivate);
             
             foreach(var node in toBeActivate)
@@ -240,22 +302,46 @@ namespace Prota.WorldTree
                 }
             }
             
-            foreach(var node in toBeActivate) f?.Invoke(true, node, CancellationToken.None);
-            
-            toBeDeactivate.Clear();
-            toBeActivate.Clear();
-            
-            state = State.None;
         }
         
-        public void ApplyRemove(int maxIteration = 200, OnWorldNodeActivate f = null)
+        void ApplyRemove()
         {
             int i = 0;
-            while(i++ < maxIteration && toBeRemoved.Count > cacheCount)
+            while(i++ < maxIterationOnRemove && toBeRemoved.Count > cacheCount)
             {
                 var e = toBeRemoved.FirstElement();
                 toBeRemoved.Remove(e);
-                f?.Invoke(false, e, CancellationToken.None);
+                onActiveDeactive?.Invoke(false, e, CancellationToken.None);
+            }
+        }
+        
+        public async Task ComputeAsync()
+        {
+            using(lockobj.Get())
+            {
+                await new SwitchToWorkerThread();
+                StartCompute();
+                
+                var extend = ProtaTask.Run(() => bfsExtend.Execute());
+                var shrink = ProtaTask.Run(() => bfsShrink.Execute());
+                await Task.WhenAll(extend, shrink);
+                
+                SetToComplete();
+                ApplyActivates();
+                ApplyEdges();
+                
+                await new BackToMainThread();
+                foreach(var node in toBeActivate) onActiveDeactive?.Invoke(true, node, CancellationToken.None);
+                
+                await new SwitchToWorkerThread();
+                toBeDeactivate.Clear();
+                toBeActivate.Clear();
+                
+                await new BackToMainThread();
+                ApplyRemove();
+                await new SwitchToWorkerThread();
+                
+                state = State.None;
             }
         }
         
@@ -263,49 +349,61 @@ namespace Prota.WorldTree
         {
             while(true)
             {
-                (state == State.None).Assert();
                 getTargets(this);
-                // Console.WriteLine($"Get Targets. count { targets.Count }");
-                yield return this;
                 
-                (state == State.None).Assert();
-                getTargets(this);
-                StartCompute();
-                // Console.WriteLine($"Start compute.");
-                yield return this;
-                
-                (state == State.Computing).Assert();
-                int addition = 0;
-                while(state != State.Complete)
+                using(lockobj.Get())
                 {
-                    getTargets(this);
-                    ComputeActivateListStep(stepIteration + addition);
-                    addition += 5;
-                    // Console.WriteLine($"Computing [{ bfsExtend.processed } rest { bfsExtend.processing }] [{ bfsShrink.processed } rest { bfsShrink.processing }]");
+                    (state == State.None).Assert();
+                    StartCompute();
+                }
+                
+                yield return this;
+                
+                int addition = 0;
+                while(true)
+                {
+                    bool completed = state == State.Complete;
+                    if(completed) break;
+                    using(lockobj.Get())
+                    {
+                        (state == State.Computing).Assert();
+                        ComputeActivateListStep(stepIteration + addition);
+                        addition += 5;
+                    }
+                    
                     yield return this;
                 }
                 
-                // Console.WriteLine($"Done to be added [{ toBeActivate.Count }] to be removed [{ toBeDeactivate.Count }]");
+                yield return this;
                 
-                getTargets(this);
+                using(lockobj.Get())
+                {
+                    ApplyActivateList();
+                }
+                yield return this;
                 
-                ApplyActivateList();
-                // Console.WriteLine($"Done [{ activated.Count }]");
+                using(lockobj.Get())
+                {
+                    ApplyRemove();
+                }
+                
                 yield return this;
             }
         }
         
         public void Clear()
         {
-            activated.Clear();
-            edges.Clear();
-            toBeActivate.Clear();
-            toBeDeactivate.Clear();
-            toBeRemoved.Clear();
-            targets.Clear();
-            bfsExtend.Reset();
-            bfsShrink.Reset();
-            
+            using(lockobj.Get())
+            {
+                activated.Clear();
+                edges.Clear();
+                toBeActivate.Clear();
+                toBeDeactivate.Clear();
+                toBeRemoved.Clear();
+                lock(targets) targets.Clear();
+                bfsExtend.Reset();
+                bfsShrink.Reset();
+            }
         }
         
         // ====================================================================================================
@@ -316,15 +414,18 @@ namespace Prota.WorldTree
         
         public void SetTargetPoints(IEnumerable<Vector2> newTargetPoints)
         {
-            targetPoints.Clear();
-            targetPoints.AddRange(newTargetPoints);
-            
-            targets.Clear();
-            
-            foreach(var point in targetPoints)
+            lock(targets)
+            lock(targetPoints)
             {
-                var node = WorldNode.GetNodeFromPoint(point, level, rootPosition, rootSize); 
-                targets.Add(node);
+                targetPoints.Clear();
+                targetPoints.AddRange(newTargetPoints);
+            
+                targets.Clear();
+                foreach(var point in targetPoints)
+                {
+                    var node = WorldNode.GetNodeFromPoint(point, level, rootPosition, rootSize); 
+                    targets.Add(node);
+                }
             }
         }
         
@@ -335,10 +436,13 @@ namespace Prota.WorldTree
         
         float GetMinDistance(List<Vector2> targetList, WorldNode node)
         {
-            var rect = node.Rect(rootPosition, rootSize);
-            var distance = float.MaxValue;
-            foreach(var p in targetList) distance = distance.Min(rect.EdgeDistanceToPoint(p));
-            return distance;
+            lock(targetList)
+            {
+                var rect = node.Rect(rootPosition, rootSize);
+                var distance = float.MaxValue;
+                foreach(var p in targetList) distance = distance.Min(rect.EdgeDistanceToPoint(p));
+                return distance;
+            }
         }
     }
 }
