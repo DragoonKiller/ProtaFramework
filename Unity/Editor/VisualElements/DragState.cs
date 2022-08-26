@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 using System;
 
-namespace UnityEngine.UIElements
+namespace Prota.Editor
 {
     public sealed class DragState
     {

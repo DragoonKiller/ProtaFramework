@@ -41,7 +41,7 @@ namespace Prota.Editor
         void UpdateTimer(Dictionary<TimeKey, VisualElement> loaded, TimerQueue q, ScrollView scroll, Label count)
         {
             count.text = q.timers.Count.ToString();
-            loaded.SetSync(q.timers, (k, t) => {
+            loaded.SetSync(() => q.timers, q.timers.TryGetValue, (k, t) => {
                 return new VisualElement()
                     .SetParent(scroll)
                     .SetHorizontalLayout()
@@ -57,10 +57,10 @@ namespace Prota.Editor
                     )
                 ;
             }, (k, v, t) => {
-                v.SetVisible(true);
-                v.Q<Label>("name").text = t.name;
-                v.Q<TextField>("type").value = t.repeat ? "repeat" : "normal";
-                v.Q<TextField>("time").value = k.time.ToString("0.000000");
+                t.SetVisible(true);
+                t.Q<Label>("name").text = v.name;
+                t.Q<TextField>("type").value = v.repeat ? "repeat" : "normal";
+                t.Q<TextField>("time").value = k.time.ToString("0.000000");
             }, (k, v) => {
                 v.SetVisible(false);
             });

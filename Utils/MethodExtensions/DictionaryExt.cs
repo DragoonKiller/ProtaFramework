@@ -15,16 +15,17 @@ namespace Prota
         }
         
         // dictionary K => H pairing with K => G providing H.
-        public static F SetSync<K, G, H, F>(
+        public static F SetSync<K, G, V, F>(
             this F target,
-            IReadOnlyDictionary<K, H> val,
-            Func<K, H, G> newFunc,
-            Action<K, G, H> updateFunc,
+            GetKVEnumerableFunc<K, V> getEnumerable,
+            TryGetValueFunc<K, V> tryGetValue,
+            Func<K, V, G> newFunc,
+            Action<K, V, G> updateFunc,
             Action<K, G> removeFunc
         ) where F: IDictionary<K, G>
         {
             // 新增.
-            foreach(var e in val)
+            foreach(var e in getEnumerable())
             {
                 if(!target.ContainsKey(e.Key))
                 {
@@ -37,9 +38,9 @@ namespace Prota
                 foreach(var e in target)
                 {
                     // 有 key 的更新.
-                    if(val.ContainsKey(e.Key))
+                    if(tryGetValue(e.Key, out var v))
                     {
-                        updateFunc(e.Key, e.Value, val[e.Key]);
+                        updateFunc(e.Key, v, e.Value);
                     }
                     // 没 key 的取消.
                     else

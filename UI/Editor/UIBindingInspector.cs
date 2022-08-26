@@ -37,7 +37,8 @@ namespace Prota.Editor
         {
             if(root == null) return;
             
-            elements.SetSync(x.rawContent,
+            elements.SetSync(() => x.rawContent,
+                x.rawContent.TryGetValue,
                 (key, element) => {
                     var v = new VisualElement()
                         .SetGrow()
@@ -51,10 +52,10 @@ namespace Prota.Editor
                     elementList.Add(v);
                     return v;
                 },
-                (key, v, element) => {
-                    v.SetVisible(true);
-                    v.Q<Label>("label").text = key;
-                    v.Q<ObjectField>("target").value = element;
+                (key, v, t) => {
+                    t.SetVisible(true);
+                    t.Q<Label>("label").text = key;
+                    t.Q<ObjectField>("target").value = v;
                 },
                 (key, v) => {
                     v.SetVisible(false);

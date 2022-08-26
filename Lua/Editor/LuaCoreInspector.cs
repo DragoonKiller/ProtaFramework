@@ -61,7 +61,8 @@ namespace Prota.Editor
             {
                 memoryIndicator.value = core.memory;
                 
-                loadedModuleList.SetSync(core.loaded,
+                loadedModuleList.SetSync(() => core.loaded,
+                    core.loaded.TryGetValue,
                     (k, v) => {
                         var res = new VisualElement()
                             .SetHorizontalLayout()
@@ -76,9 +77,9 @@ namespace Prota.Editor
                         loadedModuleRoot.AddChild(res);
                         return res;
                     },
-                    (k, g, v) => {
-                        g.SetVisible(true);
-                        g.Q<Label>("label").text = k;
+                    (k, g, t) => {
+                        t.SetVisible(true);
+                        t.Q<Label>("label").text = k;
                     },
                     (k, g) => {
                         loadedModuleRoot.Remove(loadedModuleRoot.Q(k));

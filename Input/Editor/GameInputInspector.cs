@@ -63,51 +63,55 @@ namespace Prota.Editor
             if(Selection.objects.Count() != 1) return;
             if(this.root == null) return;
             
-            actions.SetSync(GameInput.callbacks, (k, v) => {
-                var action = new ActionRecord() { actionName = k }
-                    .SetGrow()
-                    .AddChild(new Label() { name = "title", text = k })
-                    .AddChild(new VisualElement() { name = "sub" })
-                ;
-                action.actionName = k;
-                contentRoot.AddChild(action);
-                return action;
-                
-            }, (k, g, v) => {
-                g.callbacks.SetLength(v.Count, i =>
-                {
-                    var g = new VisualElement()
-                        .SetHorizontalLayout()
+            actions.SetSync(
+                () => GameInput.callbacks, 
+                GameInput.callbacks.TryGetValue,
+                (k, v) => {
+                    var action = new ActionRecord() { actionName = k }
                         .SetGrow()
-                        .AddChild(new VisualElement().AsVerticalSeperator(22, new Color(0f, 0f, 0f, 0f)))
-                        .AddChild(new Label() { name = "info" });
-                    g.SetParent(actions[k].Q("sub"));
-                    return g;
+                        .AddChild(new Label() { name = "title", text = k })
+                        .AddChild(new VisualElement() { name = "sub" })
+                    ;
+                    action.actionName = k;
+                    contentRoot.AddChild(action);
+                    return action;
                     
-                }, (i, g) => {
-                    g.SetVisible(true);
-                    
-                    string content = string.Intern("Unknown");
-                    var tt = v[i].Target;
-                    if(tt is UnityEngine.Object gg)
+                }, (k, v, g) => {
+                    g.callbacks.SetLength(v.Count, i =>
                     {
-                        content = gg.ToString() + " : " + gg.GetInstanceID() + " " + v[i].ToString();
-                    }
-                    else
-                    {
-                        content = v[i].ToString();
-                    }
+                        var g = new VisualElement()
+                            .SetHorizontalLayout()
+                            .SetGrow()
+                            .AddChild(new VisualElement().AsVerticalSeperator(22, new Color(0f, 0f, 0f, 0f)))
+                            .AddChild(new Label() { name = "info" });
+                        g.SetParent(actions[k].Q("sub"));
+                        return g;
+                        
+                    }, (i, g) => {
+                        g.SetVisible(true);
+                        
+                        string content = string.Intern("Unknown");
+                        var tt = v[i].Target;
+                        if(tt is UnityEngine.Object gg)
+                        {
+                            content = gg.ToString() + " : " + gg.GetInstanceID() + " " + v[i].ToString();
+                        }
+                        else
+                        {
+                            content = v[i].ToString();
+                        }
+                        
+                        g.Q<Label>("info").text = content;
+                        
+                    }, (i, g) => {
+                        g.SetVisible(false);
+                    });
                     
-                    g.Q<Label>("info").text = content;
-                    
-                }, (i, g) => {
-                    g.SetVisible(false);
-                });
-                
-            }, (k, v) => {
-                contentRoot.Remove(actions[k]);
-                actions.Remove(k);
-            });
+                }, (k, v) => {
+                    contentRoot.Remove(actions[k]);
+                    actions.Remove(k);
+                }
+            );
         }
         
         
