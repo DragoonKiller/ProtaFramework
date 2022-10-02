@@ -5,6 +5,8 @@ using Unity.Burst;
 using Unity.Mathematics;
 using System.Diagnostics;
 
+using Prota.Unity;
+
 namespace Prota.WorldTree
 {
     public class WorldManager : Singleton<WorldManager>

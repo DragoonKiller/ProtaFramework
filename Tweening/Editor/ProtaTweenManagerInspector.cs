@@ -4,12 +4,12 @@ using Prota.Editor;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 using System.IO;
-using Prota.Tweening;
+using Prota.Tween;
 using System.Collections.Generic;
 
 namespace Prota.Editor
 {
-    [CustomEditor(typeof(ProtaTweeningManager), false)]
+    [CustomEditor(typeof(ProtaTweenManager), false)]
     [ExecuteAlways]
     public class ProtaTweeningManagerInspector : UpdateInspector
     {
@@ -20,7 +20,7 @@ namespace Prota.Editor
         
         List<VisualElement> runningList = new List<VisualElement>();
         
-        ProtaTweeningManager mgr => target as ProtaTweeningManager;
+        ProtaTweenManager mgr => target as ProtaTweenManager;
         
         public override VisualElement CreateInspectorGUI()
         {

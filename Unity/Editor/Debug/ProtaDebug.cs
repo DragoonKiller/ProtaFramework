@@ -1,5 +1,6 @@
 
 using UnityEngine;
+using Prota.Unity;
 
 namespace Prota.Editor
 {

@@ -57,7 +57,7 @@ namespace Prota.Editor
             
             var target = EditorUtility.InstanceIDToObject(instanceId);
             
-            var rightMargin = area.xMax - 20;
+            var rightMargin = area.xMax - 40;
             
             if(target is GameObject g)
             {
@@ -66,7 +66,11 @@ namespace Prota.Editor
                 // SetActive 部分.
                 var active = EditorGUI.Toggle(new Rect(rightMargin, area.yMax - area.height, 16, 16), g.activeSelf);
                 rightMargin -= area.height;
-                if(active != g.activeSelf) g.SetActive(active);
+                if(active != g.activeSelf)
+                {
+                    Undo.RecordObject(g, "Activation");
+                    g.SetActive(active);
+                }
                 
                 g.GetComponents<Component>(comps);
                 // comps.Sort(Compare);

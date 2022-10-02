@@ -57,5 +57,9 @@ namespace Prota
             return target;
         }
         
+        public static Dictionary<K, V> Clone<K, V>(this Dictionary<K, V> x)
+        {
+            return new Dictionary<K, V>(x);
+        }
     }
 }

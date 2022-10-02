@@ -6,9 +6,7 @@ using Prota.Unity;
 
 namespace Prota.VisualEffect
 {
-    [ExecuteAlways]
     [RequireComponent(typeof(Renderer))]
-    [RequireComponent(typeof(MaterialHandler))]
     public class RectangleDeformation : MonoBehaviour
     {
         public Vector2 coordBottomLeft = new Vector2(0, 0);
@@ -25,7 +23,6 @@ namespace Prota.VisualEffect
             mat.SetVector("_CoordTopLeft", coordTopLeft);
             mat.SetVector("_CoordTopRight", coordTopRight);
         }
-        
         
     }
 }

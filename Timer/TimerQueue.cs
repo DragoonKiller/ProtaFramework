@@ -32,8 +32,15 @@ namespace Prota.Timer
                 var (timeKey, timer) = timers.First();
                 if(curTime < timeKey.time) break;
                 timers.Remove(timeKey);
-                timer.callback();
-                if(timer.repeat) timers[new TimeKey(timer.duration)] = timer;
+                var callback = timer.callback;
+                callback?.Invoke();
+                if(timer.repeat)
+                {
+                    // craete a new key, with the same id.
+                    timer.duration.ToString().Log();
+                    var newKey = new TimeKey(timeKey, timer.duration);
+                    timers[newKey] = timer;
+                }
             }
             if(i == timersPerUpdate) UnityEngine.Debug.LogWarning($"达到{ timersPerUpdate }/帧计时器处理上限");
         }
@@ -48,7 +55,30 @@ namespace Prota.Timer
         public Timer New(string name, float duration, bool repeat, Action callback)
         {
             var timer = new Timer(name, GetTime(), duration, repeat, callback);
+            timers.Add(timer.key, timer);
             return timer;
+        }
+        
+        public bool TryRemove(TimeKey key)
+        {
+            foreach(var entry in timers)
+            {
+                if(entry.Key.id == key.id)
+                {
+                    timers.Remove(entry.Key);
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        public bool IsTimerValid(TimeKey key)
+        {
+            foreach(var entry in timers)
+            {
+                if(entry.Key.id == key.id) return true;
+            }
+            return false;
         }
         
         public void Clear() => timers.Clear();

@@ -6,7 +6,7 @@ using System;
 
 using Unity.Burst;
 
-namespace Prota
+namespace Prota.Unity
 {
     public static partial class MethodExtensions
     {

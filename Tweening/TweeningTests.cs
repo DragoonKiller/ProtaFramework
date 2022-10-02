@@ -5,7 +5,7 @@ using UnityEngine.Pool;
 using Prota.Unity;
 using System.Collections;
 
-namespace Prota.Tweening
+namespace Prota.Tween
 {
     public static class TweeningTests
     {
@@ -19,7 +19,7 @@ namespace Prota.Tweening
             tt.onRemove = t => {
                 Debug.Log("remove 1 !!!");
             };
-            ProtaTweeningManager.Get().StartCoroutine(R(a));
+            ProtaTweenManager.Get().StartCoroutine(R(a));
         }
         
         static IEnumerator R(GameObject a)

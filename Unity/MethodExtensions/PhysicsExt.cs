@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Prota
+namespace Prota.Unity
 {
     public static partial class UnityMethodExtensions
     {

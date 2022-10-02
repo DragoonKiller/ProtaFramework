@@ -16,11 +16,13 @@ namespace Prota.Animation
         
         
         // in frames
-        public int duration;
+        public int frameCount;
         
-        public float fps;
+        public float fps = 60;
         
         public bool loop;
+        
+        public float duration => frameCount / fps;
         
         [NonSerialized]
         public List<Sprite> anchorResources = new List<Sprite>();
@@ -53,6 +55,8 @@ namespace Prota.Animation
                 prevSprite = sprite;
             }
             frames.Add(sprites.Last());
+            
+            if(anchorResources.Count == 0) return;
             
             anchorResources.Sort((a, b) => a.name.CompareTo(b.name));
             

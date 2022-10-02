@@ -20,44 +20,33 @@ namespace Prota.Unity
         public static MaterialHandler MaterialHandler(this Component s)
             => s.GetOrCreate<MaterialHandler>();
         
-        public static Component MakeMaterialUnique(this Component s, bool unique = true)
+        public static Component MakeMaterialUnique(this Component s)
         {
             var handler = s.MaterialHandler();
             Debug.Assert(handler);
-            
-            if(unique)
-            {
-                handler.MakeUnique();
-            }
-            else
-            {
-                handler.MakeShared();
-            }
             
             return s;
         }
         
-        public static Material GetMaterialInstance(this Component s, bool unique = true)
+        public static Material GetMaterialInstance(this Component s)
         {
             var handler = s.MaterialHandler();
             Debug.Assert(handler);
-            s.MakeMaterialUnique(unique);
-            return handler.mat;
+            return handler.rd.material;
         }
         
-        public static Material[] GetMaterialInstances(this Component s, bool unique = true)
+        public static Material[] GetMaterialInstances(this Component s)
         {
             var handler = s.MaterialHandler();
             Debug.Assert(handler);
-            s.MakeMaterialUnique(unique);
-            return handler.mats;
+            return handler.rd.materials;
         }
         
         public static void SetMaterial(this Component s, Material material, int index = 0)
         {
             var handler = s.MaterialHandler();
             Debug.Assert(handler);
-            handler.SetMaterialTemplate(index, material);
+            handler.rd.SetMaterial(material, index);
         }
         
         

@@ -1,7 +1,8 @@
 using System;
 using UnityEngine;
+using Prota.Unity;
 
-namespace Prota.Tweening
+namespace Prota.Tween
 {
     public struct TweenComposedMove
     {
@@ -17,18 +18,16 @@ namespace Prota.Tweening
         }
     }
     
-    
-    
     public static class PositionTweening
     {
         public static TweenHandle TweenMoveX(this Transform g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweenType.MoveX, g, SingleMoveX).SetFrom(g.position.x).SetTo(to).Start(time);
+            => ProtaTweenManager.instance.New(TweenType.MoveX, g, SingleMoveX).SetFrom(g.localPosition.x).SetTo(to).Start(time);
         
         public static TweenHandle TweenMoveY(this Transform g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweenType.MoveY, g, SingleMoveY).SetFrom(g.position.y).SetTo(to).Start(time);
+            => ProtaTweenManager.instance.New(TweenType.MoveY, g, SingleMoveY).SetFrom(g.localPosition.y).SetTo(to).Start(time);
 
         public static TweenHandle TweenMoveZ(this Transform g, float to, float time)
-            => ProtaTweeningManager.instance.New(TweenType.MoveZ, g, SingleMoveZ).SetFrom(g.position.z).SetTo(to).Start(time);
+            => ProtaTweenManager.instance.New(TweenType.MoveZ, g, SingleMoveZ).SetFrom(g.localPosition.z).SetTo(to).Start(time);
         
         public static TweenComposedMove TweenMove(this Transform g, Vector3 to, float time)
         {
@@ -42,19 +41,19 @@ namespace Prota.Tweening
         
         public static Transform ClearTweenMoveX(this Transform g)
         {
-            ProtaTweeningManager.instance.Remove(g, TweenType.MoveX);
+            ProtaTweenManager.instance.Remove(g, TweenType.MoveX);
             return g;
         }
         
         public static Transform ClearTweenMoveY(this Transform g)
         {
-            ProtaTweeningManager.instance.Remove(g, TweenType.MoveY);
+            ProtaTweenManager.instance.Remove(g, TweenType.MoveY);
             return g;
         }
         
         public static Transform ClearTweenMoveZ(this Transform g)
         {
-            ProtaTweeningManager.instance.Remove(g, TweenType.MoveZ);
+            ProtaTweenManager.instance.Remove(g, TweenType.MoveZ);
             return g;
         }
         
@@ -100,6 +99,14 @@ namespace Prota.Tweening
             m.x.SetCurve(curve);
             m.y.SetCurve(curve);
             m.z.SetCurve(curve);
+            return ref m;
+        }
+        
+        public static ref TweenComposedMove SetEase(ref this TweenComposedMove m, TweenEase ease)
+        {
+            m.x.SetEase(ease);
+            m.y.SetEase(ease);
+            m.z.SetEase(ease);
             return ref m;
         }
         

@@ -76,9 +76,9 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _CoordBottomLeft: {r: 0.0028433204, g: 0.005686581, b: 0, a: 0}
+    - _CoordBottomLeft: {r: 0, g: 0, b: 0, a: 0}
     - _CoordBottomRight: {r: 1, g: 0, b: 0, a: 0}
-    - _CoordTopLeft: {r: 0.0028432608, g: 0.99736804, b: 0, a: 0}
-    - _CoordTopRight: {r: 1.0028434, g: 1.0028434, b: 0, a: 0}
+    - _CoordTopLeft: {r: 0, g: 1, b: 0, a: 0}
+    - _CoordTopRight: {r: 1, g: 1, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []

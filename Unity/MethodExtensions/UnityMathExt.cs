@@ -1,7 +1,7 @@
 using UnityEngine;
 using System;
 
-namespace Prota
+namespace Prota.Unity
 {
     public static partial class UnityMethodExtensions
     {
@@ -80,6 +80,8 @@ namespace Prota
         
         public static Vector2 Lerp(this (Vector2 from, Vector2 to) p, float x) => p.from + (p.to - p.from) * x;
         public static Vector3 Lerp(this (Vector3 from, Vector3 to) p, float x) => p.from + (p.to - p.from) * x;
+        public static Vector4 Lerp(this (Vector4 from, Vector4 to) p, float x) => p.from + (p.to - p.from) * x;
+        public static Color Lerp(this (Color from, Color to) p, float x) => p.from + (p.to - p.from) * x;
         
         
         public static Vector2 Center(this (Vector2 from, Vector2 to) p) => p.Lerp(0.5f);
@@ -120,6 +122,9 @@ namespace Prota
         
         public static Vector3 Divide(this Vector3 a, Vector3 b) => new Vector3(a.x / b.x, a.y / b.x, a.z / b.z);
         public static Vector2 Divide(this Vector2 a, Vector2 b) => new Vector2(a.x / b.x, a.y / b.x);
+        
+        public static Vector2 Clamp(this Vector2 a, Vector2 min, Vector2 max) => new Vector2(a.x.Clamp(min.x, max.x), a.y.Clamp(min.y, max.y));
+        public static Vector3 Clamp(this Vector3 a, Vector3 min, Vector3 max) => new Vector3(a.x.Clamp(min.x, max.x), a.y.Clamp(min.y, max.y), a.z.Clamp(min.z, max.z));
         
     }
     

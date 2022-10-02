@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 using Prota.Unity;
-namespace Prota.Tweening
+namespace Prota.Tween
 {
     
-    public class ProtaTweeningManager : Singleton<ProtaTweeningManager>
+    public class ProtaTweenManager : Singleton<ProtaTweenManager>
     {
         public readonly ArrayLinkedList<TweenData> data = new ArrayLinkedList<TweenData>();
         
@@ -51,7 +51,7 @@ namespace Prota.Tweening
                     v.onInterrupted?.Invoke(v.handle);
                 }
                 
-                v.onRemove(v.handle);
+                v.onRemove?.Invoke(v.handle);
             }
             
             foreach(var key in toBeRemoved)

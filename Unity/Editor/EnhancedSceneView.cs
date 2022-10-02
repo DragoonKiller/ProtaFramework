@@ -124,6 +124,8 @@ namespace Prota.Editor
             if(c == null) return;
             var min = c.bounds.min;
             var max = c.bounds.max;
+            min.SetZ(c.transform.position.z);
+            max.SetZ(c.transform.position.z);
             using(var g = GizmosContext.Get())
             {
                 Gizmos.color = darkBlue;

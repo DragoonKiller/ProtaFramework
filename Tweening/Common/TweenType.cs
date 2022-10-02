@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 using Prota.Unity;
-namespace Prota.Tweening
+namespace Prota.Tween
 {
     public delegate void ValueTweeningUpdate(TweenHandle h, float t);
     

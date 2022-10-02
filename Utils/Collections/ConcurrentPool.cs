@@ -76,7 +76,7 @@ namespace Prota
                 if(!inuse.TryGetValue(value, out var version)) return;
                 if(version != specVersion) return;
                 onReturn?.Invoke(value);
-                unused.Remove(value);
+                inuse.Remove(value);
                 unused.Add(value);
             }
         }

@@ -15,7 +15,7 @@ namespace Prota.Net
     
     public class NetCallbackManager
     {
-        public struct CallbackHandle : IDisposable
+        public readonly struct CallbackHandle : IDisposable
         {
             public readonly NetSequenceId seq;
             public readonly NetCallbackManager callbackList;

@@ -18,5 +18,10 @@ namespace Prota
             foreach(var i in g) x.Remove(i);
             return x;
         }
+        
+        public static HashSet<T> Clone<T>(this HashSet<T> x)
+        {
+            return new HashSet<T>(x);
+        }
     }
 }

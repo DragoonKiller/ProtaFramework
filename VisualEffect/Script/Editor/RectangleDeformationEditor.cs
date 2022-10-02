@@ -5,11 +5,12 @@ using UnityEditor;
 using Prota.VisualEffect;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
+using Prota.Unity;
 
 namespace Prota.Editor
 {
     [CustomEditor(typeof(RectangleDeformation))]
-    public class RectangleDeformationEditor : UpdateInspector
+    public class RectangleDeformationInspector : UpdateInspector
     {
         RectangleDeformation t => target as RectangleDeformation;
         public override VisualElement CreateInspectorGUI()

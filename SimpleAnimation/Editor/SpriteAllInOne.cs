@@ -91,14 +91,13 @@ namespace Prota.Animation
                 var assetPath = Path.Combine(curSelectPath, name + ".asset");
                 var target = AssetDatabase.LoadAssetAtPath<SimpleAnimationAsset>(assetPath);
                 
-                target.Clear();
-                
                 var exists = true;
                 if(target == null)
                 {
                     exists = false;
                     target = ScriptableObject.CreateInstance<SimpleAnimationAsset>();
                 }
+                target.Clear();
                 target.name = name;
                 foreach(var spriteTexPath in lists.anims)
                 {

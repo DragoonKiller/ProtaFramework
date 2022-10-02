@@ -7,6 +7,11 @@ namespace Prota
 {
     public static partial class MethodExtensions
     {
+        public static List<T> Clone<T>(this List<T> x)
+        {
+            return new List<T>(x);
+        }
+        
         public static void InvokeAll<G>(this IEnumerable<G> list, object[] args = null)
             where G: Delegate
         {
@@ -115,5 +120,25 @@ namespace Prota
             return list;
         }
         
+        public static List<T> Shuffle<T>(this List<T> list)
+        {
+            for(int i = 0; i < list.Count; i++)
+            {
+                var a = rd.Next(0, list.Count);
+                var t = list[a];
+                list[a] = list[i];
+                list[i] = t;
+            }
+            return list;
+        }
+        
+        public static List<T> Shrink<T>(this List<T> list, int n)
+        {
+            while(list.Count > n && list.Count != 0)
+            {
+                list.Pop();
+            }
+            return list;
+        }
     }
 }

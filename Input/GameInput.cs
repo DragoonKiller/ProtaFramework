@@ -3,6 +3,8 @@ using UnityEngine.InputSystem;
 using System;
 using System.Collections.Generic;
 
+using Prota.Unity;
+
 namespace Prota.Input
 {
     [RequireComponent(typeof(PlayerInput))]

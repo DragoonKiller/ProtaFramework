@@ -13,10 +13,11 @@ namespace Prota.Animation
         
         [Header("state")]
         
-        [SerializeField]
-        float currentTime;
+        public float currentTime;
         
-        SpriteRenderer sprite => this.GetComponent<SpriteRenderer>();
+        public float speedMultiply = 1;
+        
+        public SpriteRenderer sprite => this.GetComponent<SpriteRenderer>();
         
         public bool _mirror = false;
         public bool mirror
@@ -31,6 +32,8 @@ namespace Prota.Animation
                 this.transform.localScale = localScale;
             }
         }
+        
+        public float duration => asset?.duration ?? 0;
         
         void Start()
         {
@@ -59,22 +62,14 @@ namespace Prota.Animation
             
             if(asset.frames.Count == 0) return;
             
-            currentTime += Time.deltaTime;
-            if(currentTime >= asset.duration / asset.fps)
+            currentTime += Time.deltaTime * speedMultiply;
+            if(currentTime >= asset.frameCount / asset.fps)
             {
-                if(asset.loop) currentTime -= asset.duration / asset.fps;
-                else currentTime = asset.duration / asset.fps;
+                if(asset.loop) currentTime -= asset.frameCount / asset.fps;
+                else currentTime = asset.frameCount / asset.fps;
             }
             
-            var curFrameNum = Mathf.FloorToInt(currentTime * asset.fps);
-            curFrameNum = Mathf.Min(curFrameNum, asset.frames.Count - 1);
-            var frame = asset.frames[curFrameNum];
-            sprite.sprite = frame;
-            
-            var curAnchorNum = Mathf.FloorToInt(currentTime * asset.fps);
-            curAnchorNum = Mathf.Min(curAnchorNum, asset.anchors.Count - 1);
-            var curOffset = asset.anchors[curAnchorNum];
-            this.transform.localPosition = curOffset;
+            Refresh();
         }
         
         
@@ -84,6 +79,22 @@ namespace Prota.Animation
             if(this.asset == asset || this.asset.name == asset.name) return false;
             this.asset = asset;
             return true;
+        }
+        
+        public void Refresh()
+        {
+            var curFrameNum = Mathf.FloorToInt(currentTime * asset.fps);
+            curFrameNum = Mathf.Min(curFrameNum, asset.frames.Count - 1);
+            var frame = asset.frames[curFrameNum];
+            sprite.sprite = frame;
+            
+            if(asset.anchors.Count != 0)
+            {
+                var curAnchorNum = Mathf.FloorToInt(currentTime * asset.fps);
+                curAnchorNum = Mathf.Min(curAnchorNum, asset.anchors.Count - 1);
+                var curOffset = asset.anchors[curAnchorNum];
+                this.transform.localPosition = curOffset;
+            }
         }
         
         public void Restart()

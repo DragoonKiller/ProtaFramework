@@ -43,12 +43,14 @@ namespace Prota.Timer
         
         public static Timer New(float time, bool repeat, bool realtime, Action callback)
         {
+            (time >= 0f).Assert();
             TimerManager.EnsureExists();
             if(realtime) return realtimeTimer.New(time, repeat, callback);
             return normalTimer.New(time, repeat, callback);
         }
         public static Timer New(float time, bool repeat, Action callback) => New(time, repeat, false, callback);
         public static Timer New(float time, Action callback) => New(time, false, false, callback);
+        public static Timer New(float time) => New(time, false, false, null);
         
         
         public static Timer New(string name, float time, bool repeat, bool realtime, Action callback)
@@ -60,5 +62,23 @@ namespace Prota.Timer
         public static Timer New(string name, float time, bool repeat, Action callback) => New(name, time, repeat, false, callback);
         public static Timer New(string name, float time, Action callback) => New(name, time, false, false, callback);
         
-    } 
+        public bool Remove() => Remove(this);
+        
+        public bool valid => IsValid(this);
+        
+        public static bool IsValid(Timer timer)
+        {
+            if(normalTimer.IsTimerValid(timer.key)) return true;
+            if(realtimeTimer.IsTimerValid(timer.key)) return true;
+            return false;
+        }
+        
+        public static bool Remove(Timer timer)
+        {
+            if(normalTimer.TryRemove(timer.key)) return true;
+            if(realtimeTimer.TryRemove(timer.key)) return true;
+            return false;
+        }
+        
+    }
 }

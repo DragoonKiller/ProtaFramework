@@ -1,4 +1,4 @@
-Shader "Hidden/RectangleDeformation"
+Shader "ProtaFramwork/RectangleDeformation"
 {
     Properties
     {

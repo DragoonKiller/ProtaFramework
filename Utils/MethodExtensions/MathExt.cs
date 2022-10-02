@@ -71,7 +71,11 @@ namespace Prota
         public static bool InExclusive(this float x, float a, float b) => a < x && x < b;
         
         public static int FloorToInt(this float x) => (int)Math.Floor(x);
+        public static int FloorToInt(this double x) => (int)Math.Floor(x);
         public static int CeilToInt(this float x) => (int)Math.Ceiling(x);
+        public static int CeilToInt(this double x) => (int)Math.Ceiling(x);
+        public static int RoundToInt(this float x) => (int)Math.Round(x);
+        public static int RoundToInt(this double x) => (int)Math.Round(x);
         
         public static double Clamp(this double x, double a, double b) => x < a ? a : x > b ? b : x;
         public static float Clamp(this float x, float a, float b) => x < a ? a : x > b ? b : x;

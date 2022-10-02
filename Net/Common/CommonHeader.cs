@@ -9,7 +9,7 @@ namespace Prota.Net
 {
     [StructLayout(LayoutKind.Sequential)]
     [ProtaSerialize]
-    public struct CommonHeader
+    public readonly struct CommonHeader
     {
         public readonly NetSequenceId seq;       // 收发包序列号. notify = 0, request > 0, response < 0, 用绝对值对应 request/response.
         public readonly NetId src;

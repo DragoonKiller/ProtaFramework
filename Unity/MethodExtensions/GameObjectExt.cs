@@ -31,5 +31,11 @@ namespace Prota
         }
         
         public static bool IsPrefab(this GameObject g) => !g.scene.IsValid();
+        
+        public static GameObject SetParent(this GameObject g, Transform x = null, bool worldPositionStays = false)
+        {
+            g.transform.SetParent(x, worldPositionStays);
+            return g;
+        }
     }
 }

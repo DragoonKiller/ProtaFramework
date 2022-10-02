@@ -10,7 +10,13 @@ namespace Prota.Timer
         static ulong gid = 0;
         public readonly ulong id;
         public readonly float time;
-
+        
+        public TimeKey(TimeKey original, float appendTime)
+        {
+            id = original.id;
+            this.time = original.time + appendTime;
+        }
+        
         public TimeKey(float time)
         {
             this.id = unchecked(++gid);
