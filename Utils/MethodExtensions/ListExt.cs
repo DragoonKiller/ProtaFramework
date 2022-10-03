@@ -124,7 +124,7 @@ namespace Prota
         {
             for(int i = 0; i < list.Count; i++)
             {
-                var a = rd.Next(0, list.Count);
+                var a = rand.Next(0, list.Count);
                 var t = list[a];
                 list[a] = list[i];
                 list[i] = t;

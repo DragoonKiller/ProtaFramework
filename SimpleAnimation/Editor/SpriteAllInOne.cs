@@ -65,6 +65,11 @@ namespace Prota.Animation
         [MenuItem("Assets/ProtaFramework/动画/构建动画资源", priority = 1112)]
         static void ScanAnimationInFolder()
         {
+            RemoveDuplicatedTextures();
+            AssetDatabase.Refresh();
+            
+            
+            
             var curSelectPath = selectedFolder;
             if(curSelectPath == null) return;
             var anims = new Dictionary<string, (List<string> anims, List<string> anchors)>();

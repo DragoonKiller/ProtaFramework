@@ -62,23 +62,22 @@ namespace Prota.Timer
         public static Timer New(string name, float time, bool repeat, Action callback) => New(name, time, repeat, false, callback);
         public static Timer New(string name, float time, Action callback) => New(name, time, false, false, callback);
         
-        public bool Remove() => Remove(this);
-        
-        public bool valid => IsValid(this);
-        
-        public static bool IsValid(Timer timer)
+    }
+    
+    public static class TimerExt
+    {
+        public static bool IsValid(this Timer timer)
         {
-            if(normalTimer.IsTimerValid(timer.key)) return true;
-            if(realtimeTimer.IsTimerValid(timer.key)) return true;
+            if(Timer.normalTimer.IsTimerValid(timer.key)) return true;
+            if(Timer.realtimeTimer.IsTimerValid(timer.key)) return true;
             return false;
         }
         
-        public static bool Remove(Timer timer)
+        public static bool Remove(this Timer timer)
         {
-            if(normalTimer.TryRemove(timer.key)) return true;
-            if(realtimeTimer.TryRemove(timer.key)) return true;
+            if(Timer.normalTimer.TryRemove(timer.key)) return true;
+            if(Timer.realtimeTimer.TryRemove(timer.key)) return true;
             return false;
         }
-        
     }
 }

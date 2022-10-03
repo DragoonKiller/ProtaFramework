@@ -70,6 +70,7 @@ namespace Prota.Editor
                 {
                     Undo.RecordObject(g, "Activation");
                     g.SetActive(active);
+                    Selection.activeObject = g;
                 }
                 
                 g.GetComponents<Component>(comps);

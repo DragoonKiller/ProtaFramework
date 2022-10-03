@@ -37,7 +37,6 @@ namespace Prota.Timer
                 if(timer.repeat)
                 {
                     // craete a new key, with the same id.
-                    timer.duration.ToString().Log();
                     var newKey = new TimeKey(timeKey, timer.duration);
                     timers[newKey] = timer;
                 }

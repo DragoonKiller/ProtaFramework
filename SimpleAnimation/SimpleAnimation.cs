@@ -35,28 +35,9 @@ namespace Prota.Animation
         
         public float duration => asset?.duration ?? 0;
         
-        void Start()
-        {
-            Debug.Assert(asset);
-            playing = asset;
-        }
-        
-        [NonSerialized]
-        SimpleAnimationAsset playing;
-        
         void Update()
         {
-            if(!Application.isPlaying)
-            {
-                return;
-            }
-            
-            if(playing != asset && playing.name != asset.name)
-            {
-                currentTime = 0;
-            }
-            
-            playing = asset;
+            if(!Application.isPlaying) return;
             
             this.name = $"Animation:{ asset?.name }";
             
@@ -72,16 +53,7 @@ namespace Prota.Animation
             Refresh();
         }
         
-        
-        // 返回: 是否为新资源.
-        public bool SetAsset(SimpleAnimationAsset asset)
-        {
-            if(this.asset == asset || this.asset.name == asset.name) return false;
-            this.asset = asset;
-            return true;
-        }
-        
-        public void Refresh()
+        public SimpleAnimation Refresh()
         {
             var curFrameNum = Mathf.FloorToInt(currentTime * asset.fps);
             curFrameNum = Mathf.Min(curFrameNum, asset.frames.Count - 1);
@@ -95,11 +67,30 @@ namespace Prota.Animation
                 var curOffset = asset.anchors[curAnchorNum];
                 this.transform.localPosition = curOffset;
             }
+            
+            return this;
         }
         
-        public void Restart()
+        public SimpleAnimation Play(SimpleAnimationAsset asset, bool restartWithTheSameAnim = false)
         {
-            currentTime = 0;
+            if(this.asset == asset)
+            {
+                if(restartWithTheSameAnim) Restart();
+                return this;
+            }
+            
+            this.asset = asset;
+            Restart();
+            return this;
+        }
+        
+        public SimpleAnimation Restart() => SetTime(0);
+        
+        public SimpleAnimation SetTime(float time)
+        {
+            this.currentTime = time;
+            Refresh();
+            return this;
         }
         
         

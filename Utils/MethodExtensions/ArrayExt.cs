@@ -60,7 +60,7 @@ namespace Prota
             var n = count ?? list.Length;
             for(int i = 0; i < n; i++)
             {
-                var a = rd.Next(0, n);
+                var a = rand.Next(0, n);
                 var t = list[a];
                 list[a] = list[i];
                 list[i] = t;

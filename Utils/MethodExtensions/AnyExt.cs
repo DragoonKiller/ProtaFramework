@@ -6,7 +6,7 @@ namespace Prota
 {
     public static partial class MethodExtensions
     {
-        static Random rd = new Random(0);
+        static Random rand = new Random(unchecked((int)DateTime.Now.Ticks));
         
         public static T SwapSet<T>(this ref T t, T value) where T: struct
         {

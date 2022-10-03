@@ -46,7 +46,8 @@ namespace Prota.Tween
                 }
                 else        // to be removed but not timeout, so it's invalid.
                 {
-                    Debug.Assert(!v.isTimeout);
+                    // Debug.Assert(!v.isTimeout); // removed and timeout, any behaviour could be accepted.
+                                                   // let's make it interuppted though.
                     Debug.Assert(v.invalid);
                     v.onInterrupted?.Invoke(v.handle);
                 }
