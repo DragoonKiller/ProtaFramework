@@ -15,13 +15,20 @@ namespace Prota.Timer
         public float duration;
         public string name => mname ?? key.id.ToString();
         
-        public Timer(string name, float curTime, float duration, bool repeat, Action callback)
+        internal Timer(string name, float curTime, float duration, bool repeat, Action callback)
         {
             this.mname = name;
             this.key = new TimeKey(curTime + duration);
             this.duration = duration;
             this.repeat = repeat;
             this.callback = callback;
+        }
+        
+        internal bool NextRepeat()
+        {
+            if(!repeat) return false;
+            key = new TimeKey(key, duration);
+            return true;
         }
         
         public static TimerQueue normalTimer = new TimerQueue(() => Time.time);
@@ -68,15 +75,15 @@ namespace Prota.Timer
     {
         public static bool IsValid(this Timer timer)
         {
-            if(Timer.normalTimer.IsTimerValid(timer.key)) return true;
-            if(Timer.realtimeTimer.IsTimerValid(timer.key)) return true;
+            if(Timer.normalTimer.IsTimerValid(timer)) return true;
+            if(Timer.realtimeTimer.IsTimerValid(timer)) return true;
             return false;
         }
         
         public static bool Remove(this Timer timer)
         {
-            if(Timer.normalTimer.TryRemove(timer.key)) return true;
-            if(Timer.realtimeTimer.TryRemove(timer.key)) return true;
+            if(Timer.normalTimer.TryRemove(timer)) return true;
+            if(Timer.realtimeTimer.TryRemove(timer)) return true;
             return false;
         }
     }

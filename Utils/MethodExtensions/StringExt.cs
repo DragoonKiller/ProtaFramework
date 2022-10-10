@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 
 namespace Prota
 {
@@ -17,6 +18,13 @@ namespace Prota
         {
             Console.Error.WriteLine(x);
             return x;
+        }
+        
+        public static StringBuilder ToStringBuilder(this string x)
+        {
+            var s = new StringBuilder();
+            s.Append(x);
+            return s;
         }
     }
     

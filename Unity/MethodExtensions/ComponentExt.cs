@@ -12,6 +12,12 @@ namespace Prota.Unity
             return x.gameObject.AddComponent<T>();
         }
         
+        public static T Clone<T>(this T g, Transform parent = null)
+            where T: Component
+        {
+            return g.gameObject.Clone(parent).GetComponent<T>();
+        }
+        
         // ============================================================================================================
         // ============================================================================================================
         

@@ -12,6 +12,7 @@ namespace Prota
             return r;
         }
         
+        
         public static Component GetOrCreate(this GameObject g, Type t)
         {
             if(!typeof(Component).IsAssignableFrom(t)) return null;
@@ -20,9 +21,12 @@ namespace Prota
             return r;
         }
         
+        
         public static string GetNamePath(this GameObject g) => g.transform.GetNamePath();
         
+        
         public static void Destroy(this GameObject g) => GameObject.Destroy(g);
+        
         
         public static GameObject SetIdentity(this GameObject g)
         {
@@ -30,7 +34,20 @@ namespace Prota
             return g;
         }
         
+        public static GameObject ClearSub(this GameObject x)
+        {
+            x.transform.ClearSub();
+            return x;
+        }
+        
         public static bool IsPrefab(this GameObject g) => !g.scene.IsValid();
+        
+        
+        public static GameObject Clone(this GameObject g, Transform parent = null)
+        {
+            return GameObject.Instantiate(g, parent == null ? g.transform : parent, false);
+        }
+        
         
         public static GameObject SetParent(this GameObject g, Transform x = null, bool worldPositionStays = false)
         {
