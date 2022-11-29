@@ -7,6 +7,7 @@ using System.Collections;
 
 namespace Prota
 {
+    // struct 装箱.
     public class Box<T> where T: struct
     {
         public T value;

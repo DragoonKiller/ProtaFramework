@@ -7,6 +7,7 @@ using System.Collections;
 
 namespace Prota
 {
+    // 用来方便地做位运算的工具类.
     public struct BitValue
     {
         public readonly int value;

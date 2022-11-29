@@ -134,6 +134,15 @@ namespace Prota.Unity
             );
         }
         
+        // Verlet 积分, 用位置相对时间的函数作泰勒展开, 用来精确模拟物理位移/速度/加速度行为
+        // https://www.bilibili.com/video/BV1pG411F7b1
+        public static float Verlet(this float curPos, float prevPos, float acceleration, float dt)
+            => 2 * curPos - prevPos + dt * dt * acceleration;
+        public static Vector2 Verlet(this Vector2 curPos, Vector2 prevPos, Vector2 acceleration, float dt)
+            => 2 * curPos - prevPos + dt * dt * acceleration;
+        public static Vector3 Verlet(this Vector3 curPos, Vector3 prevPos, Vector3 acceleration, float dt)
+            => 2 * curPos - prevPos + dt * dt * acceleration;
+        
     }
     
 }

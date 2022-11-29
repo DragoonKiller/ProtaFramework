@@ -63,12 +63,15 @@ namespace Prota
         }
         
         public static bool In(this int x, int a, int b) => a <= x && x <= b;
-        
         public static bool InExclusive(this int x, int a, int b) => a < x && x < b;
-        
         public static bool In(this float x, float a, float b) => a <= x && x <= b;
-        
         public static bool InExclusive(this float x, float a, float b) => a < x && x < b;
+        
+        public static bool Contains(this (int a, int b) v, int x) => v.a <= x && x <= v.b;
+        public static bool ContainsExclusive(this (int a, int b) v, int x) => v.a < x && x < v.b;
+        public static bool Contains(this (float a, float b) v, float x) => v.a <= x && x <= v.b;
+        public static bool ContainsExclusive(this (float a, float b) v, float x) => v.a < x && x < v.b;
+        
         
         public static int FloorToInt(this float x) => (int)Math.Floor(x);
         public static int FloorToInt(this double x) => (int)Math.Floor(x);
