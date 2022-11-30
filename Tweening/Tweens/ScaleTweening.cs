@@ -25,17 +25,20 @@ namespace Prota.Tween
     {
         public static TweenHandle TweenScaleX(this Transform g, float to, float time)
         {
-            return ProtaTweenManager.instance.New(TweenType.ScaleX, g, ScaleX).SetFrom(g.localScale.x).SetTo(to).Start(time);
+            return ProtaTweenManager.instance.New(TweenType.ScaleX, g, ScaleX)
+                .SetGuard(g.LifeSpan()).SetFrom(g.localScale.x).SetTo(to).Start(time);
         }
         
         public static TweenHandle TweenScaleY(this Transform g, float to, float time)
         {
-            return ProtaTweenManager.instance.New(TweenType.ScaleY, g, ScaleY).SetFrom(g.localScale.y).SetTo(to).Start(time);
+            return ProtaTweenManager.instance.New(TweenType.ScaleY, g, ScaleY)
+                .SetGuard(g.LifeSpan()).SetFrom(g.localScale.y).SetTo(to).Start(time);
         }
 
         public static TweenHandle TweenScaleZ(this Transform g, float to, float time)
         {
-            return ProtaTweenManager.instance.New(TweenType.ScaleZ, g, ScaleZ).SetFrom(g.localScale.z).SetTo(to).Start(time);
+            return ProtaTweenManager.instance.New(TweenType.ScaleZ, g, ScaleZ)
+                .SetGuard(g.LifeSpan()).SetFrom(g.localScale.z).SetTo(to).Start(time);
         }
         
         public static TweenComposedScale TweenScale(this Transform g, Vector3 to, float time)
@@ -120,7 +123,7 @@ namespace Prota.Tween
             return ref m;
         }
         
-        public static ref TweenComposedScale SetGuard(ref this TweenComposedScale m, UnityEngine.Object guard)
+        public static ref TweenComposedScale SetGuard(ref this TweenComposedScale m, LifeSpan guard)
         {
             m.x.SetGuard(guard);
             m.y.SetGuard(guard);

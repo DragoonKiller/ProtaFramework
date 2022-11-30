@@ -95,7 +95,7 @@ namespace Prota.Tween
             set => data[key].realtime = value;
         }
         
-        public UnityEngine.Object guard
+        public LifeSpan guard
         {
             get => data[key].guard;
             set => data[key].guard = value;
@@ -149,7 +149,7 @@ namespace Prota.Tween
             return this;
         }
         
-        public TweenHandle SetGuard(UnityEngine.Object x)
+        public TweenHandle SetGuard(LifeSpan x)
         {
             this.guard = x;
             return this;

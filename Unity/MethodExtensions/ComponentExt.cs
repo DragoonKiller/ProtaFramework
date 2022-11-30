@@ -30,7 +30,6 @@ namespace Prota.Unity
         {
             var handler = s.MaterialHandler();
             Debug.Assert(handler);
-            
             return s;
         }
         

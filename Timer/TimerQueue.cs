@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Prota.Unity;
 
 namespace Prota.Timer
 {
@@ -30,20 +31,25 @@ namespace Prota.Timer
             {
                 var (timeKey, timer) = timers.First();
                 if(curTime < timeKey.time) break;
+                // 先删除, 如果有需要再添加回去.
                 timers.Remove(timeKey);
-                var callback = timer.callback;
-                callback?.Invoke();
-                if(timer.NextRepeat()) timers[timer.key] = timer;
+                
+                if(timer.isAlive)
+                {
+                    var callback = timer.callback;
+                    callback?.Invoke();
+                    if(timer.NextRepeat()) timers[timer.key] = timer;
+                }
             }
             if(i == timersPerUpdate) UnityEngine.Debug.LogWarning($"达到{ timersPerUpdate }/帧计时器处理上限");
         }
         
-        public Timer New(float duration, bool repeat, Action callback)
-            => New(null, duration, repeat, callback);
+        public Timer New(float duration, bool repeat, LifeSpan guard, Action callback)
+            => New(null, duration, repeat, guard, callback);
         
-        public Timer New(string name, float duration, bool repeat, Action callback)
+        public Timer New(string name, float duration, bool repeat, LifeSpan guard, Action callback)
         {
-            var timer = new Timer(name, GetTime(), duration, repeat, callback);
+            var timer = new Timer(name, GetTime(), duration, repeat, guard, callback);
             timers.Add(timer.key, timer);
             return timer;
         }

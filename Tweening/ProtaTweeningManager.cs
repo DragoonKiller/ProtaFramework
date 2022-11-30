@@ -85,7 +85,6 @@ namespace Prota.Tween
             var key = data.Take();
             ref var v = ref data[key];
             v.target = target;
-            v.guard = target;
             v.type = type;
             v.update = onUpdate;
             v.SetHandle(new TweenHandle(key, data));

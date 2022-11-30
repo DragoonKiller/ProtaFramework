@@ -52,19 +52,40 @@ namespace Prota
     public class ArrayLinkedList<T> : IEnumerable<T>, IReadOnlyCollection<T>, IArrayLinkedList
         where T: struct
     {
+        // 数据数组.
         public T[] arr { get; private set; } = null;
+        
+        // 下一个元素的下标. 没有填-1.
         public int[] next { get; private set; } = null;
+        
+        // 上一个元素的下标. 没有填-1.
         public int[] prev { get; private set; } = null;
+        
+        // 该元素是否正在使用.
         public bool[] inUse { get; private set; } = null;
+        
+        // 该元素的版本号.
         public int[] version { get; private set; } = null;
+        
+        // 使用中的元素数.
         public int Count { get; private set; } = 0;         // count in use.
+        
+        // 数组容量.
         public int capacity => arr?.Length ?? 0;
+        
+        // 数据链表头下标. 没有数据则是-1.
         public int head { get; private set; } = -1;
+        
+        // 没有数据的链表头下标. 数据填满了则是-1.
         public int freeHead { get; private set; } = -1;
+        
+        // 还有多少个没有使用的节点.
         public int freeCount => capacity - Count;
         
+        // 取元素.
         public ref T this[ArrayLinkedListKey i] => ref arr[i.id];
         
+        // 在链表中新增一个元素s.
         public ArrayLinkedListKey Take()
         {
             if(freeCount == 0) Resize();
@@ -72,6 +93,7 @@ namespace Prota
             return Use();
         }
         
+        // 释放一个链表中的元素.
         public bool Release(ArrayLinkedListKey i)
         {
             if(this != i.list) return false;
@@ -82,6 +104,7 @@ namespace Prota
             return true;
         }
         
+        // 池子扩容.
         void Resize()
         {
             const int initialSize = 4;

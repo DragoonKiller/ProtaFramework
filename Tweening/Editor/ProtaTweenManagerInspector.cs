@@ -70,7 +70,7 @@ namespace Prota.Editor
                                 .AddChild(new TextField() { name = "timeTo" }.SetWidth(200))
                             )
                             .AddChild(new ObjectField("Target") { name = "target" })
-                            .AddChild(new ObjectField("Guard") { name = "guard" })
+                            // .AddChild(new ObjectField("Guard") { name = "guard" })
                             .AddChild(new CurveField("Curve") { name = "curve" }.SetGrow())
                         )
                         .AddChild(new VisualElement().AsHorizontalSeperator(1))
@@ -95,7 +95,7 @@ namespace Prota.Editor
                         element.Q<TextField>("timeTo").value = data.timeTo.ToString();
                         element.Q<CurveField>("curve").value = data.curve;
                         element.Q<ObjectField>("target").value = data.target;
-                        element.Q<ObjectField>("guard").value = data.guard;
+                        // element.Q<ObjectField>("guard").value = data.guard;
                         element.Q<Toggle>("valid").value = data.valid;
                     }
                 },

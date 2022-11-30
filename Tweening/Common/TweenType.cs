@@ -14,12 +14,15 @@ namespace Prota.Tween
         MoveX = 1,
         MoveY,
         MoveZ,
+        
         ScaleX,
         ScaleY,
         ScaleZ,
+        
         RotateX,
         RotateY,
         RotateZ,
+        
         ColorR,
         ColorG,
         ColorB,

@@ -24,17 +24,20 @@ namespace Prota.Tween
     {
         public static TweenHandle TweenRotateX(this Transform g, float to, float time)
         {
-            return ProtaTweenManager.instance.New(TweenType.RotateX, g, RotateX).SetFrom(g.rotation.eulerAngles.x).SetTo(to).Start(time);
+            return ProtaTweenManager.instance.New(TweenType.RotateX, g, RotateX)
+                .SetGuard(g.LifeSpan()).SetFrom(g.rotation.eulerAngles.x).SetTo(to).Start(time);
         }
         
         public static TweenHandle TweenRotateY(this Transform g, float to, float time)
         {
-            return ProtaTweenManager.instance.New(TweenType.RotateY, g, RotateY).SetFrom(g.rotation.eulerAngles.y).SetTo(to).Start(time);
+            return ProtaTweenManager.instance.New(TweenType.RotateY, g, RotateY)
+                .SetGuard(g.LifeSpan()).SetFrom(g.rotation.eulerAngles.y).SetTo(to).Start(time);
         }
 
         public static TweenHandle TweenRotateZ(this Transform g, float to, float time)
         {
-            return ProtaTweenManager.instance.New(TweenType.RotateZ, g, RotateZ).SetFrom(g.rotation.eulerAngles.z).SetTo(to).Start(time);
+            return ProtaTweenManager.instance.New(TweenType.RotateZ, g, RotateZ)
+                .SetGuard(g.LifeSpan()).SetFrom(g.rotation.eulerAngles.z).SetTo(to).Start(time);
         }
         
         public static TweenComposedRotate TweenRotate(this Transform g, Vector3 to, float time)
@@ -110,7 +113,7 @@ namespace Prota.Tween
             return ref m;
         }
         
-        public static ref TweenComposedRotate SetGuard(ref this TweenComposedRotate m, UnityEngine.Object guard)
+        public static ref TweenComposedRotate SetGuard(ref this TweenComposedRotate m, LifeSpan guard)
         {
             m.x.SetGuard(guard);
             m.y.SetGuard(guard);

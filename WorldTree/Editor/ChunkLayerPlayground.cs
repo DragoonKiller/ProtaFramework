@@ -112,7 +112,7 @@ namespace Prota.Editor
                 ProtaTask.Run(async () => {
                     while(true)
                     {
-                        await new BackToMainThread();
+                        await new SwitchToMainThread();
                         chunk.SetTargetPoints(targets.Where(x => x != null).Select(x => x.transform.position));
                         await new SwitchToWorkerThread();
                         await chunk.ComputeAsync();

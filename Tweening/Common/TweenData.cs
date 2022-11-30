@@ -23,9 +23,9 @@ namespace Prota.Tween
         public float timeFrom;
         public float timeTo;
         public bool realtime;
-        public UnityEngine.Object guard;        // lifetime control. cannot be null.
+        public LifeSpan guard;
         public bool isTimeout => timeTo < (realtime ? Time.realtimeSinceStartup : Time.time);
-        public bool invalid => target == null || guard == null || update == null;
+        public bool invalid => target == null || (guard != null && !guard.alive) || update == null;
         public bool valid => !invalid;
         
         public TweenHandle handle { get; private set; }

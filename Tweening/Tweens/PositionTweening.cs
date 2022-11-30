@@ -21,13 +21,16 @@ namespace Prota.Tween
     public static class PositionTweening
     {
         public static TweenHandle TweenMoveX(this Transform g, float to, float time)
-            => ProtaTweenManager.instance.New(TweenType.MoveX, g, SingleMoveX).SetFrom(g.localPosition.x).SetTo(to).Start(time);
+            => ProtaTweenManager.instance.New(TweenType.MoveX, g, SingleMoveX)
+                .SetGuard(g.LifeSpan()).SetFrom(g.localPosition.x).SetTo(to).Start(time);
         
         public static TweenHandle TweenMoveY(this Transform g, float to, float time)
-            => ProtaTweenManager.instance.New(TweenType.MoveY, g, SingleMoveY).SetFrom(g.localPosition.y).SetTo(to).Start(time);
+            => ProtaTweenManager.instance.New(TweenType.MoveY, g, SingleMoveY)
+                .SetGuard(g.LifeSpan()).SetFrom(g.localPosition.y).SetTo(to).Start(time);
 
         public static TweenHandle TweenMoveZ(this Transform g, float to, float time)
-            => ProtaTweenManager.instance.New(TweenType.MoveZ, g, SingleMoveZ).SetFrom(g.localPosition.z).SetTo(to).Start(time);
+            => ProtaTweenManager.instance.New(TweenType.MoveZ, g, SingleMoveZ)
+                .SetGuard(g.LifeSpan()).SetFrom(g.localPosition.z).SetTo(to).Start(time);
         
         public static TweenComposedMove TweenMove(this Transform g, Vector3 to, float time)
         {
@@ -110,7 +113,7 @@ namespace Prota.Tween
             return ref m;
         }
         
-        public static ref TweenComposedMove SetGuard(ref this TweenComposedMove m, UnityEngine.Object guard)
+        public static ref TweenComposedMove SetGuard(ref this TweenComposedMove m, LifeSpan guard)
         {
             m.x.SetGuard(guard);
             m.y.SetGuard(guard);

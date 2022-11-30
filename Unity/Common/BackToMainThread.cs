@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Prota.Unity
 {
-    public struct BackToMainThread
+    public struct SwitchToMainThread
     {
         static SynchronizationContext context;
         
@@ -27,6 +27,10 @@ namespace Prota.Unity
             return context.GetAwaiter();
         }
     }
+    
+    
+    
+    
     
     public struct SwitchToWorkerThread
     {   

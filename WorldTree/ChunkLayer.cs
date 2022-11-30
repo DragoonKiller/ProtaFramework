@@ -330,14 +330,14 @@ namespace Prota.WorldTree
                 ApplyActivates();
                 ApplyEdges();
                 
-                await new BackToMainThread();
+                await new SwitchToMainThread();
                 foreach(var node in toBeActivate) onActiveDeactive?.Invoke(true, node, CancellationToken.None);
                 
                 await new SwitchToWorkerThread();
                 toBeDeactivate.Clear();
                 toBeActivate.Clear();
                 
-                await new BackToMainThread();
+                await new SwitchToMainThread();
                 ApplyRemove();
                 await new SwitchToWorkerThread();
                 
