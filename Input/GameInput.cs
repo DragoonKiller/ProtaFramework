@@ -14,8 +14,8 @@ namespace Prota.Input
         PlayerInput cache;
         PlayerInput input => cache == null ? cache = UnityEngine.Object.FindObjectOfType<PlayerInput>() : cache;
         
-        public static readonly Dictionary<string, List<Action<InputAction.CallbackContext>>> callbacks
-            = new Dictionary<string, List<Action<InputAction.CallbackContext>>>();
+        public static readonly HashMapList<string, Action<InputAction.CallbackContext>> callbacks
+            = new HashMapList<string, Action<InputAction.CallbackContext>>();
         
         
         void Awake()
@@ -36,18 +36,13 @@ namespace Prota.Input
         
         public void AddCallback(string name, Action<InputAction.CallbackContext> callback)
         {
-            callbacks.GetOrCreate(name, out var list);
-            if(!list.Contains(callback))
-            {
-                list.Add(callback);
-            }
+            callbacks.AddElementNoDuplicate(name, callback);
         }
         
 
         public void RemoveCallback(string name, Action<InputAction.CallbackContext> callback)
         {
-            callbacks.GetOrCreate(name, out var list);
-            list.Remove(callback);
+            callbacks.RemoveElement(name, callback);
         }
     }
 }

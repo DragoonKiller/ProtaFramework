@@ -57,6 +57,14 @@ namespace Prota
             return false;
         }
         
+        public static void Swap<T>(this IList<T> x, int i1, int i2)
+        {
+            var a1 = x[i1];
+            x[i1] = x[i2];
+            x[i2] = a1;
+        }
+        
+        
         public static List<T> RemoveBySwap<T>(this List<T> l, int i)
         {
             var temp = l[l.Count - 1];

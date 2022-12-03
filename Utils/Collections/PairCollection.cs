@@ -8,6 +8,8 @@ using System.Collections.Concurrent;
 
 namespace Prota
 {
+    
+    // 双向索引 Dictionary.
     public class PairDictionary<A, B>
         : IEnumerable
         , IDictionary<A, B>

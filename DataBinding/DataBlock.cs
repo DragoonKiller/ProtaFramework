@@ -30,20 +30,18 @@ namespace Prota.Data
         void OnTransformParentChanged() => DetachAndAttach();
         
         // 只有运行时有用.
-        readonly static Dictionary<Type, HashSet<DataBlock>> blocks = new Dictionary<Type, HashSet<DataBlock>>();
+        readonly static HashMapSet<Type, DataBlock> blocks = new HashMapSet<Type, DataBlock>();
         
         
         void Record()
         {
-            blocks.GetOrCreate(this.GetType(), out var set);
-            set.Add(this);
+            blocks.AddElement(this.GetType(), this);
         }
         
         
         void Remove()
         {
-            blocks.GetOrCreate(this.GetType(), out var set);
-            set.Remove(this);
+            blocks.RemoveElement(this.GetType(), this);
         }
         
         

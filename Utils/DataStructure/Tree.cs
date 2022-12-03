@@ -9,11 +9,20 @@ using System.Threading;
 
 namespace Prota
 {
-    public class BinaryTreeNode<Data>
+    public class BinaryTreeNode<Data> : IBinaryTreeNode<BinaryTreeNode<Data>>, ITreeNode<BinaryTreeNode<Data>>
     {
         BinaryTreeNode<Data> _l;
         BinaryTreeNode<Data> _r;
-        
+
+        public BinaryTreeNode<Data> this[int index]
+        {
+            get
+            {
+                if(index < 0 || index > 2) throw new ArgumentException("index out of range");
+                if(index == 0) return l; else return r;
+            }
+        }
+
         public BinaryTreeNode<Data> l
         {
             get => _l;
@@ -60,42 +69,12 @@ namespace Prota
             }
         }
         
-        public BinaryTreeNode<Data> prev
-        {
-            get
-            {
-                var x = this.l;
-                if(x == null) return x.f.r == x ? x.f : null;
-                while(x.r != null) x = x.r;
-                return x;
-            }
-        }
-        
-        public BinaryTreeNode<Data> next
-        {
-            get
-            {
-                var x = this.r;
-                if(x == null) return x.f.l == x ? x.f : null;
-                while(x.l != null) x = x.l;
-                return x;
-            }
-        }
         
         public Data data { get; set; }
         
+        public int subCount => throw new NotImplementedException();
         
-        // how many nodes are ancients.
-        public int Depth(Dictionary<BinaryTreeNode<Data>, int> cache = null)
-        {
-            if(this.f == null) return 0;
-            if(cache != null && cache.TryGetValue(this, out var res)) return res;
-            res = this.f.Depth(cache) + 1;
-            if(cache != null) cache[this] = res;
-            return res;
-        }
-        
-        
+        // 从父节点撤走, 让自己变成根节点.
         void Detach()
         {
             (f != null).Assert();

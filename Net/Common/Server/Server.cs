@@ -13,7 +13,7 @@ namespace Prota.Net
     {
         public readonly Dictionary<NetId, int> roomMap = new Dictionary<NetId, int>();
         
-        public readonly Dictionary<int, HashSet<NetId>> usedRoom = new Dictionary<int, HashSet<NetId>>();
+        public readonly HashMapSet<int, NetId> usedRoom = new HashMapSet<int, NetId>();
         
         public int roomCount => usedRoom.Count;
         
@@ -24,8 +24,7 @@ namespace Prota.Net
         public bool TryEnterRoom(NetId id, int roomId)
         {
             if(roomMap.ContainsKey(id)) return false;
-            usedRoom.GetOrCreate(roomId, out var playersInRoom);
-            playersInRoom.Add(id);
+            usedRoom.AddElement(roomId, id);
             roomMap[id] = roomId;
             Console.WriteLine($"[Info] Prota server { id } Enter room { roomId }");
             return true;
@@ -35,9 +34,7 @@ namespace Prota.Net
         {
             if(!roomMap.TryGetValue(id, out var roomId)) return false;
             roomMap.Remove(id);
-            var playersInRoom = usedRoom[roomId];
-            playersInRoom.Remove(id);
-            if(playersInRoom.Count == 0) usedRoom.Remove(roomId);
+            usedRoom.RemoveElement(roomId, id);
             Console.WriteLine($"[Info] { id } Leave room { roomId }");
             return true;
         }

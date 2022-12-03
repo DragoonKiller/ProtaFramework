@@ -47,13 +47,11 @@ namespace Prota.Net
                 {
                     if(handle.seq.isResponse)
                     {
-                        handle.callbackList.processOnResponse.GetOrCreate(handle.protoId, out var dict);
-                        dict.Add(handle.seq.response, handle);
+                        handle.callbackList.processOnResponse.AddElement(handle.protoId, handle.seq.response, handle);
                     }
                     else
                     {
-                        handle.callbackList.processOnReceive.GetOrCreate(handle.protoId, out var list);
-                        list.Add(handle);
+                        handle.callbackList.processOnReceive.AddElement(handle.protoId, handle);
                     }
                 }
             }
@@ -64,24 +62,20 @@ namespace Prota.Net
                 {
                     if(seq.isResponse)
                     {
-                        callbackList.processOnResponse.GetOrCreate(protoId, out var dict);
-                        dict.Remove(this.seq.response);
-                        if(dict.Count == 0) callbackList.processOnResponse.Remove(protoId);
+                        callbackList.processOnResponse.RemoveElement(protoId, this.seq.response);
                     }
                     else
                     {
-                        callbackList.processOnReceive.GetOrCreate(protoId, out var list);
-                        list.Remove(this);
-                        if(list.Count == 0) callbackList.processOnReceive.Remove(protoId);
+                        callbackList.processOnReceive.RemoveElement(protoId, this);
                     }
                 }
             }
         }
         
         
-        readonly Dictionary<int, List<CallbackHandle>> processOnReceive = new Dictionary<int, List<CallbackHandle>>();
+        readonly HashMapList<int, CallbackHandle> processOnReceive = new HashMapList<int, CallbackHandle>();
         
-        readonly Dictionary<int, Dictionary<NetSequenceId, CallbackHandle>> processOnResponse = new Dictionary<int, Dictionary<NetSequenceId, CallbackHandle>>();
+        readonly HashMapDict<int, NetSequenceId, CallbackHandle> processOnResponse = new HashMapDict<int, NetSequenceId, CallbackHandle>();
         
         readonly object lockobj = new object();
         
