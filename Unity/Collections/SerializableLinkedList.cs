@@ -1,91 +1,72 @@
-using System.Collections.Generic;
+using UnityEngine;
 using System;
-using System.Text;
-using System.Buffers.Binary;
+using System.Collections.Generic;
+using System.Linq;
+
+using Prota.Unity;
 using System.Collections;
 
 namespace Prota
 {
-    public struct ArrayLinkedListKey : IEquatable<ArrayLinkedListKey>
+    
+    public struct SerializableLinkedListKey : IEquatable<SerializableLinkedListKey>
     {
         public readonly int id;
         public readonly int version;
-        public readonly IArrayLinkedList list;
+        public readonly ISerializableLinkedList list;
         
-        public ArrayLinkedListKey(int id, int version, IArrayLinkedList list)
+        public SerializableLinkedListKey(int id, int version, ISerializableLinkedList list)
         {
             this.id = id;
             this.version = version;
             this.list = list;
         }
-
-        public bool Equals(ArrayLinkedListKey other) => this == other;
         
-        public override bool Equals(object x) => x is ArrayLinkedListKey arrKey && arrKey == this;
-        
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(id, version, list);
-        }
-        
-        public static bool operator==(ArrayLinkedListKey a, ArrayLinkedListKey b)
-        {
-            return a.id == b.id && a.version == b.version && a.list == b.list;
-        }
-        
-        public static bool operator!=(ArrayLinkedListKey a, ArrayLinkedListKey b)
-        {
-            return a.id != b.id || a.version != b.version || a.list != b.list;
-        }
-
-        public override string ToString() => $"key[{ id }:{ version }]";
+        public bool Equals(SerializableLinkedListKey other) => object.ReferenceEquals(list, other);
     }
     
-    public interface IArrayLinkedList
-    {
-        bool Valid(ArrayLinkedListKey key);
-    }
+    public interface ISerializableLinkedList { }
     
-    // 链表, 但是以数组的形式存储.
-    // 通过 ArrayLinkedListKey 操作里面的数据.
-    public class ArrayLinkedList<T> : IEnumerable<T>, IReadOnlyCollection<T>, IArrayLinkedList
-        where T: struct
+    // Unity serialization supported veersion of ArrayLinkedList.
+    [Serializable]
+    public class SerializableLinkedList<T> : ISerializableLinkedList, IEnumerable<T>, IReadOnlyCollection<T>, IEnumerable
     {
         // 数据数组.
-        public T[] arr { get; private set; } = null;
+        [SerializeField] public T[] arr = null;
         
         // 下一个元素的下标. 没有填-1.
-        public int[] next { get; private set; } = null;
+        public int[] next = null;
         
         // 上一个元素的下标. 没有填-1.
-        public int[] prev { get; private set; } = null;
+        public int[] prev = null;
         
         // 该元素是否正在使用.
-        public bool[] inUse { get; private set; } = null;
+        public bool[] inUse = null;
         
         // 该元素的版本号.
-        public int[] version { get; private set; } = null;
+        public int[] version = null;
         
         // 使用中的元素数.
+        [field: SerializeField]
         public int Count { get; private set; } = 0;         // count in use.
         
         // 数组容量.
-        public int capacity => arr?.Length ?? 0;
+        public int capacity => arr.IsNullOrEmpty() ? 0 : arr.Length;
         
         // 数据链表头下标. 没有数据则是-1.
-        public int head { get; private set; } = -1;
+        public int head = -1;
         
         // 没有数据的链表头下标. 数据填满了则是-1.
-        public int freeHead { get; private set; } = -1;
+        public int freeHead = -1;
         
         // 还有多少个没有使用的节点.
         public int freeCount => capacity - Count;
         
         // 取元素.
-        public ref T this[ArrayLinkedListKey i] => ref arr[i.id];
+        public ref T this[SerializableLinkedListKey i] => ref arr[i.id];
         
         // 在链表中新增一个元素s.
-        public ArrayLinkedListKey Take()
+        public SerializableLinkedListKey Take()
         {
             if(freeCount == 0) Resize();
             System.Diagnostics.Debug.Assert(freeCount > 0);
@@ -93,7 +74,7 @@ namespace Prota
         }
         
         // 释放一个链表中的元素.
-        public bool Release(ArrayLinkedListKey i)
+        public bool Release(SerializableLinkedListKey i)
         {
             if(this != i.list) return false;
             if(i.id >= capacity) return false;
@@ -103,7 +84,7 @@ namespace Prota
             return true;
         }
         
-        public ArrayLinkedList<T> Clear()
+        public SerializableLinkedList<T> Clear()
         {
             arr = null;
             next = prev = version = null;
@@ -118,8 +99,8 @@ namespace Prota
         {
             const int initialSize = 4;
             
-            var originalSize = arr?.Length ?? 0;
-            int nextSize = arr == null ? initialSize : (int)Math.Ceiling(arr.Length * 1.6);
+            var originalSize = arr.IsNullOrEmpty() ? 0 : arr.Length;
+            int nextSize = originalSize == 0 ? initialSize : Mathf.CeilToInt(originalSize * 1.6f);
             
             arr = arr.Resize(nextSize);
             next = next.Resize(nextSize);
@@ -155,7 +136,7 @@ namespace Prota
             unchecked { version[cur] += 1; }
         }
         
-        ArrayLinkedListKey Use()
+        SerializableLinkedListKey Use()
         {
             var cur = freeHead;
             freeHead = next[cur];
@@ -169,15 +150,15 @@ namespace Prota
             inUse[cur] = true;
             Count += 1;
             unchecked { version[cur] += 1; }
-            return new ArrayLinkedListKey(cur, version[cur], this);
+            return new SerializableLinkedListKey(cur, version[cur], this);
         }
         
         
-        public struct IndexEnumerator : IEnumerator<ArrayLinkedListKey>
+        public struct IndexEnumerator : IEnumerator<SerializableLinkedListKey>
         {
             public int index;
-            public ArrayLinkedList<T> list;
-            public ArrayLinkedListKey Current => new ArrayLinkedListKey(index, list.version[index], list);
+            public SerializableLinkedList<T> list;
+            public SerializableLinkedListKey Current => new SerializableLinkedListKey(index, list.version[index], list);
             object IEnumerator.Current => index;
 
             public void Dispose() => index = -1;
@@ -193,11 +174,11 @@ namespace Prota
             public void Reset() => index = -1;
         }
 
-        public struct IndexEnumerable : IEnumerable<ArrayLinkedListKey>
+        public struct IndexEnumerable : IEnumerable<SerializableLinkedListKey>
         {
-            public ArrayLinkedList<T> list;
+            public SerializableLinkedList<T> list;
             
-            public IEnumerator<ArrayLinkedListKey> GetEnumerator() => new IndexEnumerator() { index = -1, list = list };
+            public IEnumerator<SerializableLinkedListKey> GetEnumerator() => new IndexEnumerator() { index = -1, list = list };
 
             IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
         }
@@ -214,7 +195,7 @@ namespace Prota
 
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
-        public bool Valid(ArrayLinkedListKey key)
+        public bool Valid(SerializableLinkedListKey key)
         {
             if(key.list != this) return false;
             if(key.id >= capacity) return false;
@@ -264,5 +245,5 @@ namespace Prota
             }
         }
     }
-    
+
 }

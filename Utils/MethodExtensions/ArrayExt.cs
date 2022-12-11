@@ -6,6 +6,8 @@ namespace Prota
 {
     public static partial class MethodExtensions
     {
+        public static bool IsNullOrEmpty<T>(this T[] list) => list == null || list.Length == 0;
+        
         public static T Last<T>(this T[] l) => l[l.Length - 1];
         
         public static T Last<T>(this T[] l, T v) => l[l.Length - 1] = v;
@@ -14,7 +16,7 @@ namespace Prota
         {
             if(original == null) return new T[size <= 0 ? 4 : size];
             var arr = new T[size];
-            for(int i = 0, limit = Math.Min(original?.Length ?? 0, arr.Length); i < limit; i++)
+            for(int i = 0, limit = arr.Length.Min(original?.Length ?? 0); i < limit; i++)
             {
                 arr[i] = original[i];
             }
@@ -29,6 +31,25 @@ namespace Prota
             for(int i = 0; i < list.Length; i++)
             {
                 list[i] = content(i);
+            }
+            return list;
+        }
+        
+        public static T[] Fill<T>(this T[] list, int start, int count, Func<int, T> content)
+        {
+            for(int i = start, limit = list.Length.Min(start + count); i < limit; i++)
+            {
+                list[i] = content(i);
+            }
+            return list;
+        }
+        
+        public static T[,] Fill<T>(this T[,] list, int start1, int start2, int count1, int count2, Func<int, int, T> content)
+        {
+            for(int i = start1, limit1 = list.GetLength(0).Min(start1 + count1); i < limit1; i++)
+            for(int j = start2, limit2 = list.GetLength(1).Min(start1 + count2); j < limit2; j++)
+            {
+                list[i, j] = content(i, j);
             }
             return list;
         }

@@ -7,6 +7,15 @@ namespace Prota
 {
     public static partial class MethodExtensions
     {
+        public static bool IsNullOrEmpty<T>(this List<T> list) => list == null || list.Count == 0;
+        
+        public static List<T> Resize<T>(this List<T> list, int n)
+        {
+            while(list.Count < n) list.Add(default);
+            while(list.Count > n) list.Pop();
+            return list;
+        }
+        
         public static List<T> Clone<T>(this List<T> x)
         {
             return new List<T>(x);
@@ -119,12 +128,15 @@ namespace Prota
             return l;
         }
         
+        public static List<T> Fill<T>(this List<T> list, int n)
+        {
+            for(int i = 0; i < n; i++) list.Add(default);
+            return list;
+        }
+        
         public static List<T> Fill<T>(this List<T> list, int n, Func<int, T> content)
         {
-            for(int i = 0; i < n; i++)
-            {
-                list.Add(content(i));
-            }
+            for(int i = 0; i < n; i++) list.Add(content(i));
             return list;
         }
         

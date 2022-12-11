@@ -14,6 +14,8 @@ namespace Prota.Unity
         public static float Cos(this float x) => Mathf.Cos(x);
         public static float Tan(this float x) => Mathf.Tan(x);
         
+        public static int NextPowerOfTwo(this int x) => Mathf.NextPowerOfTwo(x);
+        
         public static Vector2 To(this Vector2 a, Vector2 b) => b - a;
         public static Vector3 To(this Vector3 a, Vector3 b) => b - a;
         public static Vector4 To(this Vector4 a, Vector4 b) => b - a;
