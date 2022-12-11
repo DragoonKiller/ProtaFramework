@@ -38,13 +38,9 @@ namespace Prota
             }
             public IEnumerator<TKey> GetEnumerator()
             {
-                var e = dict.entries;
-                for(int i = 0; i < e.capacity; i++)
-                {
-                    if(!e.inUse[i]) continue;
-                    yield return e.arr[i].key;
-                }
+                foreach(var k in dict.entries.keys) yield return dict.entries[k].key;
             }
+            
             public bool Remove(TKey item) => throw new NotSupportedException();
             IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
         }
@@ -81,13 +77,9 @@ namespace Prota
 
             public IEnumerator<TValue> GetEnumerator()
             {
-                var e = dict.entries;
-                for(int i = 0; i < e.capacity; i++)
-                {
-                    if(!e.inUse[i]) continue;
-                    yield return e.arr[i].value;
-                }
+                foreach(var k in dict.entries.keys) yield return dict.entries[k].value;
             }
+            
             public bool Remove(TValue item) => throw new NotSupportedException();
             IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
         }
@@ -159,8 +151,6 @@ namespace Prota
             return false;
         }
         
-        int GetListId(TKey key) => key.GetHashCode() % modnum;
-        
         public void Add(TKey key, TValue value)
         {
             if(TryGetEntry(key, out var headIndex, out var index)) throw new Exception("entry already exists.");
@@ -183,9 +173,9 @@ namespace Prota
             heads.Clear();
             heads.Fill(nextN);
             
-            for(int i = 0; i < entries.Count; i++)
+            foreach(var k in entries.keys)
             {
-                var e = entries.arr[i];
+                var e = entries[k];
                 
                 // 这是新的 hashcode.
                 var headIndex = e.key.GetHashCode() % modnum;
@@ -194,7 +184,7 @@ namespace Prota
                 e.next = heads[headIndex];
                 
                 // 重新整理表头.
-                heads[headIndex] = new SerializableLinkedListKey(i, entries.version[i], entries);
+                heads[headIndex] = k;
             }
         }
 
@@ -202,7 +192,7 @@ namespace Prota
         
         public bool Remove(TKey key)
         {
-            var headIndex = GetListId(key);
+            var headIndex = key.GetHashCode() % modnum;
             var index = heads[headIndex];
             if(!index.HasValue) return false; // 整个链表没东西, 没有那个元素.
             
@@ -274,9 +264,9 @@ namespace Prota
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            for(int i = 0; i < entries.capacity; i++) if(entries.inUse[i])
+            foreach(var k in entries.keys)
             {
-                yield return new KeyValuePair<TKey, TValue>(entries.arr[i].key, entries.arr[i].value);
+                yield return new KeyValuePair<TKey, TValue>(entries[k].key, entries[k].value);
             }
         }
 

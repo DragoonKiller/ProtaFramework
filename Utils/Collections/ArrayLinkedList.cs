@@ -51,26 +51,23 @@ namespace Prota
     public class ArrayLinkedList<T> : IEnumerable<T>, IReadOnlyCollection<T>, IArrayLinkedList
         where T: struct
     {
+        public struct InternalData
+        {
+            public T value;
+            public int next;        // 下一个元素的下标. 没有填-1.
+            public int prev;        // 上一个元素的下标. 没有填-1.
+            public int version;     // 该元素的版本号.
+            public bool inuse;      // 该元素是否正在使用.
+        }
+        
         // 数据数组.
-        public T[] arr { get; private set; } = null;
-        
-        // 下一个元素的下标. 没有填-1.
-        public int[] next { get; private set; } = null;
-        
-        // 上一个元素的下标. 没有填-1.
-        public int[] prev { get; private set; } = null;
-        
-        // 该元素是否正在使用.
-        public bool[] inUse { get; private set; } = null;
-        
-        // 该元素的版本号.
-        public int[] version { get; private set; } = null;
+        public InternalData[] data { get; private set; } = null;
         
         // 使用中的元素数.
         public int Count { get; private set; } = 0;         // count in use.
         
         // 数组容量.
-        public int capacity => arr?.Length ?? 0;
+        public int capacity => data?.Length ?? 0;
         
         // 数据链表头下标. 没有数据则是-1.
         public int head { get; private set; } = -1;
@@ -82,7 +79,7 @@ namespace Prota
         public int freeCount => capacity - Count;
         
         // 取元素.
-        public ref T this[ArrayLinkedListKey i] => ref arr[i.id];
+        public ref T this[ArrayLinkedListKey i] => ref data[i.id].value;
         
         // 在链表中新增一个元素s.
         public ArrayLinkedListKey Take()
@@ -97,17 +94,15 @@ namespace Prota
         {
             if(this != i.list) return false;
             if(i.id >= capacity) return false;
-            if(!inUse[i.id]) return false;
-            if(version[i.id] != i.version) return false;
+            if(!data[i.id].inuse) return false;
+            if(data[i.id].version != i.version) return false;
             Free(i.id);
             return true;
         }
         
         public ArrayLinkedList<T> Clear()
         {
-            arr = null;
-            next = prev = version = null;
-            inUse = null;
+            data = null;
             Count = 0;
             head = freeHead = -1;
             return this;
@@ -118,16 +113,12 @@ namespace Prota
         {
             const int initialSize = 4;
             
-            var originalSize = arr?.Length ?? 0;
-            int nextSize = arr == null ? initialSize : (int)Math.Ceiling(arr.Length * 1.6);
+            var originalSize = data?.Length ?? 0;
+            int nextSize = data == null ? initialSize : (int)Math.Ceiling(originalSize * 1.6);
             
-            arr = arr.Resize(nextSize);
-            next = next.Resize(nextSize);
-            prev = prev.Resize(nextSize);
-            inUse = inUse.Resize(nextSize);
-            version = version.Resize(nextSize);
+            data = data.Resize(nextSize);
             
-            for(int i = originalSize; i < arr.Length; i++) Free(i);
+            for(int i = originalSize; i < capacity; i++) Free(i);
         }
         
         
@@ -135,41 +126,41 @@ namespace Prota
         {
             if(cur == -1) return;
             
-            if(inUse[cur])
+            if(data[cur].inuse)
             {
-                var p = prev[cur];
-                var n = next[cur];
-                if(n != -1) prev[n] = p;
-                if(p != -1) next[p] = n;
+                var p = data[cur].prev;
+                var n = data[cur].next;
+                if(n != -1) data[n].prev = p;
+                if(p != -1) data[p].next = n;
                 if(head == cur) head = n;
                 Count -= 1;
             }
             
             var ori = freeHead;
-            next[cur] = ori;
-            if(ori != -1) prev[ori] = cur;
-            prev[cur] = -1;
+            data[cur].next = ori;
+            if(ori != -1) data[ori].prev = cur;
+            data[cur].prev = -1;
             freeHead = cur;
             
-            inUse[cur] = false;
-            unchecked { version[cur] += 1; }
+            data[cur].inuse = false;
+            unchecked { data[cur].version += 1; }
         }
         
         ArrayLinkedListKey Use()
         {
             var cur = freeHead;
-            freeHead = next[cur];
-            if(freeHead != -1) prev[freeHead] = -1;
+            freeHead = data[cur].next;
+            if(freeHead != -1) data[freeHead].prev = -1;
             
-            next[cur] = head;
-            prev[cur] = -1;
-            if(head != -1) prev[head] = cur;
+            data[cur].next = head;
+            data[cur].prev = -1;
+            if(head != -1) data[head].prev = cur;
             head = cur;
             
-            inUse[cur] = true;
+            data[cur].inuse = true;
             Count += 1;
-            unchecked { version[cur] += 1; }
-            return new ArrayLinkedListKey(cur, version[cur], this);
+            unchecked { data[cur].version += 1; }
+            return new ArrayLinkedListKey(cur, data[cur].version, this);
         }
         
         
@@ -177,7 +168,7 @@ namespace Prota
         {
             public int index;
             public ArrayLinkedList<T> list;
-            public ArrayLinkedListKey Current => new ArrayLinkedListKey(index, list.version[index], list);
+            public ArrayLinkedListKey Current => new ArrayLinkedListKey(index, list.data[index].version, list);
             object IEnumerator.Current => index;
 
             public void Dispose() => index = -1;
@@ -185,7 +176,7 @@ namespace Prota
             public bool MoveNext()
             {
                 if(index == -1) index = list.head;
-                else index = list.next[index];
+                else index = list.data[index].next;
                 if(index == -1) return false;
                 return true;
             }
@@ -208,7 +199,7 @@ namespace Prota
         {
             foreach(var index in EnumerateKey())
             {
-                yield return arr[index.id];
+                yield return data[index.id].value;
             }
         }
 
@@ -218,7 +209,7 @@ namespace Prota
         {
             if(key.list != this) return false;
             if(key.id >= capacity) return false;
-            if(key.version != version[key.id]) return false;
+            if(key.version != data[key.id].version) return false;
             return true;
         }
         

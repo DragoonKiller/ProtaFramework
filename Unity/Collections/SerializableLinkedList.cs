@@ -12,13 +12,11 @@ namespace Prota
     public struct SerializableLinkedListKey : IEquatable<SerializableLinkedListKey>
     {
         public readonly int id;
-        public readonly int version;
         public readonly ISerializableLinkedList list;
         
-        public SerializableLinkedListKey(int id, int version, ISerializableLinkedList list)
+        public SerializableLinkedListKey(int id, ISerializableLinkedList list)
         {
             this.id = id;
-            this.version = version;
             this.list = list;
         }
         
@@ -31,27 +29,23 @@ namespace Prota
     [Serializable]
     public class SerializableLinkedList<T> : ISerializableLinkedList, IEnumerable<T>, IReadOnlyCollection<T>, IEnumerable
     {
-        // 数据数组.
-        [SerializeField] public T[] arr = null;
+        [Serializable]
+        struct InternalData
+        {
+            public T value;         // 存储的值.
+            public int next;        // 下一个元素的下标. 没有填-1.
+            public int prev;        // 上一个元素的下标. 没有填-1.
+            public bool inuse;      // 该元素是否正在使用.
+        }
         
-        // 下一个元素的下标. 没有填-1.
-        public int[] next = null;
-        
-        // 上一个元素的下标. 没有填-1.
-        public int[] prev = null;
-        
-        // 该元素是否正在使用.
-        public bool[] inUse = null;
-        
-        // 该元素的版本号.
-        public int[] version = null;
+        [SerializeField] InternalData[] data = null;
         
         // 使用中的元素数.
         [field: SerializeField]
         public int Count { get; private set; } = 0;         // count in use.
         
         // 数组容量.
-        public int capacity => arr.IsNullOrEmpty() ? 0 : arr.Length;
+        public int capacity => data.IsNullOrEmpty() ? 0 : data.Length;
         
         // 数据链表头下标. 没有数据则是-1.
         public int head = -1;
@@ -63,7 +57,18 @@ namespace Prota
         public int freeCount => capacity - Count;
         
         // 取元素.
-        public ref T this[SerializableLinkedListKey i] => ref arr[i.id];
+        public ref T this[SerializableLinkedListKey i] => ref data[i.id].value;
+        
+        public IEnumerable<SerializableLinkedListKey> keys
+        {
+            get
+            {
+                for(int i = 0; i < capacity; i++)
+                {
+                    if(data[i].inuse) yield return new SerializableLinkedListKey(i, this);
+                }
+            }
+        }
         
         // 在链表中新增一个元素s.
         public SerializableLinkedListKey Take()
@@ -78,17 +83,14 @@ namespace Prota
         {
             if(this != i.list) return false;
             if(i.id >= capacity) return false;
-            if(!inUse[i.id]) return false;
-            if(version[i.id] != i.version) return false;
+            if(!data[i.id].inuse) return false;
             Free(i.id);
             return true;
         }
         
         public SerializableLinkedList<T> Clear()
         {
-            arr = null;
-            next = prev = version = null;
-            inUse = null;
+            data = null;
             Count = 0;
             head = freeHead = -1;
             return this;
@@ -99,16 +101,12 @@ namespace Prota
         {
             const int initialSize = 4;
             
-            var originalSize = arr.IsNullOrEmpty() ? 0 : arr.Length;
+            var originalSize = data.IsNullOrEmpty() ? 0 : data.Length;
             int nextSize = originalSize == 0 ? initialSize : Mathf.CeilToInt(originalSize * 1.6f);
             
-            arr = arr.Resize(nextSize);
-            next = next.Resize(nextSize);
-            prev = prev.Resize(nextSize);
-            inUse = inUse.Resize(nextSize);
-            version = version.Resize(nextSize);
+            data = data.Resize(nextSize);
             
-            for(int i = originalSize; i < arr.Length; i++) Free(i);
+            for(int i = originalSize; i < capacity; i++) Free(i);
         }
         
         
@@ -116,41 +114,39 @@ namespace Prota
         {
             if(cur == -1) return;
             
-            if(inUse[cur])
+            if(data[cur].inuse)
             {
-                var p = prev[cur];
-                var n = next[cur];
-                if(n != -1) prev[n] = p;
-                if(p != -1) next[p] = n;
+                var p = data[cur].prev;
+                var n = data[cur].next;
+                if(n != -1) data[n].prev = p;
+                if(p != -1) data[p].next = n;
                 if(head == cur) head = n;
                 Count -= 1;
             }
             
             var ori = freeHead;
-            next[cur] = ori;
-            if(ori != -1) prev[ori] = cur;
-            prev[cur] = -1;
+            data[cur].next = ori;
+            if(ori != -1) data[ori].prev = cur;
+            data[cur].prev = -1;
             freeHead = cur;
             
-            inUse[cur] = false;
-            unchecked { version[cur] += 1; }
+            data[cur].inuse = false;
         }
         
         SerializableLinkedListKey Use()
         {
             var cur = freeHead;
-            freeHead = next[cur];
-            if(freeHead != -1) prev[freeHead] = -1;
+            freeHead = data[cur].next;
+            if(freeHead != -1) data[freeHead].prev = -1;
             
-            next[cur] = head;
-            prev[cur] = -1;
-            if(head != -1) prev[head] = cur;
+            data[cur].next = head;
+            data[cur].prev = -1;
+            if(head != -1) data[head].prev = cur;
             head = cur;
             
-            inUse[cur] = true;
+            data[cur].inuse = true;
             Count += 1;
-            unchecked { version[cur] += 1; }
-            return new SerializableLinkedListKey(cur, version[cur], this);
+            return new SerializableLinkedListKey(cur, this);
         }
         
         
@@ -158,7 +154,7 @@ namespace Prota
         {
             public int index;
             public SerializableLinkedList<T> list;
-            public SerializableLinkedListKey Current => new SerializableLinkedListKey(index, list.version[index], list);
+            public SerializableLinkedListKey Current => new SerializableLinkedListKey(index, list);
             object IEnumerator.Current => index;
 
             public void Dispose() => index = -1;
@@ -166,7 +162,7 @@ namespace Prota
             public bool MoveNext()
             {
                 if(index == -1) index = list.head;
-                else index = list.next[index];
+                else index = list.data[index].next;
                 if(index == -1) return false;
                 return true;
             }
@@ -189,7 +185,7 @@ namespace Prota
         {
             foreach(var index in EnumerateKey())
             {
-                yield return arr[index.id];
+                yield return data[index.id].value;
             }
         }
 
@@ -199,11 +195,8 @@ namespace Prota
         {
             if(key.list != this) return false;
             if(key.id >= capacity) return false;
-            if(key.version != version[key.id]) return false;
             return true;
         }
-        
-        
         
         public static void UnitTest(Action<string> log)
         {
