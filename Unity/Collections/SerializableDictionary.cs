@@ -1,14 +1,11 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
-using Prota.Unity;
 using System.Collections;
 
 namespace Prota
 {
-    // 参考 https://referencesource.microsoft.com/#mscorlib/system/collections/generic/dictionary.cs,cc27fcdd81291584,references
     // 使用自定义链表.
     // 必须使用 SerializedReference 才能正确序列化.
     [Serializable]
