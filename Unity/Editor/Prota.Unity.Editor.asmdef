@@ -3,7 +3,9 @@
     "rootNamespace": "Prota.Editor",
     "references": [
         "GUID:1d01d2fa0687c4240ac5dc6551db391a",
-        "GUID:4af5db39d74318c4fa1288b56207dbe1"
+        "GUID:4af5db39d74318c4fa1288b56207dbe1",
+        "GUID:be0903cd8e1546f498710afdc59db5eb",
+        "GUID:ade7125e800904674ba0c115208f7ed5"
     ],
     "includePlatforms": [
         "Editor"

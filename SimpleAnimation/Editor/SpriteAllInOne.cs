@@ -14,7 +14,7 @@ namespace Prota.Animation
         static void ProcessSprites()
         {
             RemoveDuplicatedTextures();
-            ScanAnimationInFolder();
+            BuildAnimationInFolder();
         }
 
         static HashSet<string> validExtensions = new HashSet<string>() {
@@ -62,13 +62,20 @@ namespace Prota.Animation
             AssetDatabase.Refresh();
         }
         
+        // 用法:
+        // 所有帧图像放入同一个文件夹内.
+        // 命名为 文件夹名称_帧号.png
+        // 所有定位图像命名为 文件夹名称_Anchor_帧号.png
+        // 会做如下操作:
+        // (1) 删除重复的图片.
+        // (2) 确保 ScrptableObject 存在.
+        // (3) 使用帧号来填写 ScriptableObject 的动画帧.
+        // (4) 使用 Anchor 帧号填写动画位移.
         [MenuItem("Assets/ProtaFramework/动画/构建动画资源", priority = 1112)]
-        static void ScanAnimationInFolder()
+        static void BuildAnimationInFolder()
         {
             RemoveDuplicatedTextures();
             AssetDatabase.Refresh();
-            
-            
             
             var curSelectPath = selectedFolder;
             if(curSelectPath == null) return;
