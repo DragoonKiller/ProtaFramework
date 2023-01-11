@@ -16,6 +16,8 @@ namespace Prota.Editor
                 if(string.IsNullOrWhiteSpace(value)) return;
                 if(value.StartsWith("[Exception]") || value.StartsWith("[Error]") || value.Contains("exception: "))
                     Debug.LogError(value);
+                else if(value.StartsWith("[Warning]") || value.StartsWith("[warning]"))
+                    Debug.LogWarning(value);
                 else
                     Debug.Log(value);
             }

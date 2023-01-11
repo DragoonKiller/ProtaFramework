@@ -129,4 +129,13 @@ namespace Prota.Tween
     }
     
     
+    
+    public static class TweenExt
+    {
+        public static TweenHandle NewTween(this UnityEngine.Object g, TweenType type, ValueTweeningUpdate onUpdate)
+        {
+            return ProtaTweenManager.instance.New(type, g, onUpdate);
+        }
+    }
+    
 }

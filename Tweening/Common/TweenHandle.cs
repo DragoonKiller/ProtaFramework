@@ -126,6 +126,11 @@ namespace Prota.Tween
             return this;
         }
         
+        public TweenHandle SetFromTo(float from, float to)
+        {
+            return this.SetFrom(from).SetTo(to);
+        }
+        
         public TweenHandle Start(float duration, bool realtime = false)
         {
             this.realtime = realtime;

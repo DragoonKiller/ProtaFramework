@@ -43,6 +43,7 @@ namespace Prota
         public static float Pow(this float x, float y) => (float)Math.Pow(x, y);
         public static float Floor(this float x) => (float)Math.Floor(x);
         public static float Ceil(this float x) => (float)Math.Ceiling(x);
+        public static float Round(this float x) => (float)Math.Round(x);
         
         public static int Mod(this int x, int y) => x - x / y * y;
         public static long Mod(this long x, long y) => x - x / y * y;

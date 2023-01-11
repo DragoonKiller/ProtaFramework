@@ -42,17 +42,25 @@ namespace Prota.Unity
         public static ref Vector3 SetY(this ref Vector3 a, float y) { a.y = y; return ref a; }
         public static ref Vector3 SetZ(this ref Vector3 a, float z) { a.z = z; return ref a; }
         
-        
         public static ref Vector4 SetX(this ref Vector4 a, float x) { a.x = x; return ref a; }
         public static ref Vector4 SetY(this ref Vector4 a, float y) { a.y = y; return ref a; }
         public static ref Vector4 SetZ(this ref Vector4 a, float z) { a.z = z; return ref a; }
         public static ref Vector4 SetW(this ref Vector4 a, float w) { a.w = w; return ref a; }
         
+        public static Vector3 XYToXZ(this Vector2 a, float y = 0) => new Vector3(a.x, y, a.y);
+        public static Vector2 XZToXY(this Vector3 a) => new Vector2(a.x, a.z);
+        
+        public static Vector3 WithLength(this Vector3 a, float len) => a.normalized * len;
+        public static Vector2 WithLength(this Vector2 a, float len) => a.normalized * len;
+        
+        public static Vector2 AddLength(this Vector2 a, float addLen) => a.WithLength(a.magnitude + addLen);
+        public static Vector3 AddLength(this Vector3 a, float addLen) => a.WithLength(a.magnitude + addLen);
+        
+        public static float Angle(this Vector2 a, Vector2 b) => Vector2.SignedAngle(a, b);
         
         public static float Dot(this Vector2 a, Vector2 b) => Vector2.Dot(a, b);
         public static float Dot(this Vector3 a, Vector3 b) => Vector3.Dot(a, b);
         public static float Dot(this Vector4 a, Vector4 b) => Vector4.Dot(a, b);
-        
         
         public static float Cross(this Vector2 a, Vector2 b) => Vector3.Cross((Vector3)a, (Vector3)b).z;
         public static Vector3 Cross(this Vector3 a, Vector3 b) => Vector3.Cross(a, b);
@@ -85,6 +93,11 @@ namespace Prota.Unity
         public static Vector4 Lerp(this (Vector4 from, Vector4 to) p, float x) => p.from + (p.to - p.from) * x;
         public static Color Lerp(this (Color from, Color to) p, float x) => p.from + (p.to - p.from) * x;
         
+        public static Vector2 ToVec2(this (float x, float y) a) => new Vector2(a.x, a.y);
+        public static Vector3 ToVec3(this (float x, float y, float z) a) => new Vector3(a.x, a.y, a.z);
+        
+        public static (float x, float y) ToTuple(this Vector2 a) => (a.x, a.y);
+        public static (float x, float y, float z) ToTuple(this Vector3 a) => (a.x, a.y, a.z);
         
         public static Vector2 Center(this (Vector2 from, Vector2 to) p) => p.Lerp(0.5f);
         public static Vector3 Center(this (Vector3 from, Vector3 to) p) => p.Lerp(0.5f);
@@ -94,7 +107,6 @@ namespace Prota.Unity
         
         public static float Length(this (Vector2 from, Vector2 to) p) => p.Vec().magnitude;
         public static float Length(this (Vector3 from, Vector3 to) p) => p.Vec().magnitude;
-        
         
         public static float Area(this Vector2 p) => p.x * p.y;
         
@@ -116,11 +128,15 @@ namespace Prota.Unity
         public static Vector3Int FloorToInt(this Vector3 a) => new Vector3Int(a.x.FloorToInt(), a.y.FloorToInt(), a.z.FloorToInt());
         public static Vector2Int CeilToInt(this Vector2 a) => new Vector2Int(a.x.CeilToInt(), a.y.CeilToInt());
         public static Vector3Int CeilToInt(this Vector3 a) => new Vector3Int(a.x.CeilToInt(), a.y.CeilToInt(), a.z.CeilToInt());
+        public static Vector2Int RoundToInt(this Vector2 a) => new Vector2Int(a.x.RoundToInt(), a.y.RoundToInt());
+        public static Vector3Int RoundToInt(this Vector3 a) => new Vector3Int(a.x.RoundToInt(), a.y.RoundToInt(), a.z.RoundToInt());
         
         public static Vector2 Floor(this Vector2 a) => new Vector2(a.x.Floor(), a.y.Floor());
         public static Vector3 Floor(this Vector3 a) => new Vector3(a.x.Floor(), a.y.Floor(), a.z.Floor());
         public static Vector2 Ceil(this Vector2 a) => new Vector2(a.x.Ceil(), a.y.Ceil());
         public static Vector3 Ceil(this Vector3 a) => new Vector3(a.x.Ceil(), a.y.Ceil(), a.z.Ceil());
+        public static Vector2 Round(this Vector2 a) => new Vector2(a.x.Round(), a.y.Round());
+        public static Vector3 Round(this Vector3 a) => new Vector3(a.x.Round(), a.y.Round(), a.z.Round());
         
         public static Vector3 Divide(this Vector3 a, Vector3 b) => new Vector3(a.x / b.x, a.y / b.x, a.z / b.z);
         public static Vector2 Divide(this Vector2 a, Vector2 b) => new Vector2(a.x / b.x, a.y / b.x);
@@ -135,6 +151,10 @@ namespace Prota.Unity
                 -a.x * angleInRadian.Sin() + a.y * angleInRadian.Cos()
             );
         }
+        
+        
+        public static Quaternion AsEulerAngle(this (float x, float y, float z) a) => Quaternion.Euler(a.x, a.y, a.z);
+        
         
         // Verlet 积分, 用位置相对时间的函数作泰勒展开, 用来精确模拟物理位移/速度/加速度行为
         // https://www.bilibili.com/video/BV1pG411F7b1

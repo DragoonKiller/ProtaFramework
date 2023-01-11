@@ -18,6 +18,13 @@ namespace Prota.Unity
             return g.gameObject.Clone(parent).GetComponent<T>();
         }
         
+        // 设置 Component 对应的 Game Object 是否激活.
+        public static T SetActive<T>(this T a, bool activate = true) where T: Component
+        {
+            a.gameObject.SetActive(activate);
+            return a;
+        }
+        
         // ============================================================================================================
         // ============================================================================================================
         

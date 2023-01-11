@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 namespace Prota.Unity
 {
+    // 全局单例.
+    // 不随场景改变, 与场景内容无关.
+    [DisallowMultipleComponent]
     public abstract class Singleton<T> : MonoBehaviour
         where T: Singleton<T> 
     {
