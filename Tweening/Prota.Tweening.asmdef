@@ -3,7 +3,8 @@
     "rootNamespace": "Prota.Tweening",
     "references": [
         "GUID:1d01d2fa0687c4240ac5dc6551db391a",
-        "GUID:4af5db39d74318c4fa1288b56207dbe1"
+        "GUID:4af5db39d74318c4fa1288b56207dbe1",
+        "GUID:d8b63aba1907145bea998dd612889d6b"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -1,0 +1,17 @@
+{
+	"name": "Prota.VisualEffect",
+    "rootNamespace": "Prota.VisualEffect",
+    "references": [
+        "Prota.Utils",
+		"Prota.Unity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -25,20 +25,20 @@ namespace Prota.Tween
     {
         public static TweenHandle TweenScaleX(this Transform g, float to, float time)
         {
-            return ProtaTweenManager.instance.New(TweenType.ScaleX, g, ScaleX)
-                .SetGuard(g.LifeSpan()).SetFrom(g.localScale.x).SetTo(to).Start(time);
+            return ProtaTweenManager.instance.New(TweenId.ScaleX, g, ScaleX)
+                .SetGuard(g.LifeSpan()).SetFromTo(g.localScale.x, to).Start(time);
         }
         
         public static TweenHandle TweenScaleY(this Transform g, float to, float time)
         {
-            return ProtaTweenManager.instance.New(TweenType.ScaleY, g, ScaleY)
-                .SetGuard(g.LifeSpan()).SetFrom(g.localScale.y).SetTo(to).Start(time);
+            return ProtaTweenManager.instance.New(TweenId.ScaleY, g, ScaleY)
+                .SetGuard(g.LifeSpan()).SetFromTo(g.localScale.y, to).Start(time);
         }
 
         public static TweenHandle TweenScaleZ(this Transform g, float to, float time)
         {
-            return ProtaTweenManager.instance.New(TweenType.ScaleZ, g, ScaleZ)
-                .SetGuard(g.LifeSpan()).SetFrom(g.localScale.z).SetTo(to).Start(time);
+            return ProtaTweenManager.instance.New(TweenId.ScaleZ, g, ScaleZ)
+                .SetGuard(g.LifeSpan()).SetFromTo(g.localScale.z, to).Start(time);
         }
         
         public static TweenComposedScale TweenScale(this Transform g, Vector3 to, float time)
@@ -55,47 +55,36 @@ namespace Prota.Tween
         
         public static Transform ClearTweenScaleX(this Transform g)
         {
-            ProtaTweenManager.instance.Remove(g, TweenType.ScaleX);
+            ProtaTweenManager.instance.Remove(g, TweenId.ScaleX);
             return g;
         }
         
         public static Transform ClearTweenScaleY(this Transform g)
         {
-            ProtaTweenManager.instance.Remove(g, TweenType.ScaleY);
+            ProtaTweenManager.instance.Remove(g, TweenId.ScaleY);
             return g;
         }
         
         public static Transform ClearTweenScaleZ(this Transform g)
         {
-            ProtaTweenManager.instance.Remove(g, TweenType.ScaleZ);
+            ProtaTweenManager.instance.Remove(g, TweenId.ScaleZ);
             return g;
         }
         
         public static Transform ClearTweenScale(this Transform g)
         {
-            g.ClearTweenScaleX();
-            g.ClearTweenScaleY();
-            g.ClearTweenScaleZ();
-            return g;
+            return g.ClearTweenScaleX().ClearTweenScaleY().ClearTweenScaleZ();
         }
         
         // ============================================================================================================
         // ============================================================================================================
         
         
-        public static ref TweenComposedScale SetFrom(ref this TweenComposedScale m, Vector3 from)
+        public static ref TweenComposedScale SetFromTo(ref this TweenComposedScale m, Vector3 from, Vector3 to)
         {
-            m.x.SetFrom(from.x);
-            m.y.SetFrom(from.y);
-            m.z.SetFrom(from.z);
-            return ref m;
-        }
-        
-        public static ref TweenComposedScale SetTo(ref this TweenComposedScale m, Vector3 to)
-        {
-            m.x.SetTo(to.x);
-            m.y.SetTo(to.y);
-            m.z.SetTo(to.z);
+            m.x.SetFromTo(from.x, to.x);
+            m.y.SetFromTo(from.y, to.y);
+            m.z.SetFromTo(from.z, to.z);
             return ref m;
         }
         

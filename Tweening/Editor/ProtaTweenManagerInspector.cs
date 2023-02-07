@@ -47,7 +47,7 @@ namespace Prota.Editor
                         .AddChild(new VisualElement()
                             .SetHorizontalLayout()
                             .AddChild(new Label() { name = "id" }.SetWidth(200))
-                            .AddChild(new EnumField(TweenType.Custom) { name = "type" })
+                            .AddChild(new Label() { name = "tid" })
                             .AddChild(new Button(() => {
                                     x.Q("detail").SetVisible(detailVisible = !detailVisible);
                                 }) { text = "+" }
@@ -83,7 +83,7 @@ namespace Prota.Editor
                     element.SetVisible(data.valid);
                     if(!data.valid) return;
                     element.Q<Label>("id").text = key.ToString();
-                    element.Q<EnumField>("type").value = data.type;
+                    element.Q<Label>("tid").text = data.tid.ToString();
                     if(element.Q("detail").visible)
                     {
                         element.Q<TextField>("curRatio").value = data.EvaluateRatio(data.GetTimeLerp()).ToString();

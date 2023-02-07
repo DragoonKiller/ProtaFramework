@@ -17,10 +17,10 @@ namespace Prota.Tween
             set => data[key].target = value;
         }
         
-        public TweenType type
+        public TweenId tid
         {
-            get => data[key].type;
-            set => data[key].type = value;
+            get => data[key].tid;
+            set => data[key].tid = value;
         }
         
         public ValueTweeningUpdate update
@@ -101,6 +101,15 @@ namespace Prota.Tween
             set => data[key].guard = value;
         }
         
+        // from 和 to 互换.
+        public TweenHandle DoReverse()
+        {
+            var a = from;
+            from = to;
+            to = a;
+            return this;
+        }
+        
         internal TweenHandle(ArrayLinkedListKey handle, ArrayLinkedList<TweenData> data)
         {
             this.key = handle;
@@ -110,25 +119,17 @@ namespace Prota.Tween
         public bool isTimeout => timeTo < (realtime ? Time.realtimeSinceStartup : Time.time);
         
         public float EvaluateRatio(float ratio) => data[key].EvaluateRatio(ratio);
+        
+        // 
         public float Evaluate(float ratio) => data[key].Evaluate(ratio);
         
         public float GetTimeLerp() => data[key].GetTimeLerp();
         
-        public TweenHandle SetFrom(float from)
+        public TweenHandle SetFromTo(float? from, float? to)
         {
-            this.from = from;
+            if(from.HasValue) this.from = from.Value;
+            if(to.HasValue) this.to = to.Value;
             return this;
-        }
-        
-        public TweenHandle SetTo(float to)
-        {
-            this.to = to;
-            return this;
-        }
-        
-        public TweenHandle SetFromTo(float from, float to)
-        {
-            return this.SetFrom(from).SetTo(to);
         }
         
         public TweenHandle Start(float duration, bool realtime = false)
@@ -171,18 +172,17 @@ namespace Prota.Tween
     public class BindingList
     {
         public int count;
-        public TweenHandle[] bindings = new TweenHandle[15];
-        public TweenHandle this[TweenType type]
+        public Dictionary<TweenId, TweenHandle> bindings = new Dictionary<TweenId, TweenHandle>();
+        public TweenHandle this[TweenId tid]
         {
-            get => type < 0 ? TweenHandle.none : bindings[(int)type];
+            get => tid.isNone ? TweenHandle.none : bindings[tid];
             set
             {
-                
-                if(type < 0) return;         // always 0 while type < 0
-                var original = bindings[(int)type];
+                if(tid.isNone) return;      // no recording if no id.
+                var original = this[tid];
                 if(original.isNone && !value.isNone) count++;
                 if(!original.isNone && value.isNone) count--;
-                bindings[(int)type] = value;
+                bindings[tid] = value;
             }
         }
     }

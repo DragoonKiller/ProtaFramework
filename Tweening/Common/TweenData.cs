@@ -7,13 +7,14 @@ namespace Prota.Tween
 {
     public struct TweenData
     {
-        public UnityEngine.Object target;      // duplicated control. cannot be null.
-        public TweenType type;
-        public ValueTweeningUpdate update;
+        public UnityEngine.Object target;       // tween 所改变的物体.
+        public TweenId tid;                     // 标记这个 tween 在改变物体的什么内容.
+        public ValueTweeningUpdate update;      // 更新函数.
         
         public Action<TweenHandle> onFinish;
         public Action<TweenHandle> onInterrupted;
         public Action<TweenHandle> onRemove;
+        
         public object customData;
         
         public float from;
@@ -24,8 +25,9 @@ namespace Prota.Tween
         public float timeTo;
         public bool realtime;
         public LifeSpan guard;
+        
         public bool isTimeout => timeTo < (realtime ? Time.realtimeSinceStartup : Time.time);
-        public bool invalid => target == null || (guard != null && !guard.alive) || update == null;
+        public bool invalid => target == null || (guard != null && !guard.alive) || update == null; // 已考虑 target 被 destroy 但是引用还在.
         public bool valid => !invalid;
         
         public TweenHandle handle { get; private set; }

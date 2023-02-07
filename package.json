@@ -7,7 +7,7 @@
   "dependencies": {
     "com.unity.shadergraph": "12.1.7",
     "com.unity.visualeffectgraph": "12.1.7",
-    "com.unity.render-pipelines.universal": "8.0.0",
+    "com.unity.render-pipelines.universal": "15.0.1",
     
     "com.unity.ugui": "1.0.0",
     

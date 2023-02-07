@@ -1,0 +1,21 @@
+{
+	"name": "Prota.VisualEffect.Editor",
+    "rootNamespace": "Prota.Editor",
+    "references": [
+        "Prota.Utils",
+		"Prota.Unity",
+        "Prota.VisualEffect",
+        "Prota.Unity.Editor",
+        "Unity.Mathematics",
+        "Unity.Editor"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

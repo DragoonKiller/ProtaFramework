@@ -67,7 +67,7 @@ namespace Prota.Editor
                 Handles.color = new Color(.2f, 1f, .2f, 1);
                 var size = HandleUtility.GetHandleSize(p) * 0.05f;
                 var snap = Vector3.one * 0.5f;
-                var res = Handles.FreeMoveHandle(id, p, Quaternion.identity, size, snap, (controlID, position, rotation, size, eventType) => {
+                var fmh_70_57_638113646406473393 = Quaternion.identity; var res = Handles.FreeMoveHandle(id, p, size, snap, (controlID, position, rotation, size, eventType) => {
                     Handles.DotHandleCap(controlID, position, rotation, size, eventType);
                 });
                 res -= (Vector3)(localOffset);

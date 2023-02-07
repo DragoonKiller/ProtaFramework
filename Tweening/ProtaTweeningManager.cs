@@ -14,7 +14,7 @@ namespace Prota.Tween
         
         public readonly List<ArrayLinkedListKey> toBeRemoved = new List<ArrayLinkedListKey>();
         
-        public readonly ObjectPool<BindingList> listPool = new ObjectPool<BindingList>(() => new BindingList()); // TweenType.Count
+        public readonly ObjectPool<BindingList> listPool = new ObjectPool<BindingList>(() => new BindingList()); // TweenId.Count
         
         void Update()
         {
@@ -63,12 +63,13 @@ namespace Prota.Tween
             toBeRemoved.Clear();
         }
         
+        // 删除被标记的 tween 对象.
         void ActualDelete(ArrayLinkedListKey key)
         {
             ref var d = ref data[key];
-            if(targetMap.TryGetValue(d.target, out var bindingList) && bindingList[d.type].key == key)
+            if(targetMap.TryGetValue(d.target, out var bindingList) && bindingList[d.tid].key == key)
             {
-                bindingList[d.type] = TweenHandle.none;
+                bindingList[d.tid] = TweenHandle.none;
                 if(bindingList.count == 0)
                 {
                     listPool.Release(bindingList);
@@ -78,14 +79,17 @@ namespace Prota.Tween
             data.Release(key);
         }
         
-        public TweenHandle New(TweenType type, UnityEngine.Object target, ValueTweeningUpdate onUpdate)
+        public TweenHandle New(TweenId tid, UnityEngine.Object target, Action<float> setter)
+            => New(tid, target, (h, t) => setter(h.Evaluate(t)));
+        
+        public TweenHandle New(TweenId tid, UnityEngine.Object target, ValueTweeningUpdate onUpdate)
         {
             Debug.Assert(target != null);
             
             var key = data.Take();
             ref var v = ref data[key];
             v.target = target;
-            v.type = type;
+            v.tid = tid;
             v.update = onUpdate;
             v.SetHandle(new TweenHandle(key, data));
             
@@ -96,34 +100,34 @@ namespace Prota.Tween
                 targetMap.Add(target, bindingList);
             }
             
-            var prev = bindingList[type];
-            Remove(prev);
-            
             var newHandle = new TweenHandle(key, data);
-            bindingList[type] = newHandle;
+            
+            // 给上一个 tween 对象打上删除标记, 并覆盖 bindingList 中的词条.
+            var prev = bindingList[tid];
+            TagRemoved(prev);
+            bindingList[tid] = newHandle;
             return newHandle;
         }
         
-        
-        public bool Remove(TweenHandle v)
+        public bool TagRemoved(TweenHandle v)
         {
             if(v.isNone) return false;
             if(!data.Valid(v.key)) return false;
-            v.update = null;
+            v.update = null;   // 只打标记.
             return true;
         }
         
-        public bool Remove(UnityEngine.Object target, TweenType type)
+        public bool Remove(UnityEngine.Object target, TweenId tid)
         {
             if(!targetMap.TryGetValue(target, out var list)) return false;
-            return Remove(list[type]);
+            return TagRemoved(list[tid]);
         }
         
         public bool RemoveAll(UnityEngine.Object target)
         {
             if(!targetMap.TryGetValue(target, out var list)) return false;
             var res = false;
-            foreach(var i in list.bindings) res |= Remove(i);
+            foreach(var i in list.bindings) res |= TagRemoved(i.Value);
             return res;
         }
     }
@@ -132,9 +136,9 @@ namespace Prota.Tween
     
     public static class TweenExt
     {
-        public static TweenHandle NewTween(this UnityEngine.Object g, TweenType type, ValueTweeningUpdate onUpdate)
+        public static TweenHandle NewTween(this UnityEngine.Object g, TweenId tid, ValueTweeningUpdate onUpdate)
         {
-            return ProtaTweenManager.instance.New(type, g, onUpdate);
+            return ProtaTweenManager.instance.New(tid, g, onUpdate);
         }
     }
     

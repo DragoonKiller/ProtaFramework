@@ -21,16 +21,16 @@ namespace Prota.Tween
     public static class PositionTweening
     {
         public static TweenHandle TweenMoveX(this Transform g, float to, float time)
-            => ProtaTweenManager.instance.New(TweenType.MoveX, g, SingleMoveX)
-                .SetGuard(g.LifeSpan()).SetFrom(g.localPosition.x).SetTo(to).Start(time);
+            => ProtaTweenManager.instance.New(TweenId.MoveX, g, SingleMoveX)
+                .SetGuard(g.LifeSpan()).SetFromTo(g.localPosition.x, to).Start(time);
         
         public static TweenHandle TweenMoveY(this Transform g, float to, float time)
-            => ProtaTweenManager.instance.New(TweenType.MoveY, g, SingleMoveY)
-                .SetGuard(g.LifeSpan()).SetFrom(g.localPosition.y).SetTo(to).Start(time);
+            => ProtaTweenManager.instance.New(TweenId.MoveY, g, SingleMoveY)
+                .SetGuard(g.LifeSpan()).SetFromTo(g.localPosition.y, to).Start(time);
 
         public static TweenHandle TweenMoveZ(this Transform g, float to, float time)
-            => ProtaTweenManager.instance.New(TweenType.MoveZ, g, SingleMoveZ)
-                .SetGuard(g.LifeSpan()).SetFrom(g.localPosition.z).SetTo(to).Start(time);
+            => ProtaTweenManager.instance.New(TweenId.MoveZ, g, SingleMoveZ)
+                .SetGuard(g.LifeSpan()).SetFromTo(g.localPosition.z, to).Start(time);
         
         public static TweenComposedMove TweenMove(this Transform g, Vector3 to, float time)
         {
@@ -44,28 +44,25 @@ namespace Prota.Tween
         
         public static Transform ClearTweenMoveX(this Transform g)
         {
-            ProtaTweenManager.instance.Remove(g, TweenType.MoveX);
+            ProtaTweenManager.instance.Remove(g, TweenId.MoveX);
             return g;
         }
         
         public static Transform ClearTweenMoveY(this Transform g)
         {
-            ProtaTweenManager.instance.Remove(g, TweenType.MoveY);
+            ProtaTweenManager.instance.Remove(g, TweenId.MoveY);
             return g;
         }
         
         public static Transform ClearTweenMoveZ(this Transform g)
         {
-            ProtaTweenManager.instance.Remove(g, TweenType.MoveZ);
+            ProtaTweenManager.instance.Remove(g, TweenId.MoveZ);
             return g;
         }
         
         public static Transform ClearTweenMove(this Transform g)
         {
-            g.ClearTweenMoveX();
-            g.ClearTweenMoveY();
-            g.ClearTweenMoveZ();
-            return g;
+            return g.ClearTweenMoveX().ClearTweenMoveY().ClearTweenMoveZ();
         }
         
         
@@ -73,19 +70,11 @@ namespace Prota.Tween
         // ============================================================================================================
         
         
-        public static ref TweenComposedMove SetFrom(ref this TweenComposedMove m, Vector3 from)
+        public static ref TweenComposedMove SetFromTo(ref this TweenComposedMove m, Vector3 from, Vector3 to)
         {
-            m.x.SetFrom(from.x);
-            m.y.SetFrom(from.y);
-            m.z.SetFrom(from.z);
-            return ref m;
-        }
-        
-        public static ref TweenComposedMove SetTo(ref this TweenComposedMove m, Vector3 to)
-        {
-            m.x.SetTo(to.x);
-            m.y.SetTo(to.y);
-            m.z.SetTo(to.z);
+            m.x.SetFromTo(from.x, to.x);
+            m.y.SetFromTo(from.y, to.y);
+            m.z.SetFromTo(from.z, to.z);
             return ref m;
         }
         
@@ -142,32 +131,6 @@ namespace Prota.Tween
             var tr = (Transform)h.target;
             tr.localPosition = tr.localPosition.WithZ(h.Evaluate(t));
         }
-        
-        
-        static void TrackingMoveX(TweenHandle h, float t)
-        {
-            if(h.customData == null) return;
-            var tr = (Transform)h.target;
-            h.SetTo((h.customData as Transform).transform.position.x);
-            tr.localPosition = tr.localPosition.WithX(h.Evaluate(t));
-        }
-        
-        static void TrackingMoveY(TweenHandle h, float t)
-        {
-            if(h.customData == null) return;
-            var tr = (Transform)h.target;
-            h.SetTo((h.customData as Transform).transform.position.y);
-            tr.localPosition = tr.localPosition.WithY(h.Evaluate(t));
-        }
-        
-        static void TrackingMoveZ(TweenHandle h, float t)
-        {
-            if(h.customData == null) return;
-            var tr = (Transform)h.target;
-            h.SetTo((h.customData as Transform).transform.position.z);
-            tr.localPosition = tr.localPosition.WithZ(h.Evaluate(t));
-        }
-        
     }
     
     

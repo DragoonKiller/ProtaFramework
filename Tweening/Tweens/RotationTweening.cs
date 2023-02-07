@@ -24,20 +24,20 @@ namespace Prota.Tween
     {
         public static TweenHandle TweenRotateX(this Transform g, float to, float time)
         {
-            return ProtaTweenManager.instance.New(TweenType.RotateX, g, RotateX)
-                .SetGuard(g.LifeSpan()).SetFrom(g.rotation.eulerAngles.x).SetTo(to).Start(time);
+            return ProtaTweenManager.instance.New(TweenId.RotateX, g, RotateX)
+                .SetGuard(g.LifeSpan()).SetFromTo(g.rotation.eulerAngles.x, to).Start(time);
         }
         
         public static TweenHandle TweenRotateY(this Transform g, float to, float time)
         {
-            return ProtaTweenManager.instance.New(TweenType.RotateY, g, RotateY)
-                .SetGuard(g.LifeSpan()).SetFrom(g.rotation.eulerAngles.y).SetTo(to).Start(time);
+            return ProtaTweenManager.instance.New(TweenId.RotateY, g, RotateY)
+                .SetGuard(g.LifeSpan()).SetFromTo(g.rotation.eulerAngles.y, to).Start(time);
         }
 
         public static TweenHandle TweenRotateZ(this Transform g, float to, float time)
         {
-            return ProtaTweenManager.instance.New(TweenType.RotateZ, g, RotateZ)
-                .SetGuard(g.LifeSpan()).SetFrom(g.rotation.eulerAngles.z).SetTo(to).Start(time);
+            return ProtaTweenManager.instance.New(TweenId.RotateZ, g, RotateZ)
+                .SetGuard(g.LifeSpan()).SetFromTo(g.rotation.eulerAngles.z, to).Start(time);
         }
         
         public static TweenComposedRotate TweenRotate(this Transform g, Vector3 to, float time)
@@ -52,28 +52,25 @@ namespace Prota.Tween
         
         public static Transform ClearTweenRotateX(this Transform g)
         {
-            ProtaTweenManager.instance.Remove(g, TweenType.RotateX);
+            ProtaTweenManager.instance.Remove(g, TweenId.RotateX);
             return g;
         }
         
         public static Transform ClearTweenRotateY(this Transform g)
         {
-            ProtaTweenManager.instance.Remove(g, TweenType.RotateY);
+            ProtaTweenManager.instance.Remove(g, TweenId.RotateY);
             return g;
         }
         
         public static Transform ClearTweenRotateZ(this Transform g)
         {
-            ProtaTweenManager.instance.Remove(g, TweenType.RotateZ);
+            ProtaTweenManager.instance.Remove(g, TweenId.RotateZ);
             return g;
         }
         
         public static Transform ClearTweenRotate(this Transform g)
         {
-            g.ClearTweenRotateX();
-            g.ClearTweenRotateY();
-            g.ClearTweenRotateZ();
-            return g;
+            return g.ClearTweenRotateX().ClearTweenRotateY().ClearTweenRotateZ();
         }
         
         
@@ -81,19 +78,11 @@ namespace Prota.Tween
         // ============================================================================================================
         
         
-        public static ref TweenComposedRotate SetFrom(ref this TweenComposedRotate m, Vector3 from)
+        public static ref TweenComposedRotate SetFrom(ref this TweenComposedRotate m, Vector3 from, Vector3 to)
         {
-            m.x.SetFrom(from.x);
-            m.y.SetFrom(from.y);
-            m.z.SetFrom(from.z);
-            return ref m;
-        }
-        
-        public static ref TweenComposedRotate SetTo(ref this TweenComposedRotate m, Vector3 to)
-        {
-            m.x.SetTo(to.x);
-            m.y.SetTo(to.y);
-            m.z.SetTo(to.z);
+            m.x.SetFromTo(from.x, to.x);
+            m.y.SetFromTo(from.y, to.y);
+            m.z.SetFromTo(from.z, to.z);
             return ref m;
         }
         
