@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Prota
+namespace Prota.Unity
 {
     public static partial class UnityMethodExtensions
     {

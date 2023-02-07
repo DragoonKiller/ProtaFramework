@@ -31,6 +31,7 @@ namespace Prota.Timer
             {
                 var (timeKey, timer) = timers.First();
                 if(curTime < timeKey.time) break;
+                
                 // 先删除, 如果有需要再添加回去.
                 timers.Remove(timeKey);
                 

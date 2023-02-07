@@ -16,20 +16,20 @@ namespace Prota.Editor
         
         public static bool showTransformConnection
         {
-            get => EditorPrefs.GetBool("ProtaFramework.ShowTransformConnection", true);
+            get => EditorPrefs.GetBool("ProtaFramework.ShowTransformConnection", false);
             set => EditorPrefs.SetBool("ProtaFramework.ShowTransformConnection", value);
         }
         
         
         public static bool showColliderRange
         {
-            get => EditorPrefs.GetBool("ProtaFramework.ShowColliderRange", true);
+            get => EditorPrefs.GetBool("ProtaFramework.ShowColliderRange", false);
             set => EditorPrefs.SetBool("ProtaFramework.ShowColliderRange", value);
         }
         
         public static bool showSpriteRendererRange
         {
-            get => EditorPrefs.GetBool("ProtaFramework.ShowSpriteRendererRange", true);
+            get => EditorPrefs.GetBool("ProtaFramework.ShowSpriteRendererRange", false);
             set => EditorPrefs.SetBool("ProtaFramework.ShowSpriteRendererRange", value);
         }
         

@@ -31,6 +31,7 @@ namespace Prota.Timer
         internal bool NextRepeat()
         {
             if(!repeat) return false;
+            if(guard != null && !guard.alive) return false;
             key = new TimeKey(key, duration);
             return true;
         }

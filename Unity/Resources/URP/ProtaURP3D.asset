@@ -90,7 +90,7 @@ MonoBehaviour:
     serializedBounds: []
     serializedHasVolumes: []
     bakingSets: []
-    m_LightingScenario: 
+    m_LightingScenario: Default
   m_PrefilterXRKeywords: 1
   m_PrefilterForwardPlus: 0
   m_PrefilterDeferredRendering: 0

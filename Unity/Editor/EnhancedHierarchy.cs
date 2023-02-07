@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using Prota.Unity;
+
 namespace Prota.Editor
 {
     [InitializeOnLoad]
@@ -50,9 +52,16 @@ namespace Prota.Editor
         
         private const int pixelPerDepth = 14;
         static readonly List<Component> comps = new List<Component>();
+        static readonly List<GameObject> parents = new List<GameObject>();
+        
+        static Dictionary<Type, GUIContent> thumbnailMap = new Dictionary<Type, GUIContent>();
+        
+        static Texture2D barTexture = null;
         
         static void OnHierarchyGUI(int instanceId, Rect area)
         {
+            if(barTexture == null) barTexture = Resources.Load<Texture2D>("ProtaFramework/line_vertical_16_2");
+            
             var originalGUIColor = GUI.color;
             
             var target = EditorUtility.InstanceIDToObject(instanceId);
@@ -73,6 +82,7 @@ namespace Prota.Editor
                     Selection.activeObject = g;
                 }
                 
+                // 这个 gameobject 下属的 gameobject.
                 g.GetComponents<Component>(comps);
                 // comps.Sort(Compare);
                 comps.Reverse();
@@ -81,24 +91,40 @@ namespace Prota.Editor
                 foreach(var c in comps)
                 {
                     if(c == null) continue; // 脚本丢失时, Component 为 null.
-                    if(c.GetType() == typeof(UnityEngine.Transform)) continue;
-                    var content = EditorGUIUtility.ObjectContent(c, c.GetType());
-                    if(content.image != null)
+                    var ctype = c.GetType();
+                    if(ctype == typeof(UnityEngine.Transform)) continue;
+                    
+                    if(!thumbnailMap.TryGetValue(ctype, out var content))
                     {
-                        GUI.Label(new Rect(rightMargin, area.yMax - area.height, 16, 16), new GUIContent(content.image));
-                        rightMargin -= area.height;
+                        var cc = EditorGUIUtility.ObjectContent(c, ctype);
+                        var image = cc.image;
+                        if(image == null) continue;     // 没有图标.
+                        thumbnailMap[ctype] = content = new GUIContent(image);
                     }
+                    
+                    GUI.Label(new Rect(rightMargin, area.yMax - area.height, 16, 16), content);
+                    rightMargin -= area.height;
                 }
                 
-                // 空物体标记部分.
-                if(comps.Count == 1 && comps[0].GetType() == typeof(Transform))
+                // Canvas 标记部分. 如果一个物体被挂在 canvas 下方则有一个蓝色竖线标记.
+                if(g.GetComponentInParent<Canvas>() != null)
                 {
                     var r = new Rect(area);
                     r.xMin -= 20 + depth * pixelPerDepth;
                     r.xMax = r.xMin + r.height;
-                    GUI.color = new Color(1, 1, 1, 0.4f);
-                    GUI.DrawTexture(r, Resources.Load<Texture2D>("ProtaFramework/line_vertical_16_2"));
+                    GUI.color = new Color(0.6f, 0.65f, 1, 1f);
+                    GUI.DrawTexture(r, barTexture);
                 }
+                
+                // 空物体标记部分.
+                // if(comps.Count == 1 && comps[0].GetType() == typeof(Transform))
+                // {
+                //     var r = new Rect(area);
+                //     r.xMin -= 22 + depth * pixelPerDepth;
+                //     r.xMax = r.xMin + r.height;
+                //     GUI.color = new Color(0.4f, 0.4f, 0.4f, 1f);
+                //     GUI.DrawTexture(r, barTexture);
+                // }
                 
             }
             

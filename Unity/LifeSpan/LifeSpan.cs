@@ -15,7 +15,7 @@ namespace Prota.Unity
         {
             if(!alive) return;
             alive = false;
-            callbacks.InvokeAll();
+            callbacks?.InvokeAll();
             callbacks = null;
         }
         
