@@ -135,6 +135,20 @@ namespace Prota.Unity
             return tr;
         }
         
+        public static Transform ScaleLocallyByPivot(this Transform tr, Vector3 scale, Vector3 pivot)
+        {
+            // original position related to center:
+            var pp = tr.localPosition - pivot;
+            // scale the position.
+            pp = Vector3.Scale(pp, scale);
+            // move tr to the final position.
+            tr.localPosition = pivot + pp;
+            
+            // scale others normally.
+            tr.localScale = Vector3.Scale(tr.localScale, scale);
+            
+            return tr;
+        }
         
     }
 }

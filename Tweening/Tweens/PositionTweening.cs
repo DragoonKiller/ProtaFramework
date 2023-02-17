@@ -110,6 +110,14 @@ namespace Prota.Tween
             return ref m;
         }
         
+        public static ref TweenComposedMove SetLoop(ref this TweenComposedMove m, bool loop)
+        {
+            m.x.SetLoop(loop);
+            m.y.SetLoop(loop);
+            m.z.SetLoop(loop);
+            return ref m;
+        }
+        
         // ============================================================================================================
         // ============================================================================================================
         

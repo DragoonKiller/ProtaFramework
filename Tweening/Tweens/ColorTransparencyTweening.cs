@@ -69,7 +69,7 @@ namespace Prota.Tween
             res.color = res.color.WithA(h.Evaluate(r));
         }
         
-        public static TweenComposedColor TweenMove(this SpriteRenderer g, Color to, float time, bool includeTransparency)
+        public static TweenComposedColor TweenColor(this SpriteRenderer g, Color to, float time, bool includeTransparency)
             => new TweenComposedColor(
                 TweenColorR(g, to.r, time),
                 TweenColorG(g, to.g, time),
@@ -146,7 +146,7 @@ namespace Prota.Tween
             res.color = res.color.WithA(h.Evaluate(r));
         }
         
-        public static TweenComposedColor TweenMove(this Material g, Color to, float time, bool includeTransparency)
+        public static TweenComposedColor TweenColor(this Material g, Color to, float time, bool includeTransparency)
             => new TweenComposedColor(
                 TweenColorR(g, to.r, time),
                 TweenColorG(g, to.g, time),
@@ -226,7 +226,7 @@ namespace Prota.Tween
             foreach(var mat in mats) mat.color = mat.color.WithA(h.Evaluate(r));
         }
         
-        public static TweenComposedColor TweenMove(this MeshRenderer g, Color to, float time, bool includeTransparency)
+        public static TweenComposedColor TweenColor(this MeshRenderer g, Color to, float time, bool includeTransparency)
             => new TweenComposedColor(
                 TweenColorR(g, to.r, time),
                 TweenColorG(g, to.g, time),
@@ -302,7 +302,7 @@ namespace Prota.Tween
             res.color = res.color.WithA(h.Evaluate(r));
         }
         
-        public static TweenComposedColor TweenMove(this Image g, Color to, float time, bool includeTransparency)
+        public static TweenComposedColor TweenColor(this Image g, Color to, float time, bool includeTransparency)
             => new TweenComposedColor(
                 TweenColorR(g, to.r, time),
                 TweenColorG(g, to.g, time),
@@ -378,7 +378,7 @@ namespace Prota.Tween
             res.color = res.color.WithA(h.Evaluate(r));
         }
         
-        public static TweenComposedColor TweenMove(this RawImage g, Color to, float time, bool includeTransparency)
+        public static TweenComposedColor TweenColor(this RawImage g, Color to, float time, bool includeTransparency)
             => new TweenComposedColor(
                 TweenColorR(g, to.r, time),
                 TweenColorG(g, to.g, time),
@@ -463,6 +463,15 @@ namespace Prota.Tween
             m.g.SetGuard(guard);
             m.b.SetGuard(guard);
             if(!m.a.isNone) m.a.SetGuard(guard);
+            return ref m;
+        }
+        
+        public static ref TweenComposedColor SetLoop(ref this TweenComposedColor m, bool loop)
+        {
+            m.r.SetLoop(loop);
+            m.g.SetLoop(loop);
+            m.b.SetLoop(loop);
+            if(!m.a.isNone) m.a.SetLoop(loop);
             return ref m;
         }
         

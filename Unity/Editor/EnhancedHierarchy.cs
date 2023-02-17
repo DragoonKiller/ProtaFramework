@@ -58,6 +58,8 @@ namespace Prota.Editor
         
         static Texture2D barTexture = null;
         
+        const int maxIconCount = 10;
+        
         static void OnHierarchyGUI(int instanceId, Rect area)
         {
             if(barTexture == null) barTexture = Resources.Load<Texture2D>("ProtaFramework/line_vertical_16_2");
@@ -67,6 +69,7 @@ namespace Prota.Editor
             var target = EditorUtility.InstanceIDToObject(instanceId);
             
             var rightMargin = area.xMax - 40;
+            var space = area.height - 4;                // 每个图标向左偏移多少像素.
             
             if(target is GameObject g)
             {
@@ -74,7 +77,7 @@ namespace Prota.Editor
                 
                 // SetActive 部分.
                 var active = EditorGUI.Toggle(new Rect(rightMargin, area.yMax - area.height, 16, 16), g.activeSelf);
-                rightMargin -= area.height;
+                rightMargin -= space + 2;
                 if(active != g.activeSelf)
                 {
                     Undo.RecordObject(g, "Activation");
@@ -88,9 +91,14 @@ namespace Prota.Editor
                 comps.Reverse();
                 
                 // Component 图标部分.
+                int n = 0;
                 foreach(var c in comps)
                 {
                     if(c == null) continue; // 脚本丢失时, Component 为 null.
+                    
+                    n++;
+                    if(n > maxIconCount) break;
+                    
                     var ctype = c.GetType();
                     if(ctype == typeof(UnityEngine.Transform)) continue;
                     
@@ -103,7 +111,7 @@ namespace Prota.Editor
                     }
                     
                     GUI.Label(new Rect(rightMargin, area.yMax - area.height, 16, 16), content);
-                    rightMargin -= area.height;
+                    rightMargin -= space;
                 }
                 
                 // Canvas 标记部分. 如果一个物体被挂在 canvas 下方则有一个蓝色竖线标记.

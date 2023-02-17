@@ -5,6 +5,7 @@ using UnityEngine.Pool;
 using Prota.Unity;
 namespace Prota.Tween
 {
+    // 一个访问 ArrayLinkedList 中 TweenData 元素的外部接口.
     public struct TweenHandle
     {
         internal readonly ArrayLinkedListKey key;
@@ -89,6 +90,18 @@ namespace Prota.Tween
             set => data[key].timeTo = value;
         }
         
+        public bool loop
+        {
+            get => data[key].loop;
+            set => data[key].loop = value;
+        }
+        
+        public bool started
+        {
+            get => data[key].started;
+            private set => data[key].started = value;
+        }
+        
         public bool realtime
         {
             get => data[key].realtime;
@@ -99,6 +112,14 @@ namespace Prota.Tween
         {
             get => data[key].guard;
             set => data[key].guard = value;
+        }
+        
+        public float duration => timeTo - timeFrom;
+        
+        public TweenHandle Clear()
+        {
+            data[key] = default;
+            return this;
         }
         
         // from 和 to 互换.
@@ -120,7 +141,6 @@ namespace Prota.Tween
         
         public float EvaluateRatio(float ratio) => data[key].EvaluateRatio(ratio);
         
-        // 
         public float Evaluate(float ratio) => data[key].Evaluate(ratio);
         
         public float GetTimeLerp() => data[key].GetTimeLerp();
@@ -132,11 +152,22 @@ namespace Prota.Tween
             return this;
         }
         
+        // 使用先前的持续时间配置.
+        public TweenHandle Restart()
+        {
+            Debug.Assert(this.started, "Tween need to start before calling restart.");
+            var d = duration;
+            this.timeFrom = realtime ? Time.realtimeSinceStartup : Time.time;
+            this.timeTo = this.timeFrom + d;
+            return this;
+        }
+        
         public TweenHandle Start(float duration, bool realtime = false)
         {
             this.realtime = realtime;
             this.timeFrom = realtime ? Time.realtimeSinceStartup : Time.time;
             this.timeTo = this.timeFrom + duration;
+            this.started = true;
             return this;
         } 
         
@@ -161,6 +192,11 @@ namespace Prota.Tween
             return this;
         }
         
+        public TweenHandle SetLoop(bool loop)
+        {
+            this.loop = loop;
+            return this;
+        }
         
         public static TweenHandle none => new TweenHandle(new ArrayLinkedListKey(-1, -1, null), null);
         public bool isNone => key.id == -1;

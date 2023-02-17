@@ -1,7 +1,9 @@
 using System;
 using UnityEngine;
 
-namespace Prota.Unity
+using Unity.Netcode;
+
+namespace Prota.Network
 {
     public static partial class UnityMethodExtensions
     {

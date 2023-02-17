@@ -8,6 +8,8 @@ namespace Prota.Tween
     
     public class ProtaTweenManager : Singleton<ProtaTweenManager>
     {
+        public readonly static ValueTweeningUpdate doNothingValueTweening = (h, t) => { };
+        
         public readonly ArrayLinkedList<TweenData> data = new ArrayLinkedList<TweenData>();
         
         public readonly Dictionary<UnityEngine.Object, BindingList> targetMap = new Dictionary<UnityEngine.Object, BindingList>(); 
@@ -23,7 +25,7 @@ namespace Prota.Tween
             foreach(var key in data.EnumerateKey())
             {
                 ref var v = ref data[key];
-                v.update(v.handle, v.GetTimeLerp());
+                v.update(new TweenHandle(key, data), v.GetTimeLerp());
             }
         }
         
@@ -39,25 +41,33 @@ namespace Prota.Tween
             foreach(var key in toBeRemoved)
             {
                 ref var v = ref data[key];
-                if(v.isTimeout && v.valid)          // valid but timeout, set to final position.
+                var handle = new TweenHandle(key, data);
+                
+                // 如果是 tween 自己运行到终点, 更新到最后位置.
+                if(v.isTimeout && v.valid)
                 {
-                    v.update(v.handle, 1);
-                    v.onFinish?.Invoke(v.handle);
+                    v.update(handle, 1);
+                    v.onFinish?.Invoke(handle);
                 }
-                else        // to be removed but not timeout, so it's invalid.
+                else    // tween 被其它事物终止, 调用另一个回调函数.
                 {
-                    // Debug.Assert(!v.isTimeout); // removed and timeout, any behaviour could be accepted.
-                                                   // let's make it interuppted though.
                     Debug.Assert(v.invalid);
-                    v.onInterrupted?.Invoke(v.handle);
+                    v.onInterrupted?.Invoke(handle);
                 }
                 
-                v.onRemove?.Invoke(v.handle);
-            }
-            
-            foreach(var key in toBeRemoved)
-            {
-                ActualDelete(key);
+                if(v.loop) handle.Restart();
+                
+                // v.onFinish 或 v.onInterrupted 或 loop 可能会重新调整 tween 的起止时间, 这样就不认为它到时间了.
+                // 这里需要重新检查一次.
+                if(v.invalid || v.isTimeout)
+                {
+                    bool invalid = v.invalid, timeout = v.isTimeout;
+                    v.onRemove?.Invoke(handle);
+                    // onRemove 的时候不允许再改变 tween 的状态.
+                    Debug.Assert(v.invalid == invalid && v.isTimeout == timeout);
+                    
+                    ActualDelete(key);
+                }
             }
             
             toBeRemoved.Clear();
@@ -87,11 +97,12 @@ namespace Prota.Tween
             Debug.Assert(target != null);
             
             var key = data.Take();
-            ref var v = ref data[key];
-            v.target = target;
-            v.tid = tid;
-            v.update = onUpdate;
-            v.SetHandle(new TweenHandle(key, data));
+            var handle = new TweenHandle(key, data);
+            handle.Clear();     // 清理原有 tweening 数据.
+            
+            handle.target = target;
+            handle.tid = tid;
+            handle.update = onUpdate;
             
             targetMap.TryGetValue(target, out var bindingList);
             if(bindingList == null)
@@ -100,13 +111,11 @@ namespace Prota.Tween
                 targetMap.Add(target, bindingList);
             }
             
-            var newHandle = new TweenHandle(key, data);
-            
             // 给上一个 tween 对象打上删除标记, 并覆盖 bindingList 中的词条.
             var prev = bindingList[tid];
             TagRemoved(prev);
-            bindingList[tid] = newHandle;
-            return newHandle;
+            bindingList[tid] = handle;
+            return handle;
         }
         
         public bool TagRemoved(TweenHandle v)
@@ -139,6 +148,17 @@ namespace Prota.Tween
         public static TweenHandle NewTween(this UnityEngine.Object g, TweenId tid, ValueTweeningUpdate onUpdate)
         {
             return ProtaTweenManager.instance.New(tid, g, onUpdate);
+        }
+        
+        public static TweenHandle TakeupTween(this UnityEngine.Object g, TweenId id)
+        {
+            return ProtaTweenManager.instance.New(id, g, ProtaTweenManager.doNothingValueTweening);
+        }
+        
+        public static void TakeupTween(this UnityEngine.Object g, TweenId id, params TweenId[] xid)
+        {
+            g.TakeupTween(id);
+            foreach(var i in xid) g.TakeupTween(i);
         }
     }
     

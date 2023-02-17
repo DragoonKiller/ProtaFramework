@@ -120,6 +120,14 @@ namespace Prota.Tween
             return ref m;
         }
         
+        public static ref TweenComposedScale SetLoop(ref this TweenComposedScale m, bool loop)
+        {
+            m.x.SetLoop(loop);
+            m.y.SetLoop(loop);
+            m.z.SetLoop(loop);
+            return ref m;
+        }
+        
         // ============================================================================================================
         // ============================================================================================================
         

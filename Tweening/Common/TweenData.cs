@@ -23,14 +23,17 @@ namespace Prota.Tween
         public TweenEase ease;
         public float timeFrom;
         public float timeTo;
+        public bool loop;
+        public bool started;
         public bool realtime;
         public LifeSpan guard;
         
-        public bool isTimeout => timeTo < (realtime ? Time.realtimeSinceStartup : Time.time);
-        public bool invalid => target == null || (guard != null && !guard.alive) || update == null; // 已考虑 target 被 destroy 但是引用还在.
-        public bool valid => !invalid;
+        public bool isTimeout => started && (timeTo < (realtime ? Time.realtimeSinceStartup : Time.time));
         
-        public TweenHandle handle { get; private set; }
+        // 已考虑 target 被 destroy 但是引用还在.
+        public bool invalid => started && (target == null || (guard != null && !guard.alive) || update == null);
+        
+        public bool valid => !invalid;
         
         // Sample ratio on ease/curve.
         public float EvaluateRatio(float ratio)
@@ -48,12 +51,6 @@ namespace Prota.Tween
         public float GetTimeLerp()
         {
             return (timeFrom, timeTo).InvLerp(realtime ? Time.realtimeSinceStartup : Time.time);
-        }
-        
-        // a handle cache.
-        internal void SetHandle(TweenHandle handle)
-        {
-            this.handle = handle;
         }
         
     }
