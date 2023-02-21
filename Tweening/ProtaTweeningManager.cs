@@ -121,7 +121,7 @@ namespace Prota.Tween
         public bool TagRemoved(TweenHandle v)
         {
             if(v.isNone) return false;
-            if(!data.Valid(v.key)) return false;
+            if(!data.ValidateKey(v.key)) return false;
             v.update = null;   // 只打标记.
             return true;
         }

@@ -48,7 +48,7 @@ namespace Prota.Unity
                 default:
                 case BoxCollider2D box:
                 {
-                    var n = Physics2D.BoxCastNonAlloc(c.bounds.center, c.bounds.size, c.transform.rotation.z, move, rayCastBuffer, move.magnitude);
+                    var n = Physics2D.BoxCast(c.bounds.center, c.bounds.size, c.transform.rotation.z, move, new ContactFilter2D(), rayCastBuffer, move.magnitude);
                     
                     #if UNITY_EDITOR
                     var color = Color.yellow;
@@ -66,14 +66,14 @@ namespace Prota.Unity
                 
                 case CircleCollider2D circ:
                 {
-                    var n = Physics2D.CircleCastNonAlloc(circ.bounds.center, circ.radius, move, rayCastBuffer, move.magnitude);
+                    var n = Physics2D.CircleCast(circ.bounds.center, circ.radius, move, new ContactFilter2D(), rayCastBuffer, move.magnitude);
                     move = ClosetCollide(n, c, move);
                 }
                 break;
                 
                 case CapsuleCollider2D cap:
                 {
-                    var n = Physics2D.CapsuleCastNonAlloc(cap.bounds.center, cap.size, cap.direction, c.transform.rotation.z, move, rayCastBuffer, move.magnitude);
+                    var n = Physics2D.CapsuleCast(cap.bounds.center, cap.size, cap.direction, c.transform.rotation.z, move, new ContactFilter2D(), rayCastBuffer, move.magnitude);
                     move = ClosetCollide(n, c, move);
                 }
                 break;

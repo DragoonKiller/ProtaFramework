@@ -18,6 +18,12 @@ namespace Prota
             this.version = version;
             this.list = list;
         }
+        
+        public static ArrayLinkedListKey none => new ArrayLinkedListKey(0, 0, null);
+        
+        public bool isNone => list == null;
+        
+        public bool valid => list != null && list.ValidateKey(this);
 
         public bool Equals(ArrayLinkedListKey other) => this == other;
         
@@ -43,7 +49,7 @@ namespace Prota
     
     public interface IArrayLinkedList
     {
-        bool Valid(ArrayLinkedListKey key);
+        bool ValidateKey(ArrayLinkedListKey key);
     }
     
     // 链表, 但是以数组的形式存储.
@@ -204,8 +210,9 @@ namespace Prota
         }
 
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-
-        public bool Valid(ArrayLinkedListKey key)
+        
+        // 检查给定的 key 是不是这个列表的 key, 是不是当前有效的 key.
+        public bool ValidateKey(ArrayLinkedListKey key)
         {
             if(key.list != this) return false;
             if(key.id >= capacity) return false;

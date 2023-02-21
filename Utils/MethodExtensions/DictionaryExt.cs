@@ -14,7 +14,10 @@ namespace Prota
             return d;
         }
         
-        // dictionary K => H pairing with K => G providing H.
+        // 集合映射.
+        // 同步目标是一个提供 IEnumerator<KeyValuePair<K, V>> 和 TryGetValue(K, out V) 的字典类结构(不必是字典).
+        // 同步者是 IDictionary<K, G> target.
+        // 同步时需要提供 V => G 的对映逻辑.
         public static F SetSync<K, G, V, F>(
             this F target,
             GetKVEnumerableFunc<K, V> getEnumerable,
@@ -55,6 +58,21 @@ namespace Prota
             }
             
             return target;
+        }
+        
+        // 集合映射.
+        // 同步目标是一个字典 IDictionary<K, V> dict.
+        // 同步者是 IDictionary<K, G> target.
+        // 同步时需要提供 V => G 的对映逻辑.
+        public static F SetSync<K, V, G, F>(
+            this F target,
+            IDictionary<K, V> dict,
+            Func<K, V, G> newFunc,
+            Action<K, V, G> updateFunc,
+            Action<K, G> removeFunc
+        ) where F: IDictionary<K, G>
+        {
+            return target.SetSync(() => dict, dict.TryGetValue, newFunc, updateFunc, removeFunc);
         }
         
         public static Dictionary<K, V> Clone<K, V>(this Dictionary<K, V> x)

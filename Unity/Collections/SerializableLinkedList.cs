@@ -25,7 +25,7 @@ namespace Prota
     
     public interface ISerializableLinkedList { }
     
-    // Unity serialization supported veersion of ArrayLinkedList.
+    // Unity serialization supported version of ArrayLinkedList.
     [Serializable]
     public class SerializableLinkedList<T> : ISerializableLinkedList, IEnumerable<T>, IReadOnlyCollection<T>, IEnumerable
     {

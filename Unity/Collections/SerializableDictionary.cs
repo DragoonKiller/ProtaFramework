@@ -1,7 +1,6 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-
 using System.Collections;
 
 namespace Prota
@@ -99,12 +98,14 @@ namespace Prota
             }
         }
         
-        // 只是一个可复用节点集合, 我们不使用里面的链表结构.
+        // 一个可复用节点集合, 我们不使用里面的链表结构.
         // 有效节点个数(count)就是 hashmap 元素个数.
         [SerializeField] SerializableLinkedList<Entry> _entries = new SerializableLinkedList<Entry>();
-        public SerializableLinkedList<Entry> entries { get => _entries; }
-        // 链表头元素的节点的下标.
+        
+        // 拉链法哈希表, 这些是链表表头, 一个表头就是一个桶(bucket).
         public List<SerializableLinkedListKey?> heads = new List<SerializableLinkedListKey?>().Fill(baseCapacity);
+        
+        public SerializableLinkedList<Entry> entries => _entries;
         int modnum => heads.Count;
         public ICollection<TKey> Keys => new KeysCollection(this);
         public ICollection<TValue> Values => new ValuesCollection(this);

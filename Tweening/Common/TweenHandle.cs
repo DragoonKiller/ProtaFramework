@@ -123,7 +123,7 @@ namespace Prota.Tween
         }
         
         // from 和 to 互换.
-        public TweenHandle DoReverse()
+        public TweenHandle SetReverse()
         {
             var a = from;
             from = to;
@@ -198,9 +198,10 @@ namespace Prota.Tween
             return this;
         }
         
-        public static TweenHandle none => new TweenHandle(new ArrayLinkedListKey(-1, -1, null), null);
-        public bool isNone => key.id == -1;
-
+        public static TweenHandle none => new TweenHandle(ArrayLinkedListKey.none, null);
+        
+        public bool isNone => data == null;
+        
         public override string ToString() => $"handle[{ key.ToString() }]";
     }
     

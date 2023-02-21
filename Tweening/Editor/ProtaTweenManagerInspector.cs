@@ -46,12 +46,13 @@ namespace Prota.Editor
                     x = new VisualElement()
                         .AddChild(new VisualElement()
                             .SetHorizontalLayout()
-                            .AddChild(new Label() { name = "id" }.SetWidth(200))
-                            .AddChild(new Label() { name = "tid" })
                             .AddChild(new Button(() => {
                                     x.Q("detail").SetVisible(detailVisible = !detailVisible);
                                 }) { text = "+" }
                             )
+                            .AddChild(new ObjectField("") { name = "target" })
+                            .AddChild(new Label() { name = "id" })
+                            .AddChild(new Label() { name = "tid" })
                         )
                         .AddChild(new VisualElement() { name = "detail" }
                             .SetVisible(false)
@@ -69,7 +70,6 @@ namespace Prota.Editor
                                 .AddChild(new TextField() { name = "timeFrom" }.SetWidth(200))
                                 .AddChild(new TextField() { name = "timeTo" }.SetWidth(200))
                             )
-                            .AddChild(new ObjectField("Target") { name = "target" })
                             // .AddChild(new ObjectField("Guard") { name = "guard" })
                             .AddChild(new CurveField("Curve") { name = "curve" }.SetGrow())
                         )
@@ -84,6 +84,7 @@ namespace Prota.Editor
                     if(!data.valid) return;
                     element.Q<Label>("id").text = key.ToString();
                     element.Q<Label>("tid").text = data.tid.ToString();
+                    element.Q<ObjectField>("target").value = data.target;
                     if(element.Q("detail").visible)
                     {
                         element.Q<TextField>("curRatio").value = data.EvaluateRatio(data.GetTimeLerp()).ToString();
@@ -94,7 +95,6 @@ namespace Prota.Editor
                         element.Q<TextField>("timeFrom").value = data.timeFrom.ToString();
                         element.Q<TextField>("timeTo").value = data.timeTo.ToString();
                         element.Q<CurveField>("curve").value = data.curve;
-                        element.Q<ObjectField>("target").value = data.target;
                         // element.Q<ObjectField>("guard").value = data.guard;
                         element.Q<Toggle>("valid").value = data.valid;
                     }

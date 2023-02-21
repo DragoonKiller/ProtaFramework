@@ -89,6 +89,7 @@ namespace Prota
             return l;
         }
         
+        // 数量映射.
         public static F SetLength<T, F>(this F l, int n, Func<int, T> onCreate, Action<int, T> onEnable, Action<int, T> onDisable)
             where F: List<T>
         {
@@ -106,8 +107,8 @@ namespace Prota
             return l;
         }
         
-        // map K => T with i.
-        public static F SetEnumList< F, G, T, K>(this F l, G data, Func<int, K, T> onCreate, Action<int, T, K> onEnable, Action<int, T> onDisable)
+        // 列表映射. 同步目标是 IEnumerable<K> data, 同步者是 List<T> l.
+        public static F SetEnumList<F, G, T, K>(this F l, G data, Func<int, K, T> onCreate, Action<int, T, K> onEnable, Action<int, T> onDisable)
             where F: List<T>
             where G: IEnumerable<K>
         {
