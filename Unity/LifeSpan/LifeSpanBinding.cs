@@ -10,7 +10,7 @@ namespace Prota.Unity
     }
     
     
-    public static class LifeSpanExt
+    public static partial class LifeSpanExt
     {
         public static LifeSpanBinding LifeSpanBinding(this GameObject x) => x.GetOrCreate<LifeSpanBinding>();
         public static LifeSpanBinding LifeSpanBinding(this Component x) => x.GetOrCreate<LifeSpanBinding>();

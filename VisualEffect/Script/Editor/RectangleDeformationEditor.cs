@@ -43,10 +43,11 @@ namespace Prota.Editor
             if(sz.size.ToVec2().Area() <= 1e6f) return;
             
             EditorGUI.BeginChangeCheck();
-            t.coordBottomLeft = PosHandle(1, t, t.coordBottomLeft, sz, sz.min);
-            t.coordBottomRight = PosHandle(2, t, t.coordBottomRight, sz, sz.min);
-            t.coordTopLeft = PosHandle(3, t, t.coordTopLeft, sz, sz.min);
-            t.coordTopRight = PosHandle(4, t, t.coordTopRight, sz, sz.min);
+            // TODO: 编辑器的API在2023和2021不一样, 得先给它干掉.
+            // t.coordBottomLeft = PosHandle(1, t, t.coordBottomLeft, sz, sz.min);
+            // t.coordBottomRight = PosHandle(2, t, t.coordBottomRight, sz, sz.min);
+            // t.coordTopLeft = PosHandle(3, t, t.coordTopLeft, sz, sz.min);
+            // t.coordTopRight = PosHandle(4, t, t.coordTopRight, sz, sz.min);
             if(EditorGUI.EndChangeCheck())
             {
                 EditorUtility.SetDirty(target);
@@ -58,22 +59,22 @@ namespace Prota.Editor
             
         }
 
-        Vector2 PosHandle(int id, RectangleDeformation t, Vector2 curHandle, Bounds b, Vector2 localOffset)
-        {
-            var p = curHandle * b.size + localOffset;
-            
-            using(var handleContext = HandleContext.Get())
-            {
-                Handles.color = new Color(.2f, 1f, .2f, 1);
-                var size = HandleUtility.GetHandleSize(p) * 0.05f;
-                var snap = Vector3.one * 0.5f;
-                var fmh_70_57_638113646406473393 = Quaternion.identity; var res = Handles.FreeMoveHandle(id, p, size, snap, (controlID, position, rotation, size, eventType) => {
-                    Handles.DotHandleCap(controlID, position, rotation, size, eventType);
-                });
-                res -= (Vector3)(localOffset);
-                res = res.Divide(b.size);
-                return res;
-            }
-        }
+        // Vector2 PosHandle(int id, RectangleDeformation t, Vector2 curHandle, Bounds b, Vector2 localOffset)
+        // {
+        //     var p = curHandle * b.size + localOffset;
+        //     
+        //     using(var handleContext = HandleContext.Get())
+        //     {
+        //         Handles.color = new Color(.2f, 1f, .2f, 1);
+        //         var size = HandleUtility.GetHandleSize(p) * 0.05f;
+        //         var snap = Vector3.one * 0.5f;
+        //         var res = Handles.FreeMoveHandle(id, p, size, snap, (controlID, position, rotation, size, eventType) => {
+        //             Handles.DotHandleCap(controlID, position, rotation, size, eventType);
+        //         });
+        //         res -= (Vector3)(localOffset);
+        //         res = res.Divide(b.size);
+        //         return res;
+        //     }
+        // }
     }
 }

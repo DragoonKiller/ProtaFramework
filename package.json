@@ -9,9 +9,8 @@
     
     "com.unity.shadergraph": "12.1.7",
     "com.unity.visualeffectgraph": "12.1.7",
-    "com.unity.render-pipelines.universal": "15.0.1",
+    "com.unity.render-pipelines.universal": "12.1.0",
     
-    "com.unity.multiplayer.playmode": "0.1.0",
     "com.unity.netcode.gameobjects": "1.1.0",
     
     "com.unity.2d.sprite": "1.0.0",

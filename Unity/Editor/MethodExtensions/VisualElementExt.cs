@@ -107,8 +107,9 @@ namespace Prota.Editor
         
         public static T SetNoInteraction<T>(this T x) where T: VisualElement
         {
-            x.focusable = false;
-            x.pickingMode = PickingMode.Ignore;
+            // x.focusable = false;
+            // x.pickingMode = PickingMode.Ignore;
+            x.SetEnabled(false);
             return x;
         }
         

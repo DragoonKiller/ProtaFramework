@@ -13,13 +13,13 @@ namespace Prota.Animation
         
         [Header("state")]
         
-        public float currentTime;
+        [Readonly(whenPlaying = false)] public float currentTime;
         
         public float speedMultiply = 1;
         
         public SpriteRenderer sprite => this.GetComponent<SpriteRenderer>();
         
-        public bool _mirror = false;
+        [SerializeField] bool _mirror = false;
         public bool mirror
         {
             get => _mirror;

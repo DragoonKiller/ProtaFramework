@@ -83,11 +83,6 @@ namespace Prota.Unity
         
         public static Quaternion ToQuaternion(this Vector4 q) => new Quaternion(q.x, q.y, q.z, q.w); 
         
-        public static Vector2 Len(this Vector2 v, float len) => v.normalized * len;
-        public static Vector3 Len(this Vector3 v, float len) => v.normalized * len;
-        public static Vector4 Len(this Vector4 v, float len) => v.normalized * len;
-        
-        
         public static Vector2 Lerp(this (Vector2 from, Vector2 to) p, float x) => p.from + (p.to - p.from) * x;
         public static Vector3 Lerp(this (Vector3 from, Vector3 to) p, float x) => p.from + (p.to - p.from) * x;
         public static Vector4 Lerp(this (Vector4 from, Vector4 to) p, float x) => p.from + (p.to - p.from) * x;

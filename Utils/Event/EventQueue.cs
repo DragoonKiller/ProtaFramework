@@ -14,23 +14,27 @@ namespace Prota
     internal abstract class CallbackSlotBase
     {
         internal readonly static Dictionary<Type, CallbackSlotBase> instances = new Dictionary<Type, CallbackSlotBase>();
-        public abstract void Register(object x);
+        public abstract bool Register(object x);
         public abstract void Call(object x);
         public abstract void Remove(object x);
         public abstract void Clear();
     }
     
-    internal class CallbackSlot<T> : CallbackSlotBase
+    internal sealed class CallbackSlot<T> : CallbackSlotBase
     {
-        internal static Type type => typeof(T);   // 用来确保这个类初始化了.
+        // 可以调用一下以确保这个类初始化了.
+        internal static Type type => typeof(T);
         
-        public readonly static CallbackSlot<T> instance = new CallbackSlot<T>();
+        public static CallbackSlot<T> instance;
         
         public readonly HashSet<Action<T>> actions = new HashSet<Action<T>>();
         
-        CallbackSlot()
+        public CallbackSlot()
         {
-            Console.WriteLine();
+            // 我们使用 Activator 凭空创建一个对象.
+            // 把自己的全局实例注册进 CallbackSlot 列表里.
+            (instance == null).Assert();
+            instance = this;
             CallbackSlotBase.instances.Add(typeof(T), this);
         }
         
@@ -40,9 +44,10 @@ namespace Prota
             foreach(var i in actions) i.Invoke(v);
         }
 
-        public override void Register(object x)
+        // 如果已经在集合里, 返回 false.
+        public override bool Register(object x)
         {
-            actions.Add((Action<T>)x);
+            return actions.Add((Action<T>)x);
         }
 
         public override void Clear()
@@ -100,25 +105,35 @@ namespace Prota
         
         internal readonly Queue<EventOperation> queue = new Queue<EventOperation>();
         
-        public void AddCallback<T>(Action<T> a) where T: IEvent
+        void EnsureCallbackSlotExists(Type type)
         {
+            if(CallbackSlotBase.instances.TryGetValue(type, out _)) return;
+            Type a = typeof(CallbackSlot<>);
+            Type closedType = a.MakeGenericType(type);
+            object instance = Activator.CreateInstance(closedType);
+            CallbackSlotBase.instances.TryGetValue(type, out _).Assert();
+        }
+        
+        public void AddCallback<T>(Action<T> val) where T: IEvent
+        {
+            EnsureCallbackSlotExists(typeof(T));
             var opData = new EventOperation() {
                 id = ++id,
                 op = EventOperationType.Register,
-                targetType = CallbackSlot<T>.type,
-                callback = a,
+                targetType = typeof(T),
+                callback = val,
             };
             Log("add", opData);
             Execute(opData);
         }
-        
-        public void RemoveCallback<T>(Action<T> a) where T: IEvent
+        public void RemoveCallback<T>(Action<T> val) where T: IEvent
         {
+            EnsureCallbackSlotExists(typeof(T));
             var opData = new EventOperation() {
                 id = ++id,
                 op = EventOperationType.Remove,
-                targetType = CallbackSlot<T>.type,
-                callback = a,
+                targetType = typeof(T),
+                callback = val,
             };
             Log("remove", opData);
             Execute(opData);
@@ -126,10 +141,11 @@ namespace Prota
         
         public void ClearCallback<T>() where T: IEvent
         {
+            EnsureCallbackSlotExists(typeof(T));
             var opData = new EventOperation() {
                 id = ++id,
                 op = EventOperationType.RemoveAll,
-                targetType = CallbackSlot<T>.type,
+                targetType = typeof(T),
             };
             Log("clear", opData);
             Execute(opData);
@@ -145,12 +161,19 @@ namespace Prota
             Execute(opData);
         }
         
-        public void Notify<T>(T val = default) where T: IEvent
+        /// <summary>
+        /// useInstanceType = true: 使用 val 的实际对象类型作为回调的类型.
+        /// useInstanceType = false: 使用类型 T 作为回调的类型.
+        /// </summary>
+        public void Notify<T>(T val = default, bool useInstanceType = true) where T: IEvent
         {
+            var t = useInstanceType ? val.GetType() : typeof(T);
+            EnsureCallbackSlotExists(t);
+            
             var opData = new EventOperation() {
                 id = ++id,
                 op = EventOperationType.Notify,
-                targetType = CallbackSlot<T>.type,
+                targetType = t,
                 arg = val,
             };
             Log("notify", opData);
@@ -181,6 +204,9 @@ namespace Prota
         internal void ExecuteStep(EventOperation x)
         {
             Log("exec", x);
+            
+            EnsureCallbackSlotExists(x.targetType);
+            
             switch(x.op)
             {
                 case EventOperationType.Notify:
@@ -215,6 +241,16 @@ namespace Prota
         }
     }
     
+    
+    
+    public static class EventQueueExt
+    {
+        public static IEvent Notify(this IEvent e, bool useInstanceType = true)
+        {
+            EventQueue.instance.Notify(e, useInstanceType);
+            return e;
+        }
+    }
     
     
 }

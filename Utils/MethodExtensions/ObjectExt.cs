@@ -10,5 +10,15 @@ namespace Prota
             x = value;
             return res;
         }
-    } 
+        
+        public static T PassValue<T>(this T x, out T value)
+        {
+            return value = x;
+        }
+        
+        public static object CreateInstanceOfNonInitializedType(this Type x, params object[] args)
+        {
+            return Activator.CreateInstance(x, args);
+        }
+    }
 }

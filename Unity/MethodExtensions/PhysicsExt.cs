@@ -41,7 +41,7 @@ namespace Prota.Unity
             if(velocity.sqrMagnitude < 1e-8f) return Vector2.zero;
             
             var move = velocity * deltaTime;
-            move = move.Len(move.magnitude);
+            move = move.WithLength(move.magnitude);
             
             switch(c)
             {
@@ -79,7 +79,7 @@ namespace Prota.Unity
                 break;
             }
             
-            move = move.Len(move.magnitude);
+            move = move.WithLength(move.magnitude);
             return move;
         }
 
@@ -105,7 +105,7 @@ namespace Prota.Unity
                 // 法线和移动方向相同, 不属于碰撞.
                 if(Vector2.Dot(rayCastBuffer[i].normal, move) >= 0) continue;
                 
-                return move.Len(rayCastBuffer[i].distance);
+                return move.WithLength(rayCastBuffer[i].distance);
             }
             
             // 啥都没碰到.

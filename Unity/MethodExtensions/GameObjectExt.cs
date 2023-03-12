@@ -54,5 +54,7 @@ namespace Prota.Unity
             g.transform.SetParent(x, worldPositionStays);
             return g;
         }
+        
+        public static RectTransform RectTransform(this GameObject g) => g.transform as RectTransform;
     }
 }

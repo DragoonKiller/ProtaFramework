@@ -7,6 +7,12 @@ namespace Prota.Editor
 {
     public static partial class UnityMethodExtensions
     {
+        public static SerializedProperty FindPropertyofCSProperty(this SerializedObject s, string name)
+        {
+            return s.FindProperty($"<{ name }>k__BackingField");
+        }
+        
+        
         static Color recordColor;
         public static void SetColor(this EditorWindow w, Color c)
         {
