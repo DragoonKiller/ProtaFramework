@@ -16,16 +16,21 @@ namespace Prota.Animation
         
         
         // in frames
-        public int frameCount;
+        public int frameCount = 1;
         
         public float fps = 60;
         
-        public bool loop;
+        public bool loop = false;
         
         public float duration => frameCount / fps;
         
         [NonSerialized]
         public List<Sprite> anchorResources = new List<Sprite>();
+        
+        void OnValidate()
+        {
+            (frameCount != 0).Assert();
+        }
         
         public void Clear()
         {
@@ -75,6 +80,8 @@ namespace Prota.Animation
                 prevSprite = sprite;
             }
             anchors.Add(GetAnchor(anchorResources.Last()));
+            
+            frameCount = sprites.Count;
         }
         
         Vector2 GetAnchor(Sprite sprite)

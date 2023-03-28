@@ -3,7 +3,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using System;
 
-namespace Prota.Animation
+namespace Prota.Editor
 {
     public class AnimTextureImporter : AssetPostprocessor
     {

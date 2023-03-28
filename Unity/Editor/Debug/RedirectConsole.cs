@@ -6,9 +6,9 @@ namespace Prota.Editor
 {
     public static class RedirectConsoleOutput
     {
-    
         public class DebugLogWriter : System.IO.TextWriter
         {
+            [HideInCallstack]
             public override void Write(string value)
             {
                 base.Write(value);
@@ -28,6 +28,7 @@ namespace Prota.Editor
     
         public class DebugLogErrorWriter : System.IO.TextWriter
         {
+            [HideInCallstack]
             public override void Write(string value)
             {
                 base.Write(value);

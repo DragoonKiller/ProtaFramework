@@ -9,7 +9,7 @@ using System;
 
 namespace Prota.Unity
 {
-    public class UIScrollviewVertical : MonoBehaviour
+    public abstract class UIScrollviewVertical : MonoBehaviour
     {
         [field: SerializeField] public GameObject cellTemplate { get; protected set; }
         
@@ -17,19 +17,50 @@ namespace Prota.Unity
         
         [Readonly] public List<GameObject> cells = new List<GameObject>();
         
-        protected Func<int, GameObject> newCell;
+        Func<int, GameObject> internalNewCell;
+        
+        Action<int, GameObject> internalUpdateCell;
+        
+        Action<int, GameObject> internalDisableCell;
         
         protected Action<int, GameObject> updateCell;
         
         protected Action<int, GameObject> disableCell;
         
-        public virtual int n { get; }
+        public abstract int n { get; }
         
         public int maxCellPerLine
             => (this.RectTransform().rect.size.x / cellTemplate.RectTransform().rect.size.x).FloorToInt();
         
+        protected virtual void OnValidate()
+        {
+            scroll ??= this.GetComponentInChildren<ScrollRect>();
+            scroll.AssertNotNull();
+            
+            if(cellTemplate != null)
+            {
+                var p = cellTemplate.RectTransform().pivot;
+                (p.x == 0.5f).Assert("格子 Pivot 必须在正中间");
+                (p.y == 0.5f).Assert("格子 Pivot 必须在正中间");
+            }
+        }
+        
         protected virtual void Awake()
         {
+            internalNewCell = i => cellTemplate.Clone(scroll.content);
+            
+            internalUpdateCell = (i, cell) => {
+                updateCell?.Invoke(i, cell);
+                cell.RectTransform().anchoredPosition = PositionOfCell(i);
+                cell.SetActive(true);
+                
+            };
+            
+            internalDisableCell = (i, cell) => {
+                cell.SetActive(false);
+                disableCell?.Invoke(i, cell);
+            };
+            
             scroll.AssertNotNull();
             cellTemplate.AssertNotNull();
             var cellPivot = cellTemplate.RectTransform().pivot;
@@ -41,7 +72,7 @@ namespace Prota.Unity
         
         public virtual void Update()
         {
-            cells.SetLength(n, newCell, updateCell, disableCell);
+            cells.SetLength(n, internalNewCell, internalUpdateCell, internalDisableCell);
             scroll.content.RectTransform().sizeDelta = ContentSize();
         }
         
@@ -64,10 +95,10 @@ namespace Prota.Unity
         
         protected virtual Vector2 ContentSize()
         {
-            int n = cells.Count;
-            var coord = GridOfCell(n);
-            var lineCount = coord.line + (n == 0 ? 0 : 1);
-            var columnCount = maxCellPerLine.Min(n);
+            int cellsN = cells.Count;
+            var coord = GridOfCell(cellsN);
+            var lineCount = coord.line + (cellsN == 0 ? 0 : 1);
+            var columnCount = maxCellPerLine.Min(cellsN);
             var x = columnCount * cellTemplate.RectTransform().rect.size.x;
             var y = lineCount * cellTemplate.RectTransform().rect.size.y;
             return new Vector2(x, y);

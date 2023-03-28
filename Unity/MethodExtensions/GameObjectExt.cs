@@ -24,9 +24,21 @@ namespace Prota.Unity
         
         public static string GetNamePath(this GameObject g) => g.transform.GetNamePath();
         
+        public static void ActiveDestroy(this GameObject g)
+        {
+            // 主动销毁的时候, 发送 OnActiveDestroy 事件.
+            // 避免 gameObject 被 Unity 自动销毁的时候创建额外的对象.
+            g.BroadcastMessage("OnActiveDestroy", null, SendMessageOptions.DontRequireReceiver);
+            GameObject.Destroy(g);
+        }
         
-        public static void Destroy(this GameObject g) => GameObject.Destroy(g);
-        
+        public static void ActiveDestroy(this GameObject g, object args)
+        {
+            // 主动销毁的时候, 发送 OnActiveDestroy 事件.
+            // 避免 gameObject 被 Unity 自动销毁的时候创建额外的对象.
+            g.BroadcastMessage("OnActiveDestroy", args, SendMessageOptions.DontRequireReceiver);
+            GameObject.Destroy(g);
+        }
         
         public static GameObject SetIdentity(this GameObject g)
         {
@@ -45,7 +57,16 @@ namespace Prota.Unity
         
         public static GameObject Clone(this GameObject g, Transform parent = null)
         {
-            return GameObject.Instantiate(g, parent == null ? g.transform : parent, false);
+            // 父级: 优先参数 parent, 其次是 g 的 parent, 其次是 null.
+            return GameObject.Instantiate(g, parent ?? (g.scene == null ? null : g.transform.parent) ?? null, false);
+        }
+        
+        public static GameObject CloneAsTemplate(this GameObject g, Transform parent = null)
+        {
+            g.SetActive(false);
+            var x = g.Clone(parent);
+            x.SetActive(true);
+            return x;
         }
         
         

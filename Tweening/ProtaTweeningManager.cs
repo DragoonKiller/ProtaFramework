@@ -5,6 +5,10 @@ using UnityEngine.Pool;
 using Prota.Unity;
 namespace Prota.Tween
 {
+    // h: Tween handle with all tweening information
+    // t: current ratio, [0, 1]
+    public delegate void ValueTweeningUpdate(TweenHandle h, float t);
+    
     
     public class ProtaTweenManager : Singleton<ProtaTweenManager>
     {
@@ -48,6 +52,7 @@ namespace Prota.Tween
                 {
                     v.update(handle, 1);
                     v.onFinish?.Invoke(handle);
+                    if(v.reverseOnLoopFinish) handle.SetReverse();
                 }
                 else    // tween 被其它事物终止, 调用另一个回调函数.
                 {
@@ -112,8 +117,7 @@ namespace Prota.Tween
             }
             
             // 给上一个 tween 对象打上删除标记, 并覆盖 bindingList 中的词条.
-            var prev = bindingList[tid];
-            TagRemoved(prev);
+            if(bindingList.bindings.TryGetValue(tid, out var prev)) TagRemoved(prev);
             bindingList[tid] = handle;
             return handle;
         }
@@ -132,12 +136,10 @@ namespace Prota.Tween
             return TagRemoved(list[tid]);
         }
         
-        public bool RemoveAll(UnityEngine.Object target)
+        public void RemoveAll(UnityEngine.Object target)
         {
-            if(!targetMap.TryGetValue(target, out var list)) return false;
-            var res = false;
-            foreach(var i in list.bindings) res |= TagRemoved(i.Value);
-            return res;
+            if(!targetMap.TryGetValue(target, out var list)) return;
+            foreach(var i in list.bindings) TagRemoved(i.Value);
         }
     }
     
@@ -159,6 +161,16 @@ namespace Prota.Tween
         {
             g.TakeupTween(id);
             foreach(var i in xid) g.TakeupTween(i);
+        }
+        
+        public static void ClearTween(this UnityEngine.Object g, TweenId id)
+        {
+            ProtaTweenManager.instance.Remove(g, id);
+        }
+        
+        public static void ClearAllTween(this UnityEngine.Object g)
+        {
+            ProtaTweenManager.instance.RemoveAll(g);
         }
     }
     

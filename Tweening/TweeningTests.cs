@@ -26,11 +26,11 @@ namespace Prota.Tween
         {
             yield return new WaitForSeconds(1);
             var tt = a.transform.TweenMoveX(-4, 1);
-            tt.SetEase(TweenEase.cubeOut);
-            tt.onFinish = t => {
+            tt.SetEase(TweenEase.cubicOut);
+            tt.onFinish += t => {
                 Debug.Log("finish!!!");
             };
-            tt.onRemove = t => {
+            tt.onRemove += t => {
                 Debug.Log("remove 2 !!!");
             };
             

@@ -16,9 +16,14 @@ namespace Prota.Unity
         
         public static int NextPowerOfTwo(this int x) => Mathf.NextPowerOfTwo(x);
         
+        public static bool IsZero(this Vector2 a) => a == Vector2.zero;
+        public static bool IsZero(this Vector3 a) => a == Vector3.zero;
+        public static bool IsZero(this Vector4 a) => a == Vector4.zero;
+        
         public static Vector2 To(this Vector2 a, Vector2 b) => b - a;
         public static Vector3 To(this Vector3 a, Vector3 b) => b - a;
         public static Vector4 To(this Vector4 a, Vector4 b) => b - a;
+        
         
         public static Vector2 WithX(this Vector2 a, float x) => new Vector2(x, a.y);
         public static Vector2 WithY(this Vector2 a, float y) => new Vector2(a.x, y);
@@ -53,9 +58,17 @@ namespace Prota.Unity
         public static Vector3 WithLength(this Vector3 a, float len) => a.normalized * len;
         public static Vector2 WithLength(this Vector2 a, float len) => a.normalized * len;
         
+        public static Vector2 WithMaxLength(this Vector2 a, float maxLen) => a.normalized * a.magnitude.Min(maxLen);
+        public static Vector3 WithMaxLength(this Vector3 a, float maxLen) => a.normalized * a.magnitude.Min(maxLen);
+        
         public static Vector2 AddLength(this Vector2 a, float addLen) => a.WithLength(a.magnitude + addLen);
         public static Vector3 AddLength(this Vector3 a, float addLen) => a.WithLength(a.magnitude + addLen);
         
+        public static Vector2 Move(this Vector2 a, Vector2 move, float? maxLength = null)
+            => (a + move.WithMaxLength(maxLength ?? float.PositiveInfinity));
+        public static Vector3 Move(this Vector3 a, Vector3 move, float? maxLength = null)
+            => (a + move.WithMaxLength(maxLength ?? float.PositiveInfinity));
+            
         public static float Angle(this Vector2 a, Vector2 b) => Vector2.SignedAngle(a, b);
         
         public static float Dot(this Vector2 a, Vector2 b) => Vector2.Dot(a, b);
@@ -65,6 +78,11 @@ namespace Prota.Unity
         public static float Cross(this Vector2 a, Vector2 b) => Vector3.Cross((Vector3)a, (Vector3)b).z;
         public static Vector3 Cross(this Vector3 a, Vector3 b) => Vector3.Cross(a, b);
         
+        public static Color Add(this Color a, Color b) => new Color(a.r + b.r, a.g + b.g, a.b + b.b, a.a + b.a);
+        
+        public static Color Sub(this Color p, Color q) => new Color(p.r - q.r, p.g - q.g, p.b - q.b, p.a - q.a);
+        
+        public static Color WithRGB(this Color c, Color r) => new Color(r.r, r.g, r.b, c.a);
         
         public static Color WithR(this Color c, float r) => new Color(r, c.g, c.b, c.a);
         public static Color WithG(this Color c, float g) => new Color(c.r, g, c.b, c.a);

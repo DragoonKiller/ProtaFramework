@@ -6,7 +6,7 @@ using System.IO;
 
 namespace Prota.Editor
 {
-    public static class Screenshot
+    public static partial class ProtaEditorCommands
     {
         [MenuItem("ProtaFramework/Tools/Capture Screen")]
         public static void CaptureScreenAndSave()

@@ -38,42 +38,6 @@ namespace Prota.Unity
         
         public static RectTransform RectTransform(this Component x) => x.transform as RectTransform;
         
-        // ============================================================================================================
-        // ============================================================================================================
-        
-        
-        
-        public static MaterialHandler MaterialHandler(this Component s)
-            => s.GetOrCreate<MaterialHandler>();
-        
-        public static Component MakeMaterialUnique(this Component s)
-        {
-            var handler = s.MaterialHandler();
-            Debug.Assert(handler);
-            return s;
-        }
-        
-        public static Material GetMaterialInstance(this Component s)
-        {
-            var handler = s.MaterialHandler();
-            Debug.Assert(handler);
-            return handler.rd.material;
-        }
-        
-        public static Material[] GetMaterialInstances(this Component s)
-        {
-            var handler = s.MaterialHandler();
-            Debug.Assert(handler);
-            return handler.rd.materials;
-        }
-        
-        public static void SetMaterial(this Component s, Material material, int index = 0)
-        {
-            var handler = s.MaterialHandler();
-            Debug.Assert(handler);
-            handler.rd.SetMaterial(material, index);
-        }
-        
         
         // ============================================================================================================
         // ============================================================================================================

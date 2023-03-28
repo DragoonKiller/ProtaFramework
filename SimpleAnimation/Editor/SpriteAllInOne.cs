@@ -1,14 +1,15 @@
 using UnityEngine;
 using UnityEditor;
-using Prota.Editor;
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Prota.Animation
+using Prota.Animation;
+
+namespace Prota.Editor
 {
     // 删除导出的动画序列中的重复图片.
-    public static partial class Animation2DEditor
+    public static partial class ProtaEditorCommands
     {
         [MenuItem("Assets/ProtaFramework/动画/刷新资源 %6", priority = 1000)]
         static void ProcessSprites()

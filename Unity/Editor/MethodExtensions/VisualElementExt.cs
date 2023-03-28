@@ -265,6 +265,7 @@ namespace Prota.Editor
             return x;
         }
         
+        
         public static ListView Setup<T>(this ListView x, List<T> list, Func<VisualElement> makeItem, Action<VisualElement, int> bindItem)
         {
             x.itemsSource = list;
@@ -275,7 +276,7 @@ namespace Prota.Editor
             return x;
         }
         
-        public static T SetChildList<G, T>(this T l, int n, Func<int, G> onCreate, Action<int, G> onDisable, Action<int, G> onUpdate) where T: VisualElement where G:VisualElement
+        public static T SetChildList<G, T>(this T l, int n, Func<int, G> onCreate, Action<int, G> onUpdate, Action<int, G> onDisable) where T: VisualElement where G:VisualElement
         {
             for(int i = 0; i < n; i++)
             {

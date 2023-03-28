@@ -97,6 +97,16 @@ namespace Prota
         public static float InvLerp(this (float a, float b) v, float x) => (x - v.a) / (v.b - v.a);
         public static double InvLerp(this (double a, double b) v, double x) => (x - v.a) / (v.b - v.a);
         
+        // 梯形插值. trapzoid interpolation.
+        public static float Terp(this float x, float start, float fullStart, float fullEnd, float end)
+        {
+            if (x < start) return 0;
+            if (x > end) return 0;
+            if(x < fullStart) return x.XMap(start, fullStart, 0, 1);
+            if(x > fullEnd) return x.XMap(fullEnd, end, 1, 0);
+            return 1;
+        }
+        
         public static bool IsPowerOfTwo(this int x) => unchecked(x & (x - 1)) == 0;
         public static bool IsPowerOfTwo(this long x) => unchecked(x & (x - 1)) == 0;
         public static bool IsPowerOfTwo(this uint x) => unchecked(x & (x - 1)) == 0;

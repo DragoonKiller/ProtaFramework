@@ -28,7 +28,7 @@ namespace Prota.Unity
         {
             if(alive)
             {
-                callbacks = callbacks ?? new List<Action>();
+                callbacks ??= new List<Action>();
                 callbacks.Add(onKilled);
                 return;
             }

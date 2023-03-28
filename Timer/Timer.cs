@@ -16,6 +16,7 @@ namespace Prota.Timer
         public bool repeat;
         public float duration;
         public readonly LifeSpan guard;
+        
         public bool isAlive => guard == null || guard.alive;
         public string name => mname ?? key.id.ToString();
         
@@ -26,6 +27,7 @@ namespace Prota.Timer
             this.duration = duration;
             this.repeat = repeat;
             this.callback = callback;
+            this.guard = guard;
         }
         
         internal bool NextRepeat()
@@ -60,9 +62,41 @@ namespace Prota.Timer
             if(realtime) return realtimeTimer.New(time, repeat, guard, callback);
             return normalTimer.New(time, repeat, guard, callback);
         }
+        
+        /// <summary>
+        /// 创建一个新的计时器, 会自动加入计时器管理器.
+        /// </summary>
+        /// <param name="time"></param>
+        /// <param name="repeat"></param>
+        /// <param name="guard"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
         public static Timer New(float time, bool repeat, LifeSpan guard, Action callback) => New(time, repeat, false, guard, callback);
+        
+        /// <summary>
+        /// 创建一个新的计时器, 会自动加入计时器管理器.
+        /// </summary>
+        /// <param name="time"></param>
+        /// <param name="guard"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
         public static Timer New(float time, LifeSpan guard, Action callback) => New(time, false, false, guard, callback);
+        
+        /// <summary>
+        /// 创建一个新的计时器, 会自动加入计时器管理器.
+        /// </summary>
+        /// <param name="time"></param>
+        /// <param name="repeat"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
         public static Timer New(float time, bool repeat, Action callback) => New(time, repeat, false, null, callback);
+        
+        /// <summary>
+        /// 创建一个新的计时器, 会自动加入计时器管理器.
+        /// </summary>
+        /// <param name="time"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
         public static Timer New(float time, Action callback) => New(time, false, false, null, callback);
         
         public static Timer New(string name, float time, bool repeat, bool realtime, LifeSpan guard, Action callback)

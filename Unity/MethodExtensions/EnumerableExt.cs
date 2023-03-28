@@ -12,6 +12,13 @@ namespace Prota.Unity
 {
     public static partial class UnityMethodExtensions
     {
+        public static void ActiveDestroyAll(this IEnumerable<UnityEngine.GameObject> list)
+        {
+            if(list == null) return;
+            foreach(var g in list) if(g != null) g.ActiveDestroy();
+        }
+        
+    
         public static void DestroyAll<T>(this IEnumerable<T> list) where T : UnityEngine.Object
         {
             if(list == null) return;

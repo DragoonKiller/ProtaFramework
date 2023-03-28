@@ -5,10 +5,6 @@ using UnityEngine.Pool;
 using Prota.Unity;
 namespace Prota.Tween
 {
-    // h: Tween handle with all tweening information
-    // t: current ratio, [0, 1]
-    public delegate void ValueTweeningUpdate(TweenHandle h, float t);
-    
     
     // TweenId 用来分辨互斥的 tweening.
     // 例如当前对象有一个[从A移动到B]的 tween 正在执行.

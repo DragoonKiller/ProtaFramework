@@ -7,6 +7,56 @@ namespace Prota
 {
     public static partial class MethodExtensions
     {
+        public struct ListElementReference<T>
+        {
+            public ListElementReference(IList<T> list, int index)
+            {
+                this.list = list;
+                this.index = index;
+            }
+
+            public readonly IList<T> list;
+            public readonly int index;
+            
+            public bool exist => index >= 0 && index < list.Count;
+            
+            public T value
+            {
+                get => list[index];
+                set => list[index] = value;
+            }
+            
+            public void Remove() => list.RemoveAt(index);
+            
+        }
+        
+        public static ListElementReference<T> ElementReference<T>(this IList<T> list, int index)
+            => new ListElementReference<T>(list, index);
+        
+        // w * h array, with lines first and column second.
+        // point (a, b) will point to a * w + b.
+        public struct ListView2D<T>
+        {
+            public readonly IList<T> list;
+            public readonly int w, h;
+
+            public ListView2D(IList<T> list, int w, int h)
+            {
+                this.list = list;
+                this.w = w;
+                this.h = h;
+            }
+
+            public T this[int l, int c]
+            {
+                get => list[l * h + c];
+                set => list[l * h + c] = value;
+            }
+        }
+        
+        public static ListView2D<T> View2D<T>(this IList<T> list, int w, int h)
+            => new ListView2D<T>(list, w, h);
+        
         public static bool IsNullOrEmpty<T>(this List<T> list) => list == null || list.Count == 0;
         
         public static List<T> Resize<T>(this List<T> list, int n)

@@ -2,18 +2,28 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+using Prota.Unity;
+using Prota.Timer;
+
 namespace Prota.Animation
 {
     [ExecuteAlways]
     [RequireComponent(typeof(SpriteRenderer))]
     public class SimpleAnimation : MonoBehaviour
     {
-        [SerializeField]
-        SimpleAnimationAsset asset;
+        [field: SerializeField] public SimpleAnimationAsset asset { get; private set; }
         
         [Header("state")]
         
-        [Readonly(whenPlaying = false)] public float currentTime;
+        [Range(0, 1)] public float currentRate = 0;
+        
+        public float currentTime => currentRate * (asset != null ? asset.duration * currentRate : 0);
+        
+        public bool autoUpdate = true;
+        
+        public bool playOnStart = false;
+        
+        public float playOnStartDelay = 0;
         
         public float speedMultiply = 1;
         
@@ -35,19 +45,36 @@ namespace Prota.Animation
         
         public float duration => asset?.duration ?? 0;
         
+        void Start()
+        {
+            if(!playOnStart) return;
+            if(asset == null) return;
+            if(playOnStartDelay <= 0) Play(asset, true);
+            else
+            {
+                this.gameObject.SetActive(false);
+                this.NewTimer(playOnStartDelay, () => {
+                    this.gameObject.SetActive(true);
+                    this.Play(asset, true);
+                });
+            }
+        }
+        
         void Update()
         {
-            if(!Application.isPlaying) return;
+            if(asset == null)
+            {
+                sprite.sprite = null;
+                this.name = "Animation:None";
+                return;
+            }
             
             this.name = $"Animation:{ asset?.name }";
             
-            if(asset.frames.Count == 0) return;
-            
-            currentTime += Time.deltaTime * speedMultiply;
-            if(currentTime >= asset.frameCount / asset.fps)
+            if(autoUpdate)
             {
-                if(asset.loop) currentTime -= asset.frameCount / asset.fps;
-                else currentTime = asset.frameCount / asset.fps;
+                if(Application.isPlaying) currentRate += Time.deltaTime * speedMultiply / asset.duration;
+                currentRate = currentRate.Mod(1f);
             }
             
             Refresh();
@@ -56,7 +83,7 @@ namespace Prota.Animation
         public SimpleAnimation Refresh()
         {
             var curFrameNum = Mathf.FloorToInt(currentTime * asset.fps);
-            curFrameNum = Mathf.Min(curFrameNum, asset.frames.Count - 1);
+            curFrameNum = curFrameNum.Clamp(0, asset.frames.Count - 1);
             var frame = asset.frames[curFrameNum];
             sprite.sprite = frame;
             
@@ -88,14 +115,10 @@ namespace Prota.Animation
         
         public SimpleAnimation SetTime(float time)
         {
-            this.currentTime = time;
+            this.currentRate = time / asset.duration;
             Refresh();
             return this;
         }
-        
-        
-        
-        
         
     }
 }

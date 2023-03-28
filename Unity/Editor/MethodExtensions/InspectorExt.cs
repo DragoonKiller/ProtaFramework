@@ -2,12 +2,23 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using Prota.Unity;
+using System;
 
 namespace Prota.Editor
 {
     public static partial class UnityMethodExtensions
     {
-        public static SerializedProperty FindPropertyofCSProperty(this SerializedObject s, string name)
+        public static Type GetActualFieldPropertyType(this PropertyDrawer self, SerializedProperty s)
+        {
+            if(self.fieldInfo.FieldType.IsConstructedGenericType)
+            {
+                return self.fieldInfo.FieldType.GetGenericArguments()[0];
+            }
+            return self.fieldInfo.FieldType;
+        }
+        
+        
+        public static SerializedProperty FindPropertyOfCSProperty(this SerializedObject s, string name)
         {
             return s.FindProperty($"<{ name }>k__BackingField");
         }

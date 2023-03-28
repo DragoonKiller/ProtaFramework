@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Prota.Editor
 {
-    public static class HierarchyOperations
+    public static partial class ProtaEditorCommands
     {
         [MenuItem("GameObject/Prota Framework/Hierarchy Operations/Set Local Position to 0 _u", false, 10)]
         public static void SetLocalPositionToZero()

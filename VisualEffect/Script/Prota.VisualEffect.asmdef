@@ -1,9 +1,10 @@
 {
-	"name": "Prota.VisualEffect",
+    "name": "Prota.VisualEffect",
     "rootNamespace": "Prota.VisualEffect",
     "references": [
         "Prota.Utils",
-		"Prota.Unity"
+        "Prota.Unity",
+        "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

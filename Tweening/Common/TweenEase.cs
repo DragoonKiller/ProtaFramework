@@ -3,16 +3,82 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 using Prota.Unity;
+using System.Reflection;
+using System.Text;
+
 namespace Prota.Tween
 {
+    public enum TweenEaseEnum
+    {
+        Linear,
+        SinIn,
+        SinOut,
+        SinInOut,
+        QuadIn,
+        QuadOut,
+        QuadInOut,
+        CubicIn,
+        CubicOut,
+        CubicInOut,
+        QuartIn,
+        QuartOut,
+        QuartInOut,
+        QuintIn,
+        QuintOut,
+        QuintInOut,
+        ExpoIn,
+        ExpoOut,
+        ExpoInOut,
+        CircIn,
+        CircOut,
+        CircInOut,
+        BackIn,
+        BackOut,
+        BackInOut,
+        ElasticIn,
+        ElasticOut,
+        ElasticInOut,
+        BounceIn,
+        BounceOut,
+        BounceInOut,
+    }
     
+    [Serializable]
     public struct TweenEase
     {
+        
         readonly Func<float, float> f;
         public bool valid => f != null;
         public TweenEase(Func<float, float> f) => this.f = f;
         public static implicit operator TweenEase(Func<float, float> f) => new TweenEase(f);
         public static implicit operator Func<float, float>(TweenEase f) => f.f;
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        
+        static Dictionary<TweenEaseEnum, TweenEase> builtinEases = new Dictionary<TweenEaseEnum, TweenEase>();
+        static TweenEase()
+        {
+            var bindingFlags = BindingFlags.Static | BindingFlags.Public;
+            var fields = typeof(TweenEase).GetFields(bindingFlags);
+            foreach (var f in fields) {
+                if (f.FieldType != typeof(TweenEase)) continue;
+                var name = f.Name.Substring(0, 1).ToUpper() + f.Name.Substring(1);
+                var value = (TweenEase)f.GetValue(null);
+                builtinEases.Add((TweenEaseEnum)Enum.Parse(typeof(TweenEaseEnum), name), value);
+            }
+        }
+        
+        public static TweenEase GetFromEnum(TweenEaseEnum easeEnum)
+        {
+            return builtinEases[easeEnum];
+        }
+        
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
         
         public float Evaluate(float x)
         {
@@ -29,6 +95,10 @@ namespace Prota.Tween
             return new TweenEase(x => f(Mathf.Ceil(x * stepCount)));
         }
         
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        
         public static readonly TweenEase linear = new TweenEase(x => x);
         public static readonly TweenEase sinIn = new TweenEase(x => 1 - Mathf.Cos(x * Mathf.PI / 2));
         public static readonly TweenEase sinOut = new TweenEase(x => (x * Mathf.PI / 2).Sin());
@@ -36,9 +106,9 @@ namespace Prota.Tween
         public static readonly TweenEase quadIn = new TweenEase(x => x * x);
         public static readonly TweenEase quadOut = new TweenEase(x => 1 - (1 - x) * (1 - x));
         public static readonly TweenEase quadInOut = new TweenEase(x => x < 0.5f ? 2 * x * x : 1 - (-2 * x + 2).Sqr() / 2);
-        public static readonly TweenEase cubeIn = new TweenEase(x => x * x * x);
-        public static readonly TweenEase cubeOut = new TweenEase(x => 1 - (1 - x).Cube());
-        public static readonly TweenEase cubeInOut = new TweenEase(x => x < 0.5f ? 4 * x * x * x : 1 - (-2 * x + 2).Cube() / 2);
+        public static readonly TweenEase cubicIn = new TweenEase(x => x * x * x);
+        public static readonly TweenEase cubicOut = new TweenEase(x => 1 - (1 - x).Cube());
+        public static readonly TweenEase cubicInOut = new TweenEase(x => x < 0.5f ? 4 * x * x * x : 1 - (-2 * x + 2).Cube() / 2);
         public static readonly TweenEase quartIn = new TweenEase(x => x.Sqr().Sqr());
         public static readonly TweenEase quartOut = new TweenEase(x => 1 - (1 - x).Sqr().Sqr());
         public static readonly TweenEase quartInOut = new TweenEase(x => x < 0.5f ? 8 * x * x * x * x : 1 - (-2 * x + 2).Sqr().Sqr() / 2);

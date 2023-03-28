@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 using Prota.Unity;
@@ -96,6 +95,12 @@ namespace Prota.Tween
             set => data[key].loop = value;
         }
         
+        public bool reverseOnLoopFinish
+        {
+            get => data[key].reverseOnLoopFinish;
+            set => data[key].reverseOnLoopFinish = value;
+        }
+        
         public bool started
         {
             get => data[key].started;
@@ -116,11 +121,28 @@ namespace Prota.Tween
         
         public float duration => timeTo - timeFrom;
         
+        public bool isTimeout => timeTo < (realtime ? Time.realtimeSinceStartup : Time.time);
+        
+        // ====================================================================================================
+        // 
+        // ====================================================================================================
+        
+        internal TweenHandle(ArrayLinkedListKey handle, ArrayLinkedList<TweenData> data)
+        {
+            this.key = handle;
+            this.data = data;
+        }
+        
         public TweenHandle Clear()
         {
             data[key] = default;
             return this;
         }
+        
+        // ====================================================================================================
+        // Set 系列函数
+        // ====================================================================================================
+        
         
         // from 和 to 互换.
         public TweenHandle SetReverse()
@@ -131,19 +153,64 @@ namespace Prota.Tween
             return this;
         }
         
-        internal TweenHandle(ArrayLinkedListKey handle, ArrayLinkedList<TweenData> data)
+        
+        public TweenHandle SetEase(AnimationCurve curve = null)
         {
-            this.key = handle;
-            this.data = data;
+            this.curve = curve;
+            this.ease = TweenEase.linear;
+            return this;
         }
         
-        public bool isTimeout => timeTo < (realtime ? Time.realtimeSinceStartup : Time.time);
+        public TweenHandle SetEase(TweenEase? ease = null)
+        {
+            if(ease == null) ease = TweenEase.linear;
+            this.curve = null;
+            this.ease = ease.Value;
+            return this;
+        }
+        public TweenHandle SetEase(TweenEaseEnum ease)
+        {
+            this.curve = null;
+            this.ease = TweenEase.GetFromEnum(ease);
+            return this;
+        }
         
-        public float EvaluateRatio(float ratio) => data[key].EvaluateRatio(ratio);
+        public TweenHandle SetGuard(LifeSpan x)
+        {
+            this.guard = x;
+            return this;
+        }
         
-        public float Evaluate(float ratio) => data[key].Evaluate(ratio);
+        public TweenHandle SetLoop(bool loop, bool reverseOnLoopFinish = false)
+        {
+            this.loop = loop;
+            this.reverseOnLoopFinish = reverseOnLoopFinish;
+            return this;
+        }
         
-        public float GetTimeLerp() => data[key].GetTimeLerp();
+        public TweenHandle SetCustomData(object customData)
+        {
+            this.customData = customData;
+            return this;
+        }
+        
+        public TweenHandle OnFinish(Action<TweenHandle> onFinish)
+        {
+            this.onFinish += onFinish;
+            return this;
+        }
+        
+        public TweenHandle OnInterrupted(Action<TweenHandle> onInterrupted)
+        {
+            this.onInterrupted += onInterrupted;
+            return this;
+        }
+        
+        public TweenHandle OnRemove(Action<TweenHandle> onRemove)
+        {
+            this.onRemove += onRemove;
+            return this;
+        }
         
         public TweenHandle SetFromTo(float? from, float? to)
         {
@@ -151,6 +218,27 @@ namespace Prota.Tween
             if(to.HasValue) this.to = to.Value;
             return this;
         }
+        
+        public TweenHandle SetCurrentRatio(float ratio)
+        {
+            var d = duration;
+            var startTime = duration * ratio;
+            var endTime = duration * (1 - ratio);
+            this.timeFrom = realtime ? Time.realtimeSinceStartup - startTime : Time.time - startTime;
+            this.timeTo = realtime ? Time.realtimeSinceStartup + endTime : Time.time + endTime;
+            return this;
+        }
+        
+        // ====================================================================================================
+        // 通用函数.
+        // ====================================================================================================
+        
+        public float EvaluateRatio(float ratio) => data[key].EvaluateRatio(ratio);
+        
+        public float Evaluate(float ratio) => data[key].Evaluate(ratio);
+        
+        public float GetTimeLerp() => data[key].GetTimeLerp();
+        
         
         // 使用先前的持续时间配置.
         public TweenHandle Restart()
@@ -171,30 +259,9 @@ namespace Prota.Tween
             return this;
         } 
         
-        public TweenHandle SetCurve(AnimationCurve curve = null)
+        public TweenHandle Kill()
         {
-            this.curve = curve;
-            this.ease = TweenEase.linear;
-            return this;
-        }
-        
-        public TweenHandle SetEase(TweenEase? ease = null)
-        {
-            if(ease == null) ease = TweenEase.linear;
-            this.curve = null;
-            this.ease = ease.Value;
-            return this;
-        }
-        
-        public TweenHandle SetGuard(LifeSpan x)
-        {
-            this.guard = x;
-            return this;
-        }
-        
-        public TweenHandle SetLoop(bool loop)
-        {
-            this.loop = loop;
+            ProtaTweenManager.instance.TagRemoved(this);
             return this;
         }
         
@@ -203,24 +270,5 @@ namespace Prota.Tween
         public bool isNone => data == null;
         
         public override string ToString() => $"handle[{ key.ToString() }]";
-    }
-    
-    
-    public class BindingList
-    {
-        public int count;
-        public Dictionary<TweenId, TweenHandle> bindings = new Dictionary<TweenId, TweenHandle>();
-        public TweenHandle this[TweenId tid]
-        {
-            get => tid.isNone ? TweenHandle.none : bindings[tid];
-            set
-            {
-                if(tid.isNone) return;      // no recording if no id.
-                var original = this[tid];
-                if(original.isNone && !value.isNone) count++;
-                if(!original.isNone && value.isNone) count--;
-                bindings[tid] = value;
-            }
-        }
     }
 }

@@ -20,5 +20,13 @@ namespace Prota
         {
             return Activator.CreateInstance(x, args);
         }
+        
+        public static int? NullableCompare(this object a, object b)
+        {
+            if(a == null && b == null) return 0;
+            if(a != null) return 1;
+            if(b != null) return -1;
+            return null;
+        }
     }
 }

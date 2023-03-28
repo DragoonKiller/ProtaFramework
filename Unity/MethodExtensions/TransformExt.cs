@@ -1,11 +1,47 @@
 using System;
 using UnityEngine;
-
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Prota.Unity
 {
+    public struct TransformAsList<T> : IReadOnlyList<T>
+        where T : Component
+    {
+        Transform transform;
+        
+        public TransformAsList(Transform transform)
+        {
+            this.transform = transform;
+        }
+        
+        public T this[int index] => transform.GetChild(index).GetComponent<T>(); 
+        
+        public int Count => transform.childCount;
+        
+        public int IndexOf(T t)
+        {
+            for(int i = 0; i < Count; i++) if(t == this[i]) return i;
+            return -1;
+        }
+        
+        public IEnumerator<T> GetEnumerator()
+        {
+            for(int i = 0; i < Count; i++) yield return this[i];
+        }
+        
+        IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+    }
+    
+    public static partial class UnityMethodExtensions
+    {
+        public static TransformAsList<T> AsList<T>(this Transform t) where T: Component
+            => new TransformAsList<T>(t);
+    }
+    
+    
+    
     public static partial class UnityMethodExtensions
     {
         public static void ForeachChild(this Transform t, Action<Transform> f)
@@ -73,7 +109,7 @@ namespace Prota.Unity
         
         public static Transform ClearSub(this Transform x)
         {
-            for(int i = x.childCount - 1; i >= 0; i--) GameObject.Destroy(x.GetChild(i).gameObject);
+            for(int i = x.childCount - 1; i >= 0; i--) x.GetChild(i).gameObject.ActiveDestroy();
             return x;
         }
         
