@@ -74,7 +74,7 @@ namespace Prota.Animation
             if(autoUpdate)
             {
                 if(Application.isPlaying) currentRate += Time.deltaTime * speedMultiply / asset.duration;
-                currentRate = currentRate.Mod(1f);
+                currentRate = currentRate.Repeat(1f);
             }
             
             Refresh();

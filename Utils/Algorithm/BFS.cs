@@ -9,18 +9,20 @@ using System.Threading;
 
 namespace Prota
 {
-    public static class Algorithm
+    public static partial class Algorithm
     {
         // T: node type.
-        public class  BFS<T>
+        public class BFS<T>
         {
-            public Action<List<T>> SetInitialNodes;
+            Action<List<T>> SetInitialNodes;
             
-            public Action<T, List<T>> GetNextNodes;
+            Action<T, List<T>> GetNextNodes;
             
-            public Action<T> OnNodeAdd;
+            // 节点添加到队列时触发.
+            event Action<T> onNodeAdd;
             
-            public Action<T> OnNodeExtend;
+            // 节点从队列中取出时触发.
+            event Action<T> onNodeExtend;
             
             public bool started { get; private set; }
             
@@ -43,7 +45,23 @@ namespace Prota
             
             public BFS()
             {
-                this.valid = true;
+                valid = true;
+            }
+            
+            public BFS<T> Init(Action<List<T>> setInitialNodes, Action<T, List<T>> getNextNodes)
+            {
+                SetInitialNodes = setInitialNodes;
+                GetNextNodes = getNextNodes;
+                return this;
+            }
+            
+            public BFS<T> Init(Action<List<T>> setInitialNodes, Action<T, List<T>> getNextNodes, Action<T> onNodeAdd, Action<T> onNodeExtend)
+            {
+                SetInitialNodes = setInitialNodes;
+                GetNextNodes = getNextNodes;
+                this.onNodeAdd = onNodeAdd;
+                this.onNodeExtend = onNodeExtend;
+                return this;
             }
             
             public void Reset()
@@ -90,7 +108,7 @@ namespace Prota
                 var cur = queue[head];
                 head++;
                 
-                OnNodeExtend?.Invoke(cur);
+                onNodeExtend?.Invoke(cur);
                 
                 next.Clear();
                 GetNextNodes(cur, next);
@@ -98,7 +116,7 @@ namespace Prota
                 {
                     queue.Add(node);
                     reached.Add(node);
-                    OnNodeAdd?.Invoke(node);
+                    onNodeAdd?.Invoke(node);
                 }
                 
                 return false;

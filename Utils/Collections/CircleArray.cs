@@ -43,7 +43,7 @@ namespace Prota
         public int FrontMovePrev()
         {
             if(isFull) throw new Exception("list is full!");
-            front = (front - 1).ModSys(max);
+            front = (front - 1).Repeat(max);
             count++;
             return front;
         }
@@ -51,7 +51,7 @@ namespace Prota
         public int BackMovePrev()
         {
             if(isEmpty) throw new Exception("list is empty!");
-            back = (back - 1).ModSys(max);
+            back = (back - 1).Repeat(max);
             count--;
             return back;
         }
@@ -59,7 +59,7 @@ namespace Prota
         public int FrontMoveNext()
         {
             if(isEmpty) throw new Exception("list is empty!");
-            front = (front + 1).ModSys(max);
+            front = (front + 1).Repeat(max);
             count--;
             return front;
         }
@@ -67,14 +67,14 @@ namespace Prota
         public int BackMoveNext()
         {
             if(isFull) throw new Exception("list is full!");
-            back = (back + 1).ModSys(max);
+            back = (back + 1).Repeat(max);
             count++;
             return back;
         }
         
         public int Position(int i)
         {
-            return i.ModSys(max);
+            return i.Repeat(max);
         }
         
         

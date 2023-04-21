@@ -45,22 +45,32 @@ namespace Prota
         public static float Ceil(this float x) => (float)Math.Ceiling(x);
         public static float Round(this float x) => (float)Math.Round(x);
         
-        public static int Mod(this int x, int y) => x - x / y * y;
-        public static long Mod(this long x, long y) => x - x / y * y;
-        public static float Mod(this float x, float y) => x - (x / y).Floor() * y;
-        public static double Mod(this double x, double y) => x - Math.Floor(x / y) * y;
-        
-        public static int ModSys(this int x, int y) => x % y < 0 ? x % y + Math.Abs(y) : x % y;
-        public static long ModSys(this long x, long y) => x % y < 0 ? x % y + Math.Abs(y) : x % y;
-        
-        public static float Div(this float x, float y)
+        public static int Repeat(this int x, int y)
         {
-            return (x - x.Mod(y)) / y;
+            var m = x % y;
+            if(m < 0) m += y;
+            return m;
         }
         
-        public static int Div(this int x, int y)
+        public static long Repeat(this long x, long y)
         {
-            return (x - x.Mod(y)) / y;
+            var m = x % y;
+            if(m < 0) m += y;
+            return m;
+        }
+        
+        public static float Repeat(this float x, float y)
+        {
+            var m = x % y;
+            if(m < 0) m += y;
+            return m;
+        }
+        
+        public static double Repeat(this double x, double y)
+        {
+            var m = x % y;
+            if(m < 0) m += y;
+            return m;
         }
         
         public static bool In(this int x, int a, int b) => a <= x && x <= b;

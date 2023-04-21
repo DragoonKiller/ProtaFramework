@@ -10,6 +10,8 @@ namespace Prota
         
         public static T Last<T>(this T[] l) => l[l.Length - 1];
         
+        public static T LastOrDefault<T>(this T[] l) => l.Length == 0 ? default : l.Last();
+        
         public static T Last<T>(this T[] l, T v) => l[l.Length - 1] = v;
         
         public static T[] Resize<T>(this T[] original, int size)
