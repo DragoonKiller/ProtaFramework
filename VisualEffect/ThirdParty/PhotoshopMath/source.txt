@@ -1,0 +1,2 @@
+copied from here:
+https://mouaif.wordpress.com/2009/01/05/photoshop-math-with-glsl-shaders/

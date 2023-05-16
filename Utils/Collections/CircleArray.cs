@@ -7,19 +7,18 @@ using System.Collections;
 namespace Prota
 {
     // 环形双指针.
-    // 左闭右开区间.
+    // 左闭右开区间, head 开, front 闭.
     // 使用计数来确定是否满了.
     public class CircleDualPointer
     {
         public readonly int max;
-
-        public int front { get; private set; }
-        public int back { get; private set; }
+        public int head { get; private set; }
+        public int tail { get; private set; }
         public int count { get; private set; }
         public bool isEmpty => count == 0;
         public bool isFull => count == max;
         
-        public int this[int offset] => Position(front + offset);
+        public int this[int offset] => Position(head + offset);
 
         public CircleDualPointer(int max)
         {
@@ -28,8 +27,8 @@ namespace Prota
         
         public CircleDualPointer(int max, int currentCount)
         {
-            this.front = 0;
-            this.back = currentCount;
+            this.head = 0;
+            this.tail = currentCount;
             this.count = currentCount;
             this.max = max;
         }
@@ -37,81 +36,78 @@ namespace Prota
         
         public void Reset()
         {
-            front = back = count = 0;
+            head = tail = count = 0;
         }
         
-        public int FrontMovePrev()
-        {
-            if(isFull) throw new Exception("list is full!");
-            front = (front - 1).ModSys(max);
-            count++;
-            return front;
-        }
-        
-        public int BackMovePrev()
+        public int HeadMoveBack()
         {
             if(isEmpty) throw new Exception("list is empty!");
-            back = (back - 1).ModSys(max);
-            count--;
-            return back;
+            head = (head - 1).Repeat(max);
+            count++;
+            return head;
         }
         
-        public int FrontMoveNext()
-        {
-            if(isEmpty) throw new Exception("list is empty!");
-            front = (front + 1).ModSys(max);
-            count--;
-            return front;
-        }
-        
-        public int BackMoveNext()
+        public int TailMoveBack()
         {
             if(isFull) throw new Exception("list is full!");
-            back = (back + 1).ModSys(max);
-            count++;
-            return back;
+            tail = (tail - 1).Repeat(max);
+            count--;
+            return tail;
         }
         
-        public int Position(int i)
+        public int HeadMoveAhead()
         {
-            return i.ModSys(max);
+            if(isFull) throw new Exception("list is full!");
+            head = (head + 1).Repeat(max);
+            count--;
+            return head;
         }
+        
+        public int TailMoveAhead()
+        {
+            if(isEmpty) throw new Exception("list is empty!");
+            tail = (tail + 1).Repeat(max);
+            count++;
+            return tail;
+        }
+        
+        public int Position(int i) => i.Repeat(max);
         
         
         public static void UnitTest()
         {
             CircleDualPointer g = new CircleDualPointer(6);
-            try { g.FrontMoveNext(); } catch { Console.WriteLine("Success!"); }
-            try { g.BackMovePrev(); } catch { Console.WriteLine("Success!"); }
+            try { g.HeadMoveAhead(); } catch { Console.WriteLine("Success!"); }
+            try { g.TailMoveBack(); } catch { Console.WriteLine("Success!"); }
             
             g.isEmpty.Assert();
             (!g.isFull).Assert();
             
-            g.FrontMovePrev();
-            g.BackMoveNext();
-            (g.front == 5).Assert();
-            (g.back == 1).Assert();
+            g.HeadMoveBack();
+            g.TailMoveAhead();
+            (g.head == 5).Assert();
+            (g.tail == 1).Assert();
             (g.count == 2).Assert();
             (g[0] == 5).Assert();
             (g[1] == 0).Assert();
             
-            g.BackMoveNext();       // 2
-            g.BackMoveNext();
-            g.BackMoveNext();
-            g.BackMoveNext();       // 5, full.
+            g.TailMoveAhead();       // 2
+            g.TailMoveAhead();
+            g.TailMoveAhead();
+            g.TailMoveAhead();       // 5, full.
             g.isFull.Assert();
             (!g.isEmpty).Assert();
             
             (g.count == g.max).Assert();
-            g.FrontMoveNext();
+            g.HeadMoveAhead();
             
             (g.count == g.max - 1).Assert();
             (g.count == 5).Assert();
             
             g.Reset();
             (g.count == 0).Assert();
-            (g.front == 0).Assert();
-            (g.back == 0).Assert();
+            (g.head == 0).Assert();
+            (g.tail == 0).Assert();
             
             Console.WriteLine("All Done!");
         }
@@ -172,28 +168,28 @@ namespace Prota
         public void PushFront(T v)
         {
             if(pointers.count == data.Length) Resize();
-            pointers.FrontMovePrev();
-            data[pointers.front] = v;
+            pointers.HeadMoveBack();
+            data[pointers.head] = v;
         }
         
         public T PopFront()
         {
-            var res = data[pointers.front];
-            pointers.FrontMoveNext();
+            var res = data[pointers.head];
+            pointers.HeadMoveAhead();
             return res;
         }
         
         public void PushBack(T v)
         {
             if(pointers.count == data.Length) Resize();
-            data[pointers.front] = v;
-            pointers.BackMoveNext();
+            data[pointers.head] = v;
+            pointers.TailMoveAhead();
         }
         
         public T PopBack()
         {
-            pointers.BackMovePrev();
-            var res = data[pointers.front];
+            pointers.TailMoveBack();
+            var res = data[pointers.head];
             return res;
         }
     }

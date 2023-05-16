@@ -15,12 +15,23 @@ namespace Prota
         , IDictionary<A, B>
         , IReadOnlyDictionary<A, B>
         , IDictionary
-        , IDeserializationCallback
-        , ISerializable
     {
-        Dictionary<A, B> dict = new Dictionary<A, B>();
-        Dictionary<B, A> rev = new Dictionary<B, A>();
+        readonly IDictionary<A, B> dict;
+        readonly IDictionary<B, A> rev;
         
+        public IDictionary<B, A> inverted => new PairDictionary<B, A>(rev, dict);
+        
+        public PairDictionary()
+        {
+            dict = new Dictionary<A, B>();
+            rev = new Dictionary<B, A>();
+        }
+        
+        public PairDictionary(IDictionary<A, B> dict, IDictionary<B, A> rev)
+        {
+            this.dict = new Dictionary<A, B>(dict);
+            this.rev = new Dictionary<B, A>(rev);
+        }
         
         
         public A GetKeyByValue(B value)
@@ -32,6 +43,17 @@ namespace Prota
         {
             return rev.TryGetValue(value, out key);
         }
+        
+        public bool ContainsKey(A key)
+        {
+            return dict.ContainsKey(key);
+        }
+        
+        public bool ContainsValue(B value)
+        {
+            return rev.ContainsKey(value);
+        }
+        
         
         
         public B this[A key]
@@ -70,11 +92,11 @@ namespace Prota
 
         IEnumerable<A> IReadOnlyDictionary<A, B>.Keys => dict.Keys;
 
-        ICollection IDictionary.Keys => dict.Keys;
+        ICollection IDictionary.Keys => (ICollection)dict.Keys;
 
         IEnumerable<B> IReadOnlyDictionary<A, B>.Values => dict.Values;
 
-        ICollection IDictionary.Values => dict.Values;
+        ICollection IDictionary.Values => (ICollection)dict.Values;
 
         public void Add(A key, B value)
         {
@@ -108,11 +130,6 @@ namespace Prota
             return (dict as IDictionary).Contains(key);
         }
 
-        public bool ContainsKey(A key)
-        {
-            return dict.ContainsKey(key);
-        }
-
         public void CopyTo(KeyValuePair<A, B>[] array, int arrayIndex)
         {
             (dict as ICollection<KeyValuePair<A, B>>).CopyTo(array, arrayIndex);
@@ -127,17 +144,7 @@ namespace Prota
         {
             return dict.GetEnumerator();
         }
-
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            dict.GetObjectData(info, context);
-        }
-
-        public void OnDeserialization(object sender)
-        {
-            dict.OnDeserialization(sender);
-        }
-
+        
         public bool Remove(A key)
         {
             if(!dict.TryGetValue(key, out var value)) return false;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 
+using Prota;
 using Prota.Unity;
 
 namespace Prota.Timer
@@ -110,15 +111,23 @@ namespace Prota.Timer
         public static Timer New(string name, float time, bool repeat, Action callback) => New(name, time, repeat, false, null, callback);
         public static Timer New(string name, float time, Action callback) => New(name, time, false, false, null, callback);
         
+        
+        // ====================================================================================================
         // 支持 Async-Await.
         // await 后的流程会从主线程(timer的调度线程)调起来.
         // 由于创建 timer 也需要在主线程创建, 所以这个函数需要在主线程调用.
-        public static TimerWait Wait(float time)
+        // ====================================================================================================
+        
+        public static TimerWait Wait(float time, bool realtime = false, TaskCanceller.Token? cancellationToken = null)
         {
             var res = new TimerWait();
+            if(cancellationToken.HasValue) res.cancellationToken = cancellationToken.Value;
             res.timer = New(time, false, false, null, res.OnTimesUp);
             return res;
         }
+        
+        public static TimerWait Wait(float time, TaskCanceller.Token? cancellationToken)
+            => Wait(time, false, cancellationToken);
     }
     
     public static class TimerExt

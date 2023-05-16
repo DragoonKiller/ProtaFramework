@@ -12,7 +12,7 @@ namespace Prota.Editor
     [CustomPropertyDrawer(typeof(EnumEditor))]
     public class EditorEnumDrawer : PropertyDrawer
     {
-        public override VisualElement CreatePropertyGUI(SerializedProperty property) 
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             Type enumType = this.GetActualFieldPropertyType(property);
             

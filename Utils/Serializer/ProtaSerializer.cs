@@ -26,12 +26,10 @@ namespace Prota
     {
         public readonly static MessagePackSerializerOptions options;
         
-        [ThreadStatic]
-        static byte[] _serializeTempBuffer;
+        [ThreadStatic] static byte[] _serializeTempBuffer;
         static byte[] serializeTempBuffer => _serializeTempBuffer != null ? _serializeTempBuffer : _serializeTempBuffer = new byte[2 * 1024];       // 2k cache.
         
-        [ThreadStatic]
-        static byte[] _deserializeTempBuffer;
+        [ThreadStatic] static byte[] _deserializeTempBuffer;
         static byte[] deserializeTempBuffer => _deserializeTempBuffer != null ? _deserializeTempBuffer : _deserializeTempBuffer = new byte[2 * 1024];       // 2k cache.
         
         

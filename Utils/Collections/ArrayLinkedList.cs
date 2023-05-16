@@ -55,7 +55,7 @@ namespace Prota
     // 链表, 但是以数组的形式存储.
     // 通过 ArrayLinkedListKey 操作里面的数据.
     public class ArrayLinkedList<T> : IEnumerable<T>, IReadOnlyCollection<T>, IArrayLinkedList
-        where T: struct
+        // where T: struct
     {
         public struct InternalData
         {

@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 
 namespace Prota
 {
     public static partial class MethodExtensions
     {
+        public static bool ApproximatelyEqual(this float x, float y) => Math.Abs(x - y) < 1e-6f;
+        
         public static float Sqr(this float x) => x * x;
         public static int Sqr(this int x) => x * x;
         public static double Sqr(this double x) => x * x;
@@ -45,22 +48,32 @@ namespace Prota
         public static float Ceil(this float x) => (float)Math.Ceiling(x);
         public static float Round(this float x) => (float)Math.Round(x);
         
-        public static int Mod(this int x, int y) => x - x / y * y;
-        public static long Mod(this long x, long y) => x - x / y * y;
-        public static float Mod(this float x, float y) => x - (x / y).Floor() * y;
-        public static double Mod(this double x, double y) => x - Math.Floor(x / y) * y;
-        
-        public static int ModSys(this int x, int y) => x % y < 0 ? x % y + Math.Abs(y) : x % y;
-        public static long ModSys(this long x, long y) => x % y < 0 ? x % y + Math.Abs(y) : x % y;
-        
-        public static float Div(this float x, float y)
+        public static int Repeat(this int x, int y)
         {
-            return (x - x.Mod(y)) / y;
+            var m = x % y;
+            if(m < 0) m += y;
+            return m;
         }
         
-        public static int Div(this int x, int y)
+        public static long Repeat(this long x, long y)
         {
-            return (x - x.Mod(y)) / y;
+            var m = x % y;
+            if(m < 0) m += y;
+            return m;
+        }
+        
+        public static float Repeat(this float x, float y)
+        {
+            var m = x % y;
+            if(m < 0) m += y;
+            return m;
+        }
+        
+        public static double Repeat(this double x, double y)
+        {
+            var m = x % y;
+            if(m < 0) m += y;
+            return m;
         }
         
         public static bool In(this int x, int a, int b) => a <= x && x <= b;
@@ -107,9 +120,142 @@ namespace Prota
             return 1;
         }
         
+        
+        
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        
+        public static int NextPowerOfTwo(this int x)
+        {
+            x |= x >> 16;
+            x |= x >> 8;
+            x |= x >> 4;
+            x |= x >> 2;
+            x |= x >> 1;
+            return x + 1;
+        }
+        
+        public static long NextPowerOfTwo(this long x)
+        {
+            x |= x >> 32;
+            x |= x >> 16;
+            x |= x >> 8;
+            x |= x >> 4;
+            x |= x >> 2;
+            x |= x >> 1;
+            return x + 1;
+        }
+        
+        public static uint NextPowerOfTwo(this uint x)
+        {
+            x |= x >> 16;
+            x |= x >> 8;
+            x |= x >> 4;
+            x |= x >> 2;
+            x |= x >> 1;
+            return x + 1;
+        }
+        
+        public static ulong NextPowerOfTwo(this ulong x)
+        {
+            x |= x >> 32;
+            x |= x >> 16;
+            x |= x >> 8;
+            x |= x >> 4;
+            x |= x >> 2;
+            x |= x >> 1;
+            return x + 1;
+        }
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        
         public static bool IsPowerOfTwo(this int x) => unchecked(x & (x - 1)) == 0;
         public static bool IsPowerOfTwo(this long x) => unchecked(x & (x - 1)) == 0;
         public static bool IsPowerOfTwo(this uint x) => unchecked(x & (x - 1)) == 0;
         public static bool IsPowerOfTwo(this ulong x) => unchecked(x & (x - 1)) == 0;
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        
+        public static IEnumerable<(int f, int count)> Factorization(this int x)
+        {
+            for(int i = 2, sqrt = Math.Sqrt(x).FloorToInt(); i <= sqrt; i += 2)
+            {
+                int count = 0;
+                for(; x % i == 0; count++, x /= i);
+                if(count > 0) yield return (i, count);
+            }
+            if (x > 1) yield return (x, 1);          // x is a prime.
+        }
+        
+        public static IEnumerable<(long f, int count)> Factorization(this long x)
+        {
+            for(long i = 2, sqrt = Math.Sqrt(x).FloorToInt(); i <= sqrt; i += 2)
+            {
+                int count = 0;
+                for(; x % i == 0; count++, x /= i);
+                if(count > 0) yield return (i, count);
+            }
+            if (x > 1) yield return (x, 1);          // x is a prime.
+        }
+        
+        public static IEnumerable<(uint f, int count)> Factorization(this uint x)
+        {
+            for(uint i = 2, sqrt = (uint)Math.Sqrt(x); i <= sqrt; i += 2)
+            {
+                int count = 0;
+                for(; x % i == 0; count++, x /= i);
+                if(count > 0) yield return (i, count);
+            }
+            if (x > 1) yield return (x, 1);          // x is a prime.
+        }
+        
+        public static IEnumerable<(ulong f, int count)> Factorization(this ulong x)
+        {
+            for(ulong i = 2, sqrt = (ulong)Math.Sqrt(x); i <= sqrt; i += 2)
+            {
+                int count = 0;
+                for(; x % i == 0; count++, x /= i);
+                if(count > 0) yield return (i, count);
+            }
+            if (x > 1) yield return (x, 1);          // x is a prime.
+        }
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        
+        public static bool IsPrime(this int x)
+        {
+            if(x < 2) return false;
+            for(int i = 2, sqrt = Math.Sqrt(x).FloorToInt(); i <= sqrt; i += 2) if(x % i == 0) return false;
+            return true;
+        }
+        
+        public static bool isPrime(this long x)
+        {
+            if(x < 2) return false;
+            for(long i = 2, sqrt = Math.Sqrt(x).FloorToInt(); i <= sqrt; i += 2) if(x % i == 0) return false;
+            return true;
+        }
+        
+        public static bool IsPrime(this uint x)
+        {
+            if(x < 2) return false;
+            for(uint i = 2, sqrt = (uint)Math.Sqrt(x); i <= sqrt; i += 2) if(x % i == 0) return false;
+            return true;
+        }
+        
+        public static bool IsPrime(this ulong x)
+        {
+            if(x < 2) return false;
+            for(ulong i = 2, sqrt = (ulong)Math.Sqrt(x); i <= sqrt; i += 2) if(x % i == 0) return false;
+            return true;
+        }
     }
 }

@@ -1,10 +1,189 @@
 using UnityEngine;
 using System;
+using System.Collections.Generic;
 
 namespace Prota.Unity
 {
     public static partial class UnityMethodExtensions
     {
+        // 4向分离, 从0开始, 逆时针.
+        // 返回值为0, 1, 2, 3, 分别表示右, 上, 左, 下.
+        public static int DirectionPartition4(this Vector2 dir)
+        {
+            var angle = Vector2.SignedAngle(Vector2.right, dir);
+            if(angle < 0) angle += 360;
+            if(angle < 45f) return 0;
+            if(angle < 135f) return 1;
+            if(angle < 225f) return 2;
+            if(angle < 315f) return 3;
+            return 0;
+        }
+        
+        // 4向分离.
+        public static Vector2Int DirectionNormalize4(this Vector2 dir)
+        {
+            var partition = dir.DirectionPartition4();
+            switch (partition)
+            {
+                case 0: return Vector2Int.right;
+                case 1: return Vector2Int.up;
+                case 2: return Vector2Int.left;
+                case 3: return Vector2Int.down;
+                default: throw new ArgumentOutOfRangeException();
+            }
+        }
+        
+        // 8向分离, 从0开始, 逆时针.
+        // 返回值为0, 1, 2, 3, 4, 5, 6, 7, 分别表示右, 右上, 上, 左上, 左, 左下, 下, 右下.
+        public static int DirectionPartition8(this Vector2 dir)
+        {
+            var angle = Vector2.SignedAngle(Vector2.right, dir);
+            if(angle < 0) angle += 360;
+            if(angle < 22.5f) return 0;
+            if(angle < 67.5f) return 1;
+            if(angle < 112.5f) return 2;
+            if(angle < 157.5f) return 3;
+            if(angle < 202.5f) return 4;
+            if(angle < 247.5f) return 5;
+            if(angle < 292.5f) return 6;
+            if(angle < 337.5f) return 7;
+            return 0;
+        }
+        
+        // 8向分离.
+        public static Vector2Int DirectionNormalize8(this Vector2 dir)
+        {
+            var partition = dir.DirectionPartition8();
+            switch (partition)
+            {
+                case 0: return Vector2Int.right;
+                case 1: return new Vector2Int(1, 1);
+                case 2: return Vector2Int.up;
+                case 3: return new Vector2Int(-1, 1);
+                case 4: return Vector2Int.left;
+                case 5: return new Vector2Int(-1, -1);
+                case 6: return Vector2Int.down;
+                case 7: return new Vector2Int(1, -1);
+                default: throw new ArgumentOutOfRangeException();
+            }
+        }
+        
+        public static string DirectionPartitionName4(this Vector2 dir)
+        {
+            var partition = dir.DirectionPartition4();
+            switch (partition)
+            {
+                case 0: return "Right";
+                case 1: return "Up";
+                case 2: return "Left";
+                case 3: return "Down";
+                default: throw new ArgumentOutOfRangeException();
+            }
+        }
+        
+        public static string DirectionPartitionName8(this Vector2 dir)
+        {
+            var partition = dir.DirectionPartition8();
+            switch (partition)
+            {
+                case 0: return "Right";
+                case 1: return "UpRight";
+                case 2: return "Up";
+                case 3: return "UpLeft";
+                case 4: return "Left";
+                case 5: return "DownLeft";
+                case 6: return "Down";
+                case 7: return "DownRight";
+                default: throw new ArgumentOutOfRangeException();
+            }
+        }
+        
+        public static string DirectionPartitionToName8(this int dir)
+        {
+            switch (dir)
+            {
+                case 0: return "Right";
+                case 1: return "UpRight";
+                case 2: return "Up";
+                case 3: return "UpLeft";
+                case 4: return "Left";
+                case 5: return "DownLeft";
+                case 6: return "Down";
+                case 7: return "DownRight";
+                default: throw new ArgumentOutOfRangeException();
+            }
+        }
+        
+        public static string DirectionPartitionToName4(this int dir)
+        {
+            switch (dir)
+            {
+                case 0: return "Right";
+                case 1: return "Up";
+                case 2: return "Left";
+                case 3: return "Down";
+                default: throw new ArgumentOutOfRangeException();
+            }
+        }
+        
+        public static int DirectionNameToPartition4(this string dir)
+        {
+            switch (dir)
+            {
+                case "Right": return 0;
+                case "Up": return 1;
+                case "Left": return 2;
+                case "Down": return 3;
+                default: throw new ArgumentOutOfRangeException();
+            }
+        }
+        
+        public static int DirectionNameToPartition8(this string dir)
+        {
+            switch (dir)
+            {
+                case "Right": return 0;
+                case "UpRight": return 1;
+                case "Up": return 2;
+                case "UpLeft": return 3;
+                case "Left": return 4;
+                case "DownLeft": return 5;
+                case "Down": return 6;
+                case "DownRight": return 7;
+                default: throw new ArgumentOutOfRangeException();
+            }
+        }
+        
+        
+        
+        
+        public static Vector2Int StepLeft(this Vector2Int a) => new Vector2Int(a.x - 1, a.y);
+        public static Vector2Int StepRight(this Vector2Int a) => new Vector2Int(a.x + 1, a.y);
+        public static Vector2Int StepUp(this Vector2Int a) => new Vector2Int(a.x, a.y + 1);
+        public static Vector2Int StepDown(this Vector2Int a) => new Vector2Int(a.x, a.y - 1);
+        public static Vector2Int StepUpLeft(this Vector2Int a) => new Vector2Int(a.x - 1, a.y + 1);
+        public static Vector2Int StepUpRight(this Vector2Int a) => new Vector2Int(a.x + 1, a.y + 1);
+        public static Vector2Int StepDownLeft(this Vector2Int a) => new Vector2Int(a.x - 1, a.y - 1);
+        public static Vector2Int StepDownRight(this Vector2Int a) => new Vector2Int(a.x + 1, a.y - 1);
+        
+        public static Vector3Int StepLeft(this Vector3Int a) => new Vector3Int(a.x - 1, a.y, a.z);
+        public static Vector3Int StepRight(this Vector3Int a) => new Vector3Int(a.x + 1, a.y, a.z);
+        public static Vector3Int StepUp(this Vector3Int a) => new Vector3Int(a.x, a.y + 1, a.z);
+        public static Vector3Int StepDown(this Vector3Int a) => new Vector3Int(a.x, a.y - 1, a.z);
+        public static Vector3Int StepForward(this Vector3Int a) => new Vector3Int(a.x, a.y, a.z + 1);
+        public static Vector3Int StepBack(this Vector3Int a) => new Vector3Int(a.x, a.y, a.z - 1);
+        
+        
+        public static float ManhattanLength(this Vector2 a) => a.x + a.y;
+        public static float ManhattanLength(this Vector3 a) => a.x + a.y + a.z;
+        
+        public static float ManhattanDistance(this Vector2 a, Vector2 b) => (a - b).ManhattanLength();
+        public static float ManhattanDistance(this Vector3 a, Vector3 b) => (a - b).ManhattanLength();
+        
+        // 从a到b的两条曼哈顿路径的转折点.
+        public static (Vector2 a, Vector2 b) ManhattanCorner(this Vector2 a, Vector2 b)
+            => (new Vector2(a.x, b.y), new Vector2(b.x, a.y));
+        
         public static float Sqrt(this float x) => Mathf.Sqrt(x);
         public static float Sqrt(this int x) => Mathf.Sqrt(x);
         public static double Sqrt(this double x) => Math.Sqrt(x);
@@ -14,11 +193,14 @@ namespace Prota.Unity
         public static float Cos(this float x) => Mathf.Cos(x);
         public static float Tan(this float x) => Mathf.Tan(x);
         
-        public static int NextPowerOfTwo(this int x) => Mathf.NextPowerOfTwo(x);
+        public static float PingPong(this float x, float a) => Mathf.PingPong(x, a);
         
         public static bool IsZero(this Vector2 a) => a == Vector2.zero;
         public static bool IsZero(this Vector3 a) => a == Vector3.zero;
         public static bool IsZero(this Vector4 a) => a == Vector4.zero;
+        
+        public static Vector2 Abs(this Vector2 a) => new Vector2(Mathf.Abs(a.x), Mathf.Abs(a.y));
+        public static Vector3 Abs(this Vector3 a) => new Vector3(Mathf.Abs(a.x), Mathf.Abs(a.y), Mathf.Abs(a.z));
         
         public static Vector2 To(this Vector2 a, Vector2 b) => b - a;
         public static Vector3 To(this Vector3 a, Vector3 b) => b - a;
@@ -94,6 +276,9 @@ namespace Prota.Unity
         public static ref Color SetB(this ref Color c, float b) { c.b = b; return ref c; }
         public static ref Color SetA(this ref Color c, float a) { c.a = a; return ref c; }
         
+        public static string ToWebString(this Color c) => ColorUtility.ToHtmlStringRGBA(c);
+        public static Color ToColor(this string str) => ColorUtility.TryParseHtmlString(str, out Color c) ? c : Color.clear;
+        
         public static Vector4 ToVec4(this Color c) => new Vector4(c.r, c.g, c.b, c.a);
         
         public static Vector4 ToVec4(this Quaternion q) => new Vector4(q.x, q.y, q.z, q.w);
@@ -123,7 +308,11 @@ namespace Prota.Unity
         
         public static float Area(this Vector2 p) => p.x * p.y;
         
+        public static float Perimiter(this Vector2 p) => (p.x + p.y) * 2;
+        
         public static float Volume(this Vector3 p) => p.x * p.y * p.z;
+        
+        public static float SurfaceArea(this Vector3 p) => (p.x * p.y + p.x * p.z + p.y * p.z) * 2;
         
         public static Vector2 ToVec2(this Vector3 p) => new Vector2(p.x, p.y);
         public static Vector2 ToVec2(this Vector4 p) => new Vector2(p.x, p.y);
@@ -178,6 +367,45 @@ namespace Prota.Unity
         public static Vector3 Verlet(this Vector3 curPos, Vector3 prevPos, Vector3 acceleration, float dt)
             => 2 * curPos - prevPos + dt * dt * acceleration;
         
+        
+        public static Vector3 ProjectToPerpendicularPlane(this Vector3 a, Vector3 normal)
+            => a - Vector3.Project(a, normal);
+        
+        public static Vector3 Project(this Vector3 a, Vector3 normal)
+            => Vector3.Project(a, normal);
+        
+        public static Vector2 ProjectToPerpendicularLine(this Vector2 a, Vector2 normal)
+            => a - a.Project(normal);
+        
+        public static Vector2 Project(this Vector2 a, Vector2 normal)
+            => a.Dot(normal.normalized) * normal.normalized;
+        
+        
+        
+        public static bool IsParallel(this Vector2 a, Vector2 b)
+            => a.Cross(b).ApproximatelyEqual(0);
+        
+        public static bool IsParallel(this Vector3 a, Vector3 b)
+            => a.Cross(b).IsZero();
+        
+        public static bool IsPerpendicular(this Vector2 a, Vector2 b)
+            => a.Dot(b).ApproximatelyEqual(0);
+        
+        public static bool IsPerpendicular(this Vector3 a, Vector3 b)
+            => a.Dot(b).ApproximatelyEqual(0);
+        
+        
+        public static IEnumerable<Vector2> AverageDivide(this (Vector2 from, Vector2 to) v, int count)
+        {
+            (count > 0).Assert();
+            for (var i = 0; i < count; i++) yield return v.from + (v.to - v.from) * (i + 1) / (count + 1);
+        }
+        
+        public static IEnumerable<Vector3> AverageDivide(this (Vector3 from, Vector3 to) v, int count)
+        {
+            (count > 0).Assert();
+            for (var i = 0; i < count; i++) yield return v.from + (v.to - v.from) * (i + 1) / (count + 1);
+        }
     }
     
 }

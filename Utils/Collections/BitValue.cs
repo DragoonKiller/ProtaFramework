@@ -103,8 +103,7 @@ namespace Prota
         public string ToString(string format) => value.ToString(format);
         
         
-        [ThreadStatic]
-        static StringBuilder sb;
+        [ThreadStatic] static StringBuilder sb;
         
         public string To01String()
         {

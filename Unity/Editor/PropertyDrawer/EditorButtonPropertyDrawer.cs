@@ -11,12 +11,11 @@ namespace Prota.Editor
     [CustomPropertyDrawer(typeof(EditorButton))]
     public class EditorButtonDrawer : PropertyDrawer
     {
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            if(GUILayout.Button(property.displayName))
-            {
-                property.boolValue = true;
-            }
+            var button = new Button(() => property.boolValue = true);
+            button.text = property.displayName;
+            return button;
         }
     }
 }

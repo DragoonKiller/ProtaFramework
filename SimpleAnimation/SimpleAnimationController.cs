@@ -70,7 +70,7 @@ namespace Prota.Animation
             
             foreach(var a in anims) a.anim.currentRate = currentRate;
             if(Application.isPlaying) currentRate += Time.deltaTime * speedMultiply / duration;
-            currentRate = currentRate.Mod(1f);
+            currentRate = currentRate.Repeat(1f);
             
             foreach(var a in anims) a.anim.currentRate = currentRate;
         }

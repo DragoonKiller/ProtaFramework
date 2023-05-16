@@ -9,7 +9,7 @@ namespace Prota
     // 泛型List, 但是可以获取底层数组, 可以设置容量.
     public class FlatList<T> : IList<T>
     {
-        T[] data;
+        public T[] data { get; private set; }
         
         public T this[int index]
         {
@@ -20,7 +20,9 @@ namespace Prota
         public int Count { get; private set; }
 
         public bool IsReadOnly => false;
-
+        
+        public bool IsValidData(T[] data) => this.data == data;
+        
         public void Add(T item)
         {
             Preserve(Count + 1);

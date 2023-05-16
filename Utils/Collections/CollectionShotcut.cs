@@ -3,11 +3,21 @@ using System;
 using System.Text;
 using System.Buffers.Binary;
 using System.Collections;
+using System.Linq;
 
 namespace Prota
 {
+    // 相当于 Dictionary<A, List<B>>, 提供了额外的函数.
     public class HashMapList<A, B> : Dictionary<A, List<B>>
     {
+        public IEnumerable<B> elements => this.Values.SelectMany(x => x);
+        
+        public bool Contains(A key, B val)
+        {
+            if(!this.TryGetValue(key, out var s)) return false;
+            return s.Contains(val);
+        }
+        
         public HashMapList<A, B> SetElement(A key, int i, B val)
         {
             this.GetOrCreate(key, out var s);
@@ -62,6 +72,7 @@ namespace Prota
         }
     }
     
+    // 相当于 Dictionary<A, HashSet<B>>, 提供了额外的函数.
     public class HashMapSet<A, B> : Dictionary<A, HashSet<B>>
     {
         
@@ -81,6 +92,7 @@ namespace Prota
         }
     }
     
+    // 相当于 Dictionary<A, Dictionary<B, C>>, 提供了额外的函数.
     public class HashMapDict<A, B, C> : Dictionary<A, Dictionary<B, C>>
     {
         

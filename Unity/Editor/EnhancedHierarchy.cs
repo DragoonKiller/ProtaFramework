@@ -54,15 +54,15 @@ namespace Prota.Editor
         static readonly List<Component> comps = new List<Component>();
         static readonly List<GameObject> parents = new List<GameObject>();
         
-        static Dictionary<Type, GUIContent> thumbnailMap = new Dictionary<Type, GUIContent>();
-        
         static Texture2D barTexture = null;
+        static Texture2D backTexture = null;
         
         const int maxIconCount = 10;
         
         static void OnHierarchyGUI(int instanceId, Rect area)
         {
             if(barTexture == null) barTexture = Resources.Load<Texture2D>("ProtaFramework/line_vertical_16_2");
+            if(backTexture == null) backTexture = Resources.Load<Texture2D>("ProtaFramework/rect_16");
             
             var originalGUIColor = GUI.color;
             
@@ -71,71 +71,91 @@ namespace Prota.Editor
             var rightMargin = area.xMax - 40;
             var space = area.height - 4;                // 每个图标向左偏移多少像素.
             
-            if(target is GameObject g)
+            if(!(target is GameObject g)) return;
+            var depth = g.transform.GetDepth();
+            
+            // SetActive 部分.
+            var active = EditorGUI.Toggle(new Rect(rightMargin, area.yMax - area.height, 16, 16), g.activeSelf);
+            rightMargin -= space + 2;
+            if(active != g.activeSelf)
             {
-                var depth = g.transform.GetDepth();
-                
-                // SetActive 部分.
-                var active = EditorGUI.Toggle(new Rect(rightMargin, area.yMax - area.height, 16, 16), g.activeSelf);
-                rightMargin -= space + 2;
-                if(active != g.activeSelf)
-                {
-                    Undo.RecordObject(g, "Activation");
-                    g.SetActive(active);
-                    Selection.activeObject = g;
-                }
-                
-                // 这个 gameobject 下属的 gameobject.
-                g.GetComponents<Component>(comps);
-                // comps.Sort(Compare);
-                comps.Reverse();
-                
-                // Component 图标部分.
-                int n = 0;
-                foreach(var c in comps)
-                {
-                    if(c == null) continue; // 脚本丢失时, Component 为 null.
-                    
-                    n++;
-                    if(n > maxIconCount) break;
-                    
-                    var ctype = c.GetType();
-                    if(ctype == typeof(UnityEngine.Transform)) continue;
-                    
-                    if(!thumbnailMap.TryGetValue(ctype, out var content))
-                    {
-                        var cc = EditorGUIUtility.ObjectContent(c, ctype);
-                        var image = cc.image;
-                        if(image == null) continue;     // 没有图标.
-                        thumbnailMap[ctype] = content = new GUIContent(image);
-                    }
-                    
-                    GUI.Label(new Rect(rightMargin, area.yMax - area.height, 16, 16), content);
-                    rightMargin -= space;
-                }
-                
-                // Canvas 标记部分. 如果一个物体被挂在 canvas 下方则有一个蓝色竖线标记.
-                if(g.GetComponentInParent<Canvas>() != null)
-                {
-                    var r = new Rect(area);
-                    r.xMin -= 20 + depth * pixelPerDepth;
-                    r.xMax = r.xMin + r.height;
-                    GUI.color = new Color(0.6f, 0.65f, 1, 1f);
-                    GUI.DrawTexture(r, barTexture);
-                }
-                
-                // 空物体标记部分.
-                // if(comps.Count == 1 && comps[0].GetType() == typeof(Transform))
-                // {
-                //     var r = new Rect(area);
-                //     r.xMin -= 22 + depth * pixelPerDepth;
-                //     r.xMax = r.xMin + r.height;
-                //     GUI.color = new Color(0.4f, 0.4f, 0.4f, 1f);
-                //     GUI.DrawTexture(r, barTexture);
-                // }
-                
+                Undo.RecordObject(g, "Activation");
+                g.SetActive(active);
+                Selection.activeObject = g;
             }
             
+            // 这个 gameobject 下属的 gameobject.
+            g.GetComponents<Component>(comps);
+            // comps.Sort(Compare);
+            comps.Reverse();
+            comps.RemoveAll(x => x == null);
+            
+            // Component 图标部分.
+            int n = 0;
+            foreach(var c in comps)
+            {
+                n++;
+                if(n > maxIconCount) break;
+                
+                var ctype = c.GetType();
+                if(ctype == typeof(UnityEngine.Transform)) continue;
+                GUI.Label(new Rect(rightMargin, area.yMax - area.height, 16, 16), new GUIContent(c.FindEditorIcon()));
+                rightMargin -= space;
+            }
+            
+            // Canvas 标记部分. 如果一个物体被挂在 canvas 下方则有一个蓝色竖线标记.
+            if(g.GetComponentInParent<Canvas>() != null)
+            {
+                var r = new Rect(area);
+                r.xMin -= 20 + depth * pixelPerDepth;
+                r.xMax = r.xMin + r.height;
+                GUI.color = new Color(0.6f, 0.65f, 1, 1f);
+                GUI.DrawTexture(r, barTexture);
+            }
+            
+            // 全局单例标记部分, 命名带 # 号, 或者组件带有 Singleton.
+            {
+                bool hasSingleton = false;
+                foreach(var c in comps)
+                {
+                    var t = c.GetType();
+                    if(!t.IsGenericType) continue;
+                    t = t.GetGenericTypeDefinition();
+                    if(t != typeof(Singleton<>)) continue;
+                    hasSingleton = true;
+                    break;
+                }
+                if(g.name.StartsWith("#") || hasSingleton)
+                {
+                    var r = new Rect(area);
+                    r.xMin -= 22 + depth * pixelPerDepth;
+                    r.xMax = r.xMin + r.height;
+                    GUI.color = new Color(0.6f, 0.0f, 0.0f, 1f);
+                    GUI.DrawTexture(r, barTexture);
+                }
+            }
+                
+            // 标记名称前缀为 >>> 或 ===, 后缀为 <<< 或 === 的物体.
+            if((g.name.StartsWith(">>>") || g.name.StartsWith("===") || g.name.StartsWith("---"))
+            && (g.name.EndsWith("<<<") || g.name.EndsWith("===") || g.name.EndsWith("---")))
+            {
+                var r = new Rect(area);
+                // r.xMin -= depth * pixelPerDepth;
+                r.xMin += 20;
+                var oriMax = r.yMax;
+                r.yMax = r.yMin + 1;
+                
+                GUI.color = new Color(0.6f, 0.6f, 0.6f, 1f);
+                GUI.DrawTexture(r, backTexture);
+                
+                // GUI.color = new Color(0.4f, 0.4f, 0.4f, 1f);
+                // r.xMin += depth * pixelPerDepth;
+                // r.xMax -= r.width * 0.5f;
+                // r.yMax = oriMax;
+                // r.yMin = r.yMax - 1;
+                // GUI.DrawTexture(r, backTexture);
+            }
+
             GUI.color = originalGUIColor;
         }
         

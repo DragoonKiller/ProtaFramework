@@ -19,26 +19,16 @@ namespace Prota.Editor
             return 0;
         }
         
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var attr = fieldInfo.GetCustomAttribute<Readonly>();
-            
-            void DrawOrNot()
-            {
-                if(ShouldDraw(attr)) EditorGUI.PropertyField(position, property, label, true);
-            }
-            
-            if(ShouldBeReadonly(attr))
-            {
-                GUI.enabled = false;
-                DrawOrNot();
-                GUI.enabled = true;
-            }
-            else
-            {
-                DrawOrNot();
-            }
+            if(!ShouldDraw(attr)) return null;
+            var res = new PropertyField(property);
+            if(ShouldBeReadonly(attr)) res.SetEnabled(false);
+            return res;
         }
+        
+        public override bool CanCacheInspectorGUI(SerializedProperty property) => false;
         
         bool ShouldBeReadonly(Readonly attr)
         {

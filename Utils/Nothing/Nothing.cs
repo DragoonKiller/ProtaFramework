@@ -5,8 +5,8 @@ namespace Prota
 {
     public static class Nothing
     {
-        public class Class { }
-        public struct Struct { }
+        [Serializable] public class Class { }
+        [Serializable] public struct Struct { }
         public static Action DoNothing = () => { };
     }
 }

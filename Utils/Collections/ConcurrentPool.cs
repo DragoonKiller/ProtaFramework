@@ -6,7 +6,7 @@ using System.Collections.Concurrent;
 namespace Prota
 {
     
-    
+    // T: 池子存放的对象类型.
     public class ConcurrentPool<T> where T: class, new()
     {
         public struct Handle : IDisposable
@@ -16,6 +16,8 @@ namespace Prota
             public readonly T value;
             
             public readonly int version;
+            
+            public bool valid => src.inuse.ContainsKey(value) && src.inuse[value] == version;
             
             public Handle(ConcurrentPool<T> src, T value, int version)
             {
@@ -81,6 +83,19 @@ namespace Prota
             }
         }
         
+        
+        
+        public static void UnitTest()
+        {
+            var p = new ConcurrentPool<List<int>>();
+            
+            var l = p.Get();
+            l.value.Add(1);
+            (l.value[0] == 1).Assert();
+            (l.valid == true).Assert();
+            l.Dispose();
+            (l.valid == false).Assert();
+        }
         
     }
 }

@@ -8,13 +8,13 @@ namespace Prota
         public int n { get; private set; } = 0;
         
         // 类型数组.
-        public readonly VectorBuffer type = new VectorBuffer();
+        public readonly FlatList<byte> type = new FlatList<byte>();
         
         // 数据大小.
         public int size { get; private set; } = 0;
         
         // 数据数组.
-        public readonly VectorBuffer data = new VectorBuffer();
+        public readonly FlatList<byte> data = new FlatList<byte>();
         
         public DataVector Push(byte value)
         {
@@ -238,8 +238,8 @@ namespace Prota
         {
             n -= 1;
             size -= sz;
-            type.Shrink(n);
-            data.Shrink(size);
+            type.Resize(n);
+            data.Resize(size);
         }
         
         

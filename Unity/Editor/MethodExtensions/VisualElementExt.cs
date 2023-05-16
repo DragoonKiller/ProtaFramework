@@ -22,6 +22,13 @@ namespace Prota.Editor
             return x;
         }
         
+        public static T SetSize<T>(this T x, float width, float height) where T: VisualElement
+        {
+            x.style.width = x.style.minWidth = x.style.maxWidth = width;
+            x.style.height = x.style.minHeight = x.style.maxHeight = height;
+            return x;
+        }
+        
         public static T SetMaxHeight<T>(this T x, float height) where T: VisualElement
         {
             x.style.maxHeight = height;
@@ -154,7 +161,7 @@ namespace Prota.Editor
             return field;
         }
         
-        public static T TargetType<T>(this T field, Type type) where T: ObjectField
+        public static T SetTargetType<T>(this T field, Type type) where T: ObjectField
         {
             field.objectType = type;
             return field;
@@ -175,6 +182,25 @@ namespace Prota.Editor
         public static Label SetTextCentered(this Label x)
         {
             x.style.unityTextAlign = new StyleEnum<TextAnchor>(TextAnchor.MiddleCenter);
+            return x;
+        }
+        
+        public static T SetCentered<T>(this T x) where T: VisualElement
+        {
+            x.style.alignSelf = Align.Center;
+            return x;
+        }
+        
+        public static T SetFontSize<T>(this T x, int size) where T: VisualElement
+        {
+            x.style.fontSize = size;
+            return x;
+        }
+        
+        public static T OnHoverLeave<T>(this T x, Action<IMouseEvent, bool> f) where T: VisualElement
+        {
+            x.RegisterCallback<MouseEnterEvent>(e => f(e, true));
+            x.RegisterCallback<MouseLeaveEvent>(e => f(e, false));
             return x;
         }
         
@@ -250,6 +276,15 @@ namespace Prota.Editor
             x.style.paddingRight = r;
             x.style.paddingBottom = b;
             x.style.paddingTop = t;
+            return x;
+        }
+        
+        public static T SetMargin<T>(this T x, float l, float r, float b, float t) where T : VisualElement
+        {
+            x.style.marginLeft = l;
+            x.style.marginRight = r;
+            x.style.marginBottom = b;
+            x.style.marginTop = t;
             return x;
         }
         

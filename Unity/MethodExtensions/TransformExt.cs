@@ -9,16 +9,16 @@ namespace Prota.Unity
     public struct TransformAsList<T> : IReadOnlyList<T>
         where T : Component
     {
-        Transform transform;
+        Transform root;
         
         public TransformAsList(Transform transform)
         {
-            this.transform = transform;
+            this.root = transform;
         }
         
-        public T this[int index] => transform.GetChild(index).GetComponent<T>(); 
+        public T this[int index] => root.GetChild(index).GetComponent<T>(); 
         
-        public int Count => transform.childCount;
+        public int Count => root.childCount;
         
         public int IndexOf(T t)
         {
@@ -32,6 +32,60 @@ namespace Prota.Unity
         }
         
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+        
+        public TransformAsList<T> Replace(int index, T t)
+        {
+            var old = this[index];
+            if(old == t) return this;
+            t.transform.SetParent(root, false);
+            t.transform.SetSiblingIndex(index);
+            GameObject.Destroy(old.gameObject);
+            return this;
+        }
+        
+        // public void Add(T t)
+        public TransformAsList<T> CloneAdd(T t)
+        {
+            var clone = t.Clone(root);
+            clone.transform.SetAsLastSibling();
+            return this;
+        }
+        
+        public TransformAsList<T> MoveAdd(T t)
+        {
+            t.transform.SetParent(root, false);
+            t.transform.SetAsLastSibling();
+            return this;
+        }
+        
+        public TransformAsList<T> CloneInsert(int index, T t)
+        {
+            var clone = t.Clone(root);
+            clone.transform.SetSiblingIndex(index);
+            return this;
+        }
+        
+        public TransformAsList<T> MoveInsert(int index, T t)
+        {
+            t.transform.SetParent(root, false);
+            t.transform.SetSiblingIndex(index);
+            return this;
+        }
+        
+        public TransformAsList<T> RemoveAt(int index)
+        {
+            var t = this[index];
+            GameObject.Destroy(t.gameObject);
+            return this;
+        }
+        
+        public TransformAsList<T> Remove(T t)
+        {
+            var index = IndexOf(t);
+            if(index < 0) return this;
+            return RemoveAt(index);
+        }
+        
     }
     
     public static partial class UnityMethodExtensions
@@ -186,5 +240,10 @@ namespace Prota.Unity
             return tr;
         }
         
+        public static Vector3 PositionTo(this Transform a, Transform b)
+            => b.position - a.position;
+        
+        public static Vector3 PositionTo(this Transform a, Vector3 b)
+            => b - a.position;
     }
 }

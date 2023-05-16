@@ -59,6 +59,12 @@ namespace Prota
         
         public static bool IsNullOrEmpty<T>(this List<T> list) => list == null || list.Count == 0;
         
+        public static List<T> EnsureSize<T>(this List<T> list, int n)
+        {
+            if(list.Count < n) list.Resize(n);
+            return list;
+        }
+        
         public static List<T> Resize<T>(this List<T> list, int n)
         {
             while(list.Count < n) list.Add(default);
@@ -96,7 +102,9 @@ namespace Prota
         
         public static T Last<T>(this List<T> l) => l[l.Count - 1];
         
-        public static T Last<T>(this List<T> l, T v) => l[l.Count - 1] = v;
+        public static T LastOrDefault<T>(this List<T> l) => l.Count == 0 ? default : l.Last();
+        
+        public static T SetLast<T>(this List<T> l, T v) => l[l.Count - 1] = v;
         
         public static T Pop<T>(this List<T> l)
         {
@@ -210,6 +218,18 @@ namespace Prota
                 list.Pop();
             }
             return list;
+        }
+        
+        public static List<T> AddNoDuplicate<T>(this List<T> list, T x)
+        {
+            if(!list.Contains(x)) list.Add(x);
+            return list;
+        }
+        
+        public static T[] UnderlayingArray<T>(this List<T> list)
+        {
+            var t = list.ProtaReflection();
+            return t.Get<T[]>("_items");
         }
     }
 }

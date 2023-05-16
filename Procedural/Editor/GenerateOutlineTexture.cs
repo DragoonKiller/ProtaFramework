@@ -14,12 +14,30 @@ namespace Prota.Editor
 {
     public static partial class GenerateTextureArgs
     {
-        public static float outlineWidth = 4;
-        public static Color32 outlineColor = (Color32)Color.black;
-        public static float outlineAlphaWidth = 1.5f;
+        public static float outlineWidth
+        {
+            get => EditorPrefs.GetFloat("prota::outlineWidth", 2);
+            set => EditorPrefs.SetFloat("prota::outlineWidth", value);
+        }
         
-        // 大于等于这个值的像素才会被认为是有效像素, 用于去除透明边缘
-        public static float alphaThreshold = 0.5f;
+        public static Color32 outlineColor
+        {
+            get => EditorPrefs.GetString("prota::outlineColor", "000000FF").ToColor();
+            set => EditorPrefs.SetString("prota::outlineColor", ((Color)value).ToWebString());
+        }
+        
+        public static float outlineAlphaWidth
+        {
+            get => EditorPrefs.GetFloat("prota::outlineAlphaWidth", 1);
+            set => EditorPrefs.SetFloat("prota::outlineAlphaWidth", value);
+        }
+        
+        // 大于等于这个值的像素才会被认为是有效像素, 用于去除透明边缘.
+        public static float alphaThreshold
+        {
+            get => EditorPrefs.GetFloat("prota::alphaThreshold", 0.1f);
+            set => EditorPrefs.SetFloat("prota::alphaThreshold", value);
+        }
         
         public static List<Texture2D> GetCurrentSelectedTextures()
         {
@@ -83,7 +101,7 @@ namespace Prota.Editor
                             continue;
                         }
                         
-                        var distanceToEdge = (distanceToVisible.Value + distanceToInvisible.Value) / 2;
+                        var distanceToEdge = Mathf.Max(distanceToVisible.Value + distanceToInvisible.Value);
                         
                         var outlineRatio = distanceToEdge.Terp(-1, 0, outlineWidth - outlineAlphaWidth, outlineWidth);
                         var srcColor = (Color)outlineColor;

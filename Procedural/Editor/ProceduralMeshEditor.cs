@@ -35,10 +35,10 @@ namespace Prota.Editor
                 return t.transform.InverseTransformPoint(Handles.PositionHandle(t.transform.TransformPoint(v), Quaternion.identity));
             }
             
-            modified |= g.bottomLeft.DiffModify(Transform(g.bottomLeft));
-            modified |= g.bottonRight.DiffModify(Transform(g.bottonRight));
-            modified |= g.topLeft.DiffModify(Transform(g.topLeft));
-            modified |= g.topRight.DiffModify(Transform(g.topRight));
+            modified |= g.bottomLeft.SetAndCompare(Transform(g.bottomLeft));
+            modified |= g.bottonRight.SetAndCompare(Transform(g.bottonRight));
+            modified |= g.topLeft.SetAndCompare(Transform(g.topLeft));
+            modified |= g.topRight.SetAndCompare(Transform(g.topRight));
             
             // g.bottomLeft = Transform(g.bottomLeft);
             // if(a != g.bottomLeft) modified = true;

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Prota.Unity
@@ -77,5 +79,20 @@ namespace Prota.Unity
         }
         
         public static RectTransform RectTransform(this GameObject g) => g.transform as RectTransform;
+        
+        public static IEnumerable<Component> EnumerateComponents(this GameObject g)
+        {
+            using(var t = TempList<Component>.Get())
+            {
+                g.GetComponents(typeof(Component), t.value);
+                foreach(var x in t.value) yield return x;
+            }
+        }
+        
+        public static bool HasDuplicatedComponent(this GameObject g)
+        {
+            var e = g.EnumerateComponents();
+            return e.Count() != new HashSet<Component>(e).Count;
+        }
     }
 }

@@ -18,9 +18,9 @@ namespace Prota.Editor
         
         public override VisualElement CreateInspectorGUI()
         {
-            var root = new VisualElement();
+            var root = new VisualElement() { name = "root" };
             root.AddChild(new PropertyField(serializedObject.FindProperty("layerMask")));
-            root.AddChild(list = new VisualElement());
+            root.AddChild(list = new VisualElement() { name = "visList" });
             return root;
         }
 
