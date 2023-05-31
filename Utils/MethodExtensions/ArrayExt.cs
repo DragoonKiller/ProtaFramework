@@ -90,5 +90,18 @@ namespace Prota
             }
             return list;
         }
+        
+        public static bool Contains<T>(this T[] list, T element)
+        {
+            for(int i = 0; i < list.Length; i++) if(list[i].Equals(element)) return true;
+            return false;
+        }
+        
+        public static T[] WithDuplicateRemoved<T>(this T[] list)
+        {
+            var l = new List<T>();
+            for(int i = 0; i < list.Length; i++) if(!l.Contains(list[i])) l.Add(list[i]);
+            return l.ToArray();
+        }
     }
 }

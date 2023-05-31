@@ -15,7 +15,7 @@ namespace Prota.Editor
         {
             var t = fieldInfo.DeclaringType.ProtaReflection();
             var res = new VisualElement();
-            foreach(var f in t.methods)
+            foreach(var f in t.allMethods)
             {
                 if(f.GetCustomAttribute<MethodExecutor>().PassValue(out var attr) == null) continue;
                 var button = new Button(() => f.Invoke(property.serializedObject.targetObject, null));

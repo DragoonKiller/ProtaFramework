@@ -10,6 +10,7 @@ namespace Prota.Unity
 {
     public enum PhysicsEventType
     {
+        None = 0,
         Enter = 1,
         Stay = 2,
         Exit = 3,
@@ -24,6 +25,7 @@ namespace Prota.Unity
             public readonly Collision collision;
             public readonly float time;
             
+            public bool valid => 0 < (int)type && (int)type <= 3;
             public bool isEnter => type == PhysicsEventType.Enter;
             public bool isExit => type == PhysicsEventType.Exit;
             public bool isStay => type == PhysicsEventType.Stay;
@@ -34,6 +36,7 @@ namespace Prota.Unity
                 this.collider = collider;
                 this.collision = collision;
                 this.time = time;
+                valid.Assert();
             }
         }
         

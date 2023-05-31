@@ -11,7 +11,7 @@ namespace Prota
         public struct Token
         {
             public readonly CancellationTokenSource src;
-            public bool cancelled => src.IsCancellationRequested;
+            public bool cancelled => isNone ? false : src.IsCancellationRequested;
             public bool isNone => src == null;
             public Token(TaskCanceller cc) => this.src = cc.currentSource;
         }
@@ -37,5 +37,11 @@ namespace Prota
             currentSource?.Cancel();
             currentSource = null;
         }
+    }
+    
+    public static partial class MethodExtensions
+    {
+        public static bool IsCancelled(this TaskCanceller.Token? token)
+            => token == null ? false : token.Value.cancelled;
     }
 }

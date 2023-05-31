@@ -196,7 +196,8 @@ namespace Prota.Tween
         
         public TweenHandle OnFinish(Action<TweenHandle> onFinish)
         {
-            this.onFinish += onFinish;
+            if(isTimeout) onFinish?.Invoke(this);
+            else this.onFinish += onFinish;
             return this;
         }
         

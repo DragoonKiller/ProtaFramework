@@ -18,7 +18,7 @@ namespace Prota
         // 同步目标是一个提供 IEnumerator<KeyValuePair<K, V>> 和 TryGetValue(K, out V) 的字典类结构(不必是字典).
         // 同步者是 IDictionary<K, G> target.
         // 同步时需要提供 V => G 的对映逻辑.
-        public static F SetSync<K, G, V, F>(
+        public static F SyncData<K, G, V, F>(
             this F target,
             GetKVEnumerableFunc<K, V> getEnumerable,
             TryGetValueFunc<K, V> tryGetValue,
@@ -36,26 +36,24 @@ namespace Prota
                 }
             }
             
-            using(var temp = TempList<K>.Get())
+            using var _ = TempList<K>.Get(out var temp);
+            foreach(var e in target)
             {
-                foreach(var e in target)
+                // 有 key 的更新.
+                if(tryGetValue(e.Key, out var v))
                 {
-                    // 有 key 的更新.
-                    if(tryGetValue(e.Key, out var v))
-                    {
-                        updateFunc(e.Key, v, e.Value);
-                    }
-                    // 没 key 的取消.
-                    else
-                    {
-                        removeFunc(e.Key, e.Value);
-                        temp.value.Add(e.Key);
-                    }
+                    updateFunc(e.Key, v, e.Value);
                 }
-                
-                // 没有的删除.
-                foreach(var k in temp.value) target.Remove(k);
+                // 没 key 的取消.
+                else
+                {
+                    removeFunc(e.Key, e.Value);
+                    temp.Add(e.Key);
+                }
             }
+            
+            // 没有的删除.
+            foreach(var k in temp) target.Remove(k);
             
             return target;
         }
@@ -72,7 +70,7 @@ namespace Prota
             Action<K, G> removeFunc
         ) where F: IDictionary<K, G>
         {
-            return target.SetSync(() => dict, dict.TryGetValue, newFunc, updateFunc, removeFunc);
+            return target.SyncData(() => dict, dict.TryGetValue, newFunc, updateFunc, removeFunc);
         }
         
         public static Dictionary<K, V> Clone<K, V>(this Dictionary<K, V> x)

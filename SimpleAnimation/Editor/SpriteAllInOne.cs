@@ -44,7 +44,11 @@ namespace Prota.Editor
         {
             var curSelectPath = selectedFolder;
             if(curSelectPath == null) return;
-            var files = Prota.Editor.Utils.GetAllFilesWithExtension(curSelectPath, validExtensions);
+            var dir = AssetTree.instance.root.FindFullPath(curSelectPath);
+            var files = dir.files
+                .Where(x => x != null && validExtensions.Contains(x.extension.ToLower()))
+                .Select(x => x.fullPath.FullPathToAssetPath())
+                .ToList();
             var textures = files.Select(x => AssetDatabase.LoadAssetAtPath<Texture2D>(x)).ToList();
             var sameAsPrev = new List<bool>();
             for(int i = 0; i < textures.Count; i++) sameAsPrev.Add(false);

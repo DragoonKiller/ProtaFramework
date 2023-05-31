@@ -11,7 +11,7 @@ namespace Prota.Unity
         public HashSet<Type> required = new HashSet<Type>();
         public HashSet<Type> excluded = new HashSet<Type>();
         
-        HashSet<EComponent> anchorList => EComponent.instances[typeof(T)];
+        IEnumerable<T> anchorList => EComponent.Instances<T>();
         
         public EFilter<T> With<H>() where H : EComponent
         {
@@ -34,7 +34,7 @@ namespace Prota.Unity
             return true;
         }
         
-        public IEnumerable<T> result => anchorList.Where(x => Match(x.entity)).Cast<T>();
+        public IEnumerable<T> result => anchorList.Where(x => Match(x.entity));
     }
 }
 

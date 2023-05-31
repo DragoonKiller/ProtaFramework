@@ -28,7 +28,7 @@ namespace Prota.Editor
             onDeactive.AssertNotNull();
             
             var len = getLength();
-            list.SetLength(len, onCreate, onActive, onDeactive);
+            list.SyncData(len, onCreate, onActive, onDeactive);
             
             return this;
         }

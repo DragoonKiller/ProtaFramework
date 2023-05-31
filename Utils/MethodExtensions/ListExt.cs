@@ -77,7 +77,7 @@ namespace Prota
             return new List<T>(x);
         }
         
-        public static void InvokeAll<G>(this IEnumerable<G> list, object[] args = null)
+        public static void InvokeAll<G>(this IEnumerable<G> list, params object[] args)
             where G: Delegate
         {
             foreach(var i in list) i?.DynamicInvoke(args);
@@ -148,7 +148,7 @@ namespace Prota
         }
         
         // 数量映射.
-        public static F SetLength<T, F>(this F l, int n, Func<int, T> onCreate, Action<int, T> onEnable, Action<int, T> onDisable)
+        public static F SyncData<T, F>(this F l, int n, Func<int, T> onCreate, Action<int, T> onEnable, Action<int, T> onDisable)
             where F: List<T>
         {
             for(int i = 0; i < n; i++)

@@ -16,6 +16,13 @@ namespace Prota
         {
             return ConcurrentPool<List<T>>.instance.Get();
         }
+        
+        public static ConcurrentPool<List<T>>.Handle Get(out List<T> value)
+        {
+            var handle = ConcurrentPool<List<T>>.instance.Get();
+            value = handle.value;
+            return handle;
+        }
     }
     
     public class TempHashSet<T>
@@ -31,6 +38,13 @@ namespace Prota
         {
             return ConcurrentPool<HashSet<T>>.instance.Get();
         }
+        
+        public static ConcurrentPool<HashSet<T>>.Handle Get(out HashSet<T> value)
+        {
+            var handle = ConcurrentPool<HashSet<T>>.instance.Get();
+            value = handle.value;
+            return handle;
+        }
     }
     
     public static class TempDict<K, V>
@@ -45,6 +59,13 @@ namespace Prota
         public static ConcurrentPool<Dictionary<K, V>>.Handle Get()
         {
             return ConcurrentPool<Dictionary<K, V>>.instance.Get();
+        }
+        
+        public static ConcurrentPool<Dictionary<K, V>>.Handle Get(out Dictionary<K, V> value)
+        {
+            var handle = ConcurrentPool<Dictionary<K, V>>.instance.Get();
+            value = handle.value;
+            return handle;
         }
     }
 }

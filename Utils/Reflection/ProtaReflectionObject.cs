@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
+using System.Text;
 
 namespace Prota
 {
@@ -13,6 +13,8 @@ namespace Prota
         const BindingFlags BindingAttr = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
         public readonly object target;
         public ProtaReflectionType type => new ProtaReflectionType(target.GetType());
+        
+        public Type rawType => target.GetType();
         
         public ProtaReflectionObject(object target)
         {
@@ -137,7 +139,17 @@ namespace Prota
             throw new Exception($"specific method [{ name }({ argTypes.ToStrings().Join(",") })] not found");
         }
         
-        
+        public string AllPropertiesAndValuesToString()
+        {
+            var all = this.type.allFields;
+            var sb = new StringBuilder();
+            foreach(var f in all)
+            {
+                var value = f.GetValue(target);
+                sb.AppendLine($"[{f.Name}]{value}");
+            }
+            return sb.ToString();
+        }
         
         
     }

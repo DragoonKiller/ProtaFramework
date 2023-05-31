@@ -240,16 +240,19 @@ namespace Prota.Unity
         public static Vector3 WithLength(this Vector3 a, float len) => a.normalized * len;
         public static Vector2 WithLength(this Vector2 a, float len) => a.normalized * len;
         
-        public static Vector2 WithMaxLength(this Vector2 a, float maxLen) => a.normalized * a.magnitude.Min(maxLen);
-        public static Vector3 WithMaxLength(this Vector3 a, float maxLen) => a.normalized * a.magnitude.Min(maxLen);
+        public static Vector2 WithMaxLength(this Vector2 a, float maxLen) => a.normalized * a.magnitude.Max(maxLen);
+        public static Vector3 WithMaxLength(this Vector3 a, float maxLen) => a.normalized * a.magnitude.Max(maxLen);
+        
+        public static Vector2 WithMinLength(this Vector2 a, float maxLen) => a.normalized * a.magnitude.Min(maxLen);
+        public static Vector3 WithMinLength(this Vector3 a, float maxLen) => a.normalized * a.magnitude.Min(maxLen);
         
         public static Vector2 AddLength(this Vector2 a, float addLen) => a.WithLength(a.magnitude + addLen);
         public static Vector3 AddLength(this Vector3 a, float addLen) => a.WithLength(a.magnitude + addLen);
         
         public static Vector2 Move(this Vector2 a, Vector2 move, float? maxLength = null)
-            => (a + move.WithMaxLength(maxLength ?? float.PositiveInfinity));
+            => (a + move.WithMinLength(maxLength ?? float.PositiveInfinity));
         public static Vector3 Move(this Vector3 a, Vector3 move, float? maxLength = null)
-            => (a + move.WithMaxLength(maxLength ?? float.PositiveInfinity));
+            => (a + move.WithMinLength(maxLength ?? float.PositiveInfinity));
             
         public static float Angle(this Vector2 a, Vector2 b) => Vector2.SignedAngle(a, b);
         

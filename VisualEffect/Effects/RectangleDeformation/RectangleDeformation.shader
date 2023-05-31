@@ -26,7 +26,7 @@ Shader "ProtaFramwork/RectangleDeformation"
             #pragma fragment frag
             
             #include "UnityCG.cginc"
-            #include "ProtaUtils.cginc"
+            #include "../../Shader/ProtaUtils.cginc"
 
             struct appdata
             {

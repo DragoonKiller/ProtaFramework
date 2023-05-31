@@ -3,9 +3,11 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace Prota.Unity
 {
+    // T: 使用什么组件来控制. 不知道填什么就填 Transform.
     public struct TransformAsList<T> : IReadOnlyList<T>
         where T : Component
     {
@@ -17,6 +19,22 @@ namespace Prota.Unity
         }
         
         public T this[int index] => root.GetChild(index).GetComponent<T>(); 
+        
+        public T this[params string[] name]
+        {
+            get
+            {
+                var cur = root;
+                for(int i = 0; i < name.Length; i++)
+                {
+                    cur = cur.Find(name[i]);
+                    if(cur == null) throw new Exception($"{ name.ToStringJoined("/") } 找不到 { name[i] }");
+                }
+                var c = cur.GetComponent<T>();
+                if(c == null) throw new Exception($"{ name.ToStringJoined("/") } 找到了GameObject但是找不到组件 { nameof(T) }");
+                return c;
+            }
+        }
         
         public int Count => root.childCount;
         
@@ -31,6 +49,7 @@ namespace Prota.Unity
             for(int i = 0; i < Count; i++) yield return this[i];
         }
         
+        
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
         
         public TransformAsList<T> Replace(int index, T t)
@@ -40,6 +59,13 @@ namespace Prota.Unity
             t.transform.SetParent(root, false);
             t.transform.SetSiblingIndex(index);
             GameObject.Destroy(old.gameObject);
+            return this;
+        }
+        
+        public TransformAsList<T> CloneAddWithTemplate(T template)
+        {
+            var clone = template.CloneAsTemplate(root);
+            clone.transform.SetAsLastSibling();
             return this;
         }
         
@@ -86,6 +112,34 @@ namespace Prota.Unity
             return RemoveAt(index);
         }
         
+        public void EnsureCountWithCloneAdd(int count, T prefab)
+        {
+            while(Count < count) CloneAdd(prefab);
+        }
+        
+        public void EnsureCountWithCloneAddTemplate(int count, T prefab)
+        {
+            while(Count < count) CloneAddWithTemplate(prefab);
+        }
+        
+        public void SetSync(int n, T template, Action<int, T> onActivate = null, Action<int, T> onDeactivate = null)
+        {
+            this.EnsureCountWithCloneAddTemplate(n, template);
+            for(int i = 0; i < Count; i++)
+            {
+                var t = this[i];
+                if(i < n)
+                {
+                    if(onActivate != null) onActivate.Invoke(i, t);
+                    else t.SetActive(true);
+                }
+                else
+                {
+                    if(onDeactivate != null) onDeactivate.Invoke(i, t);
+                    else t.SetActive(false);
+                }
+            }
+        }
     }
     
     public static partial class UnityMethodExtensions
@@ -117,12 +171,20 @@ namespace Prota.Unity
             }
         }
         
-        private static Action<Transform> currentRecursiveTransformOp;
-        private static void ForeachTransformRecursivelyInternal(Transform t)
+        [ThreadStatic] static Func<Transform, bool> currentRecursiveTransformOpX;
+        static void ForeachTransformRecursivelyInternalX(Transform t)
+        {
+            if(!currentRecursiveTransformOpX(t)) return;
+            ForeachChild(t, ForeachTransformRecursivelyInternalX);
+        }
+        
+        [ThreadStatic] static Action<Transform> currentRecursiveTransformOp;
+        static void ForeachTransformRecursivelyInternal(Transform t)
         {
             currentRecursiveTransformOp(t);
             ForeachChild(t, ForeachTransformRecursivelyInternal);
         }
+        
         public static void ForeachTransformRecursively(this Transform t, Action<Transform> f)
         {
             if(t == null || f == null) return;
@@ -130,6 +192,13 @@ namespace Prota.Unity
             ForeachTransformRecursivelyInternal(t);
         }
         
+        // 返回值: 是否要递归搜索.
+        public static void ForeachTransformRecursively(this Transform t, Func<Transform, bool> f)
+        {
+            if(t == null || f == null) return;
+            currentRecursiveTransformOpX = f;
+            ForeachTransformRecursivelyInternalX(t);
+        }
         
         public static int GetDepth(this Transform t)
         {
@@ -144,14 +213,14 @@ namespace Prota.Unity
         
         public static string GetNamePath(this Transform t)
         {
-            var sb = new StringBuilder();
+            var sb = new List<string>();
             while(t != null)
             {
-                sb.Append("/");
-                sb.Append(t.gameObject.name);
+                sb.Add(t.gameObject.name);
                 t = t.parent;
             }
-            return sb.ToString();
+            sb.Reverse();
+            return sb.ToStringJoined("/");
         }
         
         public static T GetOrCreate<T>(this Transform t) where T : Component

@@ -6,8 +6,13 @@ using UnityEngine;
 
 namespace Prota.Unity
 {
+    [ESystemAllowDuplicate]
     public sealed class NodeSystem : ESystem
     {
-        
+        protected override void OnValidate()
+        {
+            base.OnValidate();
+            this.updateMode = UpdateMode.None;
+        }
     }
 }

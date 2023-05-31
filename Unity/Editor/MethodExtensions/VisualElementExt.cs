@@ -129,7 +129,7 @@ namespace Prota.Editor
         }
         
         public static T AsHorizontalSeperator<T>(this T x, float height) where T: VisualElement
-            => x.AsHorizontalSeperator(height, new Color(.1f, .1f, .1f, 1));
+            => x.AsHorizontalSeperator(height, new Color(.15f, .15f, .15f, 1)).SetMargin(0, 0, 1, 1);
         public static T AsHorizontalSeperator<T>(this T x, float height, Color color) where T: VisualElement
         {
             x.SetGrow().SetHeight(height).AutoWidth();
@@ -138,7 +138,7 @@ namespace Prota.Editor
         }
         
         public static T AsVerticalSeperator<T>(this T x, float width) where T: VisualElement
-            => x.AsVerticalSeperator(width, new Color(.1f, .1f, .1f, 1));
+            => x.AsVerticalSeperator(width, new Color(.15f, .15f, .15f, 1)).SetMargin(1, 1, 0, 0);
         public static T AsVerticalSeperator<T>(this T x, float width, Color color) where T: VisualElement
         {
             x.SetGrow().SetWidth(width).AutoHeight();
@@ -149,9 +149,9 @@ namespace Prota.Editor
         
         public static T SetVisible<T>(this T x, bool visible) where T: VisualElement
         {
-            if(x.visible != visible) x.visible = visible;
+            // if(x.visible != visible) x.visible = visible;
             x.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
-            x.style.visibility = visible ? Visibility.Visible : Visibility.Hidden;
+            // x.style.visibility = visible ? Visibility.Visible : Visibility.Hidden;
             return x;
         }
         
@@ -176,6 +176,18 @@ namespace Prota.Editor
         public static T SetTextColor<T>(this T x, Color a) where T: Label
         {
             x.style.color = a;
+            return x;
+        }
+        
+        public static T SetTextBold<T>(this T x) where T: Label
+        {
+            x.style.unityFontStyleAndWeight = new StyleEnum<FontStyle>(FontStyle.Bold);
+            return x;
+        }
+        
+        public static T SetTextNormal<T>(this T x) where T: Label
+        {
+            x.style.unityFontStyleAndWeight = new StyleEnum<FontStyle>(FontStyle.Normal);
             return x;
         }
         
@@ -223,13 +235,13 @@ namespace Prota.Editor
         public static ScrollView VerticalScroll(this ScrollView x)
         {
             x.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
-            x.verticalScrollerVisibility = ScrollerVisibility.Hidden;
+            x.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
             return x;
         }
         public static ScrollView HorizontalScroll(this ScrollView x)
         {
             x.verticalScrollerVisibility = ScrollerVisibility.Hidden;
-            x.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
+            x.horizontalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
             return x;
         }
         public static ScrollView NoScroll(this ScrollView x)
@@ -311,7 +323,15 @@ namespace Prota.Editor
             return x;
         }
         
-        public static T SetChildList<G, T>(this T l, int n, Func<int, G> onCreate, Action<int, G> onUpdate, Action<int, G> onDisable) where T: VisualElement where G:VisualElement
+        public static VisualElement ShowOnCondition<T, G>(this VisualElement x, T listenTarget, Func<G, G, bool> f) where T: VisualElement, INotifyValueChanged<G>
+        {
+            listenTarget.RegisterValueChangedCallback<G>(e => {
+                x.SetVisible(f(e.previousValue, e.newValue));
+            });
+            return x.SetVisible(f(default, listenTarget.value));
+        }
+        
+        public static T SyncData<G, T>(this T l, int n, Func<int, G> onCreate, Action<int, G> onUpdate, Action<int, G> onDisable) where T: VisualElement where G:VisualElement
         {
             for(int i = 0; i < n; i++)
             {
@@ -325,6 +345,47 @@ namespace Prota.Editor
             
             for(int i = n; i < l.childCount; i++) onDisable(i, l[i] as G);
             return l;
+        }
+        
+        public static VisualElement AsToggle(this VisualElement e, string name, string hint, SerializedProperty prop)
+        {
+            return new VisualElement() { name = ":" + name }
+                .SetHorizontalLayout()
+                .AddChild(new Toggle() { name = name }.WithBind(prop).SetMargin(0, 4, 0, 0))
+                .AddChild(new Label(hint) { name = "hint" });
+        }
+        
+        public static VisualElement AsToggle(this VisualElement e, string name, string hint, out Toggle toggle)
+        {
+            e.name = ":" + name;
+            var s = e
+                .SetHorizontalLayout()
+                .AddChild(toggle = new Toggle() { name = name }.SetMargin(0, 4, 0, 0))
+                .AddChild(new Label(hint) { name = "hint" });
+            return s;
+        }
+        
+        public static VisualElement AsToggle(this VisualElement e, string hint, SerializedProperty prop)
+        {
+            return new VisualElement()
+                .SetHorizontalLayout()
+                .AddChild(new Toggle().WithBind(prop).SetMargin(0, 4, 0, 0))
+                .AddChild(new Label(hint) { name = "hint" });
+        }
+        
+        public static VisualElement AsToggle(this VisualElement e, string hint, out Toggle toggle)
+        {
+            var s = e
+                .SetHorizontalLayout()
+                .AddChild(toggle = new Toggle().SetMargin(0, 4, 0, 0))
+                .AddChild(new Label(hint) { name = "hint" });
+            return s;
+        }
+        
+        public static T WithBind<T>(this T bindable, SerializedProperty prop) where T: VisualElement, IBindable
+        {
+            bindable.BindProperty(prop);
+            return bindable;
         }
     }
 }

@@ -1,12 +1,57 @@
 using System.Collections.Generic;
 using System;
-using System.Text;
-using System.Buffers.Binary;
 using System.Collections;
 using System.Linq;
 
 namespace Prota
 {
+    
+    public class HashMapArray<A, B> : Dictionary<A, B[]>
+    {
+        public IEnumerable<B> elements => this.Values.SelectMany(x => x);
+        
+        public bool Contains(A key, B val)
+        {
+            if(!this.TryGetValue(key, out var s)) return false;
+            return s.Contains(val);
+        }
+        
+        public void Resize(A key, int size)
+        {
+            if(!this.TryGetValue(key, out var s))
+            {
+                s = new B[size];
+            }
+            else
+            {
+                Array.Resize(ref s, size);
+            }
+            this[key] = s;
+        }
+        
+        public void EnsureCap(A key, int i)
+        {
+            if(!this.TryGetValue(key, out var s))
+            {
+                s = new B[i.NextPowerOfTwo()];
+            }
+            else if(s.Length <= i)
+            {
+                Array.Resize(ref s, i.NextPowerOfTwo());
+            }
+            this[key] = s;
+        }
+        
+        public HashMapArray<A, B> SetElement(A key, int i, B val)
+        {
+            this.EnsureCap(key, i);
+            this[key][i] = val;
+            return this;
+        }
+        
+    }
+    
+    
     // 相当于 Dictionary<A, List<B>>, 提供了额外的函数.
     public class HashMapList<A, B> : Dictionary<A, List<B>>
     {
@@ -39,6 +84,13 @@ namespace Prota
             return this;
         }
         
+        public void Remove(Func<KeyValuePair<A, List<B>>, bool> f)
+        {
+            using var _ = TempList<A>.Get(out var toBeRemoved);
+            foreach(var kv in this) if(f(kv)) toBeRemoved.Add(kv.Key);
+            foreach(var k in toBeRemoved) this.Remove(k);
+        }
+        
         public bool RemoveElementAt(A key, int i)
         {
             if(!this.TryGetValue(key, out var s)) return false;
@@ -55,6 +107,19 @@ namespace Prota
             return res;
         }
         
+        public void RemoveElement(A key, Predicate<B> f)
+        {
+            if(!this.TryGetValue(key, out var s)) return;
+            var res = s.RemoveAll(f);
+            if(s.Count == 0) this.Remove(key);
+        }
+        
+        public void RemoveElement(Predicate<B> f)
+        {
+            foreach(var s in this.Values) s.RemoveAll(f);
+            this.Remove(x => x.Value.Count == 0);
+        }
+        
         public bool InsertElementNoDuplicate(A key, int i, B val)
         {
             this.GetOrCreate(key, out var s);
@@ -69,6 +134,26 @@ namespace Prota
             if(s.Contains(val)) return false;
             s.Add(val);
             return true;
+        }
+        
+        public B FirstElement(A key)
+        {
+            if(!this.TryGetValue(key, out var s)) return default;
+            return s[0];
+        }
+        
+        public B LastElement(A key)
+        {
+            if(!this.TryGetValue(key, out var s)) return default;
+            return s[s.Count - 1];
+        }
+        
+        public bool TryGetElement(A key, int i, out B res)
+        {
+            res = default;
+            if(!this.TryGetValue(key, out var s)) return false;
+            if(s.TryGetValue(i, out res)) return true;
+            return false;
         }
     }
     

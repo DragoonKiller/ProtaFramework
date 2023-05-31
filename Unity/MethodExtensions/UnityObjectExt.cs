@@ -7,7 +7,7 @@ namespace Prota.Unity
     public static partial class UnityMethodExtensions
     {
         // 用来把非 null 但是已删除的对象转换为 null, 这样可以对齐 C# 语法糖.
-        public static UnityEngine.Object CheckNull(this UnityEngine.Object x)
+        public static T CheckNull<T>(this T x) where T: UnityEngine.Object
         {
             if(x == null) return null;
             return x;

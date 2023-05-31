@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
+using MessagePack.Formatters;
 
 namespace Prota
 {
@@ -35,6 +35,8 @@ namespace Prota
         }
         
         public static string BackingFieldNameOfProperty(string name) => $"<{name}>k__BackingField";
+        
+        public Attribute[] attributes => type.GetCustomAttributes(true).Cast<Attribute>().ToArray();
         
         public MemberInfo[] allMembers => type.GetMembers(BindingAttr);
         
@@ -197,14 +199,6 @@ namespace Prota
         
         public MemberInfo GetMember(string name) => AssertThis("Member {0} not found", name, type.GetMember(name, BindingAttr).FirstOrDefault());
         
-        public IEnumerable<PropertyInfo> properties => type.GetProperties(BindingAttr);
-        
-        public IEnumerable<FieldInfo> fields => type.GetFields(BindingAttr);
-        
-        public IEnumerable<MethodInfo> methods => type.GetMethods(BindingAttr);
-        
-        public IEnumerable<MemberInfo> members => type.GetMembers(BindingAttr);
-        
         public bool HasProperty(string name) => type.GetProperty(name, BindingAttr) != null;
         
         public bool HasField(string name) => type.GetField(name, BindingAttr) != null;
@@ -246,6 +240,10 @@ namespace Prota
             if(HasMethod(name, args)) return GetMethod(name, args).IsPublic;
             throw new ProtaReflectionFailException($"Member { name } ({ args.ToStrings().Join(",") }) not found");
         }
+        
+        public Attribute GetTypeAttribute(Type type) => attributes.FirstOrDefault(a => a.GetType() == type);
+        
+        public T GetTypeAttribute<T>() where T: Attribute => GetTypeAttribute(typeof(T)) as T;
         
         
         public Attribute[] GetAllAttributes(string name)

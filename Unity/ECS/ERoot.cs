@@ -5,30 +5,41 @@ using UnityEngine;
 
 namespace Prota.Unity
 {
-    
-    public class ERoot : MonoBehaviour
+    [ExecuteAlways]
+    public sealed class ERoot : MonoBehaviour
     {
         public static HashSet<ERoot> entities = new HashSet<ERoot>();
         
-        [SerializeField, Readonly] List<EComponent> components = new List<EComponent>();
+        [SerializeField, Readonly] HashMapList<Type, EComponent> components = new HashMapList<Type, EComponent>();
         
-        public T GetEntityComponent<T>() where T : EComponent
-            => components.Where(x => x is T).FirstOrDefault() as T;
+        public bool TryGetEntityComponent<T>(out T c) where T : EComponent
+        {
+            c = GetEntityComponent<T>();
+            return c != null;
+        }
+        
+        public bool TryGetEntityComponent(Type t, out EComponent c)
+        {
+            c = GetEntityComponent(t);
+            return c != null;
+        }
+        
+        public T GetEntityComponent<T>() where T : EComponent => GetEntityComponent(typeof(T)) as T;
         
         public EComponent GetEntityComponent(Type t)
-            => components.Where(x => x.GetType() == t).FirstOrDefault();
+            => components.FirstElement(t);
         
         public bool HasEntityComponent<T>() where T : EComponent
-            => components.Any(x => x is T);
+            => HasEntityComponent(typeof(T));
         
         public bool HasEntityComponent(Type t)
-            => components.Any(x => x.GetType() == t);
+            => components.TryGetValue(t, out var res) && res.Count > 0;
         
         public IEnumerable<T> GetEntityComponents<T>() where T : EComponent
-            => components.Select(x => x as T).Where(x => x != null);
+            => GetEntityComponents(typeof(T)).Cast<T>();
             
         public IEnumerable<EComponent> GetEntityComponents(Type t)
-            => components.Where(x => x.GetType() == t);
+            => components[t];
         
         void Awake()
         {
@@ -40,6 +51,12 @@ namespace Prota.Unity
             if(!gameObject.IsDestroyed()) throw new Exception("EntityRoot should be destroyed with GameObject.");
         }
         
+        void Update()
+        {
+            if(Application.isPlaying) return;
+            components.RemoveElement(x => x == null);
+        }
+        
         void OnDestroy()
         {
             entities.Remove(this);
@@ -47,11 +64,14 @@ namespace Prota.Unity
         
         
         public void AttachEntityComponent(EComponent c)
-            => components.AddNoDuplicate(c);
-        
+        {
+            components.AddElementNoDuplicate(c.GetType(), c);
+        }
         
         public void DetachEntityComponent(EComponent c)
-            => components.Remove(c);
+        {
+            components.RemoveElement(c.GetType(), c);
+        }
     }
 }
 

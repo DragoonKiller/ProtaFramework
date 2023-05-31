@@ -8,21 +8,5 @@ namespace Prota.Editor
 {
     public static partial class Utils
     {
-        public static List<string> GetAllFilesWithExtension(string curSelectPath, HashSet<string> validExtension)
-        {
-            return Directory.GetFiles(curSelectPath, "*.*", SearchOption.TopDirectoryOnly)
-                .Where(x => validExtension.Contains(Path.GetExtension(x)))
-                .Select(x => Path.GetFullPath(x).FullPathToAssetPath())
-                .ToList();
-        }
-        
-        public static string GetRelativePath(string parent, string sub)
-        {
-            var fpParent = Path.GetFullPath(parent);
-            var fpSub = Path.GetFullPath(sub);
-            if(fpSub.StartsWith(fpParent)) return fpSub.Substring(fpParent.Length + 1);
-            // throw new System.Exception("给定路径不是包含关系.");
-            return null;
-        }
     }
 }

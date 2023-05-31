@@ -84,11 +84,9 @@ namespace Prota.Editor
             var from = p.position;
             var to = t.position;
             
-            using(var g = GizmosContext.Get())
-            {
-                Gizmos.color = Color.green;
-                Gizmos.DrawLine(from, to);
-            }
+            using var g = GizmosContext.Get();
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(from, to);
         }
         
         
@@ -103,14 +101,12 @@ namespace Prota.Editor
             if(c == null) return;
             var min = c.bounds.min;
             var max = c.bounds.max;
-            using(var g = GizmosContext.Get())
-            {
-                Gizmos.color = c.attachedRigidbody == null ? darkRed : darkGreen;
-                Gizmos.DrawLine(min, max.WithX(min.x));
-                Gizmos.DrawLine(min, max.WithY(min.y));
-                Gizmos.DrawLine(min.WithX(max.x), max);
-                Gizmos.DrawLine(min.WithY(max.y), max);
-            }
+            using var g = GizmosContext.Get();
+            Gizmos.color = c.attachedRigidbody == null ? darkRed : darkGreen;
+            Gizmos.DrawLine(min, max.WithX(min.x));
+            Gizmos.DrawLine(min, max.WithY(min.y));
+            Gizmos.DrawLine(min.WithX(max.x), max);
+            Gizmos.DrawLine(min.WithY(max.y), max);
         }
         
         
@@ -126,14 +122,12 @@ namespace Prota.Editor
             var max = c.bounds.max;
             min.SetZ(c.transform.position.z);
             max.SetZ(c.transform.position.z);
-            using(var g = GizmosContext.Get())
-            {
-                Gizmos.color = darkBlue;
-                Gizmos.DrawLine(min, max.WithX(min.x));
-                Gizmos.DrawLine(min, max.WithY(min.y));
-                Gizmos.DrawLine(min.WithX(max.x), max);
-                Gizmos.DrawLine(min.WithY(max.y), max);
-            }
+            using var g = GizmosContext.Get();
+            Gizmos.color = darkBlue;
+            Gizmos.DrawLine(min, max.WithX(min.x));
+            Gizmos.DrawLine(min, max.WithY(min.y));
+            Gizmos.DrawLine(min.WithX(max.x), max);
+            Gizmos.DrawLine(min.WithY(max.y), max);
         }
         
         

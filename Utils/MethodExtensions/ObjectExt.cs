@@ -33,7 +33,7 @@ namespace Prota
             return value = x;
         }
         
-        public static IEnumerable<string> ToStrings(this IEnumerable<object> x)
+        public static IEnumerable<string> ToStrings<T>(this IEnumerable<T> x)
         {
             foreach(var i in x)
             {
@@ -41,10 +41,11 @@ namespace Prota
             }
         }
         
-        public static string ToStringJoined(this IEnumerable<object> x, string separator = "\n")
+        public static string ToStringJoined<T>(this IEnumerable<T> x, string separator = "\n")
         {
             return string.Join(separator, x.ToStrings());
         }
+        
         
         
         public static bool IsAllOfType(this IEnumerable<object> x, Type type)

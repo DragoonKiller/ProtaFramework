@@ -5,6 +5,8 @@ using UnityEngine.Pool;
 using Prota.Unity;
 using System.Reflection;
 using System.Text;
+using System.Runtime.Versioning;
+using System.Linq;
 
 namespace Prota.Tween
 {
@@ -41,10 +43,13 @@ namespace Prota.Tween
         BounceIn,
         BounceOut,
         BounceInOut,
+        
+        AppearIn,
+        AppearOut,
     }
     
     [Serializable]
-    public struct TweenEase
+    public partial struct TweenEase
     {
         
         readonly Func<float, float> f;
@@ -88,7 +93,6 @@ namespace Prota.Tween
             return f(x);
         }
         
-        // builtin ease functions https://easings.net/#
         
         public static TweenEase Step(Func<float, float> f, int stepCount = 1)
         {
@@ -96,8 +100,28 @@ namespace Prota.Tween
         }
         
         // ====================================================================================================
+        // builtin ease by custom animation curve.
         // ====================================================================================================
         
+        public static readonly TweenEaseCurves curves
+            = Resources.LoadAll<TweenEaseCurves>("TweenEaseCurves")
+                .FirstOrDefault()
+                .AssertNotNull();
+        
+        public static readonly TweenEase appearIn = new TweenEase(x => curves.appearIn.Evaluate(x));
+        public static readonly TweenEase appearOut = new TweenEase(x => curves.appearOut.Evaluate(x));
+        
+        // ====================================================================================================
+        // builtin ease functions https://easings.net/#
+        // ====================================================================================================
+        
+        const float c1 = 1.70158f;
+        const float c2 = c1 * 1.525f;
+        const float c3 = c1 + 1;
+        const float c4 = (2 * Mathf.PI) / 3;
+        const float c5 = (2 * Mathf.PI) / 4.5f;
+        const float n1 = 7.5625f;
+        const float d1 = 2.75f;
         
         public static readonly TweenEase linear = new TweenEase(x => x);
         public static readonly TweenEase sinIn = new TweenEase(x => 1 - Mathf.Cos(x * Mathf.PI / 2));
@@ -130,29 +154,25 @@ namespace Prota.Tween
             : ((1 - (-2 * x + 2).Sqr()).Sqrt() + 1) / 2
         );
         
-        public static readonly TweenEase backIn = new TweenEase(x => 2.70158f * x * x * x - 1.70158f * x * x);
-        public static readonly TweenEase backOut = new TweenEase(x => 1 + 2.70158f * (x - 1).Cube() - 1.70158f * (x - 1).Sqr());
+        public static readonly TweenEase backIn = new TweenEase(x => c3 * x * x * x - c1 * x * x);
+        public static readonly TweenEase backOut = new TweenEase(x => 1 + c3 * (x - 1).Pow(3) + c1 * (x - 1).Pow(2));
         public static readonly TweenEase backInOut = new TweenEase(x =>
-            x < 0.5 ? ((2 * x).Sqr() * (3.59491f * 2 * x - 2.59491f)) / 2
+            x < 0.5 ? ((2 * x).Sqr() * ((3.59491f + 1) * 2 * x - 2.59491f)) / 2
             : ((2 * x - 2).Sqr() * (3.59491f * (x * 2 - 2) + 2.59491f) + 2) / 2
         );
         
         
-        const float c4 = (2 * Mathf.PI) / 3;
-        const float c5 = (2 * Mathf.PI) / 4.5f;
+        
         public static readonly TweenEase elasticIn = new TweenEase(x => x == 0 ? 0 : x == 1 ? 1 : (2f).Pow(10 * x - 10) * (10 * x - 10.75f).Sin() * c4);
         public static readonly TweenEase elasticOut = new TweenEase(x => x == 0 ? 0 : x == 1 ? 1 : (2f).Pow(-10 * x) * (10 * x - 0.75f).Sin() * c4 + 1);
         public static readonly TweenEase elasticInOut = new TweenEase(x =>
-            x == 0 ? 0
-            : x == 1 ? 1
-            : x < 0.5f ? -((2f).Pow(20 * x - 10) * ((20 * x - 11.125f) * c5).Sin()) / 2
-            : ((2f).Pow(-20 * x + 10) * ((20 * x - 11.125f) * c5).Sin()) / 2 + 1
+            x < 0.5
+            ? ((2 * x).Pow(2) * ((c2 + 1) * 2 * x - c2)) / 2
+            : ((2 * x - 2).Pow(2) * ((c2 + 1) * (x * 2 - 2) + c2) + 2) / 2
         );
         
         public static readonly TweenEase bounceIn = new TweenEase(x => 1 - bounceOut.f(x - 1));
         public static readonly TweenEase bounceOut = new TweenEase(x => {
-            const float n1 = 7.5625f;
-            const float d1 = 2.75f;
 
             if (x < 1 / d1) {
                 return n1 * x * x;

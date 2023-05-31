@@ -30,6 +30,7 @@ namespace Prota.Unity
         {
             // 主动销毁的时候, 发送 OnActiveDestroy 事件.
             // 避免 gameObject 被 Unity 自动销毁的时候创建额外的对象.
+            if(g == null) return;
             g.BroadcastMessage("OnActiveDestroy", null, SendMessageOptions.DontRequireReceiver);
             GameObject.Destroy(g);
         }
@@ -38,6 +39,7 @@ namespace Prota.Unity
         {
             // 主动销毁的时候, 发送 OnActiveDestroy 事件.
             // 避免 gameObject 被 Unity 自动销毁的时候创建额外的对象.
+            if(g == null) return;
             g.BroadcastMessage("OnActiveDestroy", args, SendMessageOptions.DontRequireReceiver);
             GameObject.Destroy(g);
         }
@@ -55,7 +57,6 @@ namespace Prota.Unity
         }
         
         public static bool IsPrefab(this GameObject g) => !g.scene.IsValid();
-        
         
         public static GameObject Clone(this GameObject g, Transform parent = null)
         {
@@ -82,11 +83,9 @@ namespace Prota.Unity
         
         public static IEnumerable<Component> EnumerateComponents(this GameObject g)
         {
-            using(var t = TempList<Component>.Get())
-            {
-                g.GetComponents(typeof(Component), t.value);
-                foreach(var x in t.value) yield return x;
-            }
+            using var _ = TempList<Component>.Get(out var t);
+            g.GetComponents(typeof(Component), t);
+            foreach(var x in t) yield return x;
         }
         
         public static bool HasDuplicatedComponent(this GameObject g)

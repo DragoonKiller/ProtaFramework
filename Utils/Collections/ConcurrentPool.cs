@@ -25,7 +25,7 @@ namespace Prota
                 this.value = value;
                 this.version = version;
             }
-
+            
             public void Dispose()
             {
                 src.Return(value, version);

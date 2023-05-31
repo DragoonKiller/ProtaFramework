@@ -3,7 +3,8 @@
     "rootNamespace": "Prota.Unity",
     "references": [
         "Prota.Utils",
-        "Unity.Mathematics"
+        "Unity.Mathematics",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

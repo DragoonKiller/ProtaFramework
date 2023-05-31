@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using Prota.Unity;
-using Prota.Timer;
 
 namespace Prota.Animation
 {
@@ -43,7 +42,7 @@ namespace Prota.Animation
                 
             }
             
-            foreach(var a in anims) a.anim.autoUpdate = false;
+            foreach(var a in anims) a.anim.autoPlay = false;
             
             if(anims.Count == 1 && anims[0].asset != null) duration = anims[0].asset.duration;
             else duration = anims.Select(x => x.anim?.asset).Where(a => a != null).FirstOrDefault()?.duration ?? 0;
@@ -68,11 +67,11 @@ namespace Prota.Animation
             
             if(!autoUpdate) return;
             
-            foreach(var a in anims) a.anim.currentRate = currentRate;
+            foreach(var a in anims) a.anim.process = currentRate;
             if(Application.isPlaying) currentRate += Time.deltaTime * speedMultiply / duration;
             currentRate = currentRate.Repeat(1f);
             
-            foreach(var a in anims) a.anim.currentRate = currentRate;
+            foreach(var a in anims) a.anim.process = currentRate;
         }
     }
 }

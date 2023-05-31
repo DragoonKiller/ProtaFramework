@@ -5,7 +5,7 @@ using System.Linq;
 
 using Prota.Unity;
 
-namespace Prota
+namespace Prota.Unity
 {
     [RequireComponent(typeof(Renderer))]
     [ExecuteAlways]

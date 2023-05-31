@@ -5,6 +5,7 @@ using System.Linq;
 using Prota.Unity;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using TMPro;
 
 namespace Prota.Editor
 {
@@ -33,6 +34,8 @@ namespace Prota.Editor
                 ecsComponentMap.Add(typeof(CanvasGroup), typeof(ECRenderer));
                 ecsComponentMap.Add(typeof(MeshRenderer), typeof(ECRenderer));
                 ecsComponentMap.Add(typeof(SkinnedMeshRenderer), typeof(ECRenderer));
+                ecsComponentMap.Add(typeof(TextMeshPro), typeof(ECRenderer));
+                ecsComponentMap.Add(typeof(TextMeshProUGUI), typeof(ECRenderer));
             }
             
             var gs = Selection.gameObjects;

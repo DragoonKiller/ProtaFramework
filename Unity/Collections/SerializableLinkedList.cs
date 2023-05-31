@@ -5,14 +5,17 @@ using System.Linq;
 
 using Prota.Unity;
 using System.Collections;
+using UnityEditor.Overlays;
+using System.Diagnostics.Contracts;
+using System.Data;
 
 namespace Prota
 {
-    
+    [Serializable]
     public struct SerializableLinkedListKey : IEquatable<SerializableLinkedListKey>
     {
-        public readonly int id;
-        public readonly ISerializableLinkedList list;
+        [SerializeField, Readonly] public int id;
+        [SerializeReference, Readonly] public ISerializableLinkedList list;
         
         public SerializableLinkedListKey(int id, ISerializableLinkedList list)
         {
@@ -20,7 +23,21 @@ namespace Prota
             this.list = list;
         }
         
-        public bool Equals(SerializableLinkedListKey other) => object.ReferenceEquals(list, other);
+        public bool Equals(SerializableLinkedListKey other) => id == other.id && list == other.list;
+        
+        public bool valid => list != null;
+        
+        public bool Valid(ISerializableLinkedList list) => this.list == list;
+        
+        public static SerializableLinkedListKey none => new SerializableLinkedListKey(-1, null);
+
+        public override bool Equals(object obj) => obj is SerializableLinkedListKey other && Equals(other);
+        public static bool operator==(SerializableLinkedListKey a, SerializableLinkedListKey b) => a.Equals(b);
+        public static bool operator!=(SerializableLinkedListKey a, SerializableLinkedListKey b) => !a.Equals(b);
+        public override int GetHashCode() => HashCode.Combine(id, list);
+        
+        // * 表示无效.
+        public override string ToString() => $"LinkedListKey[{id}{ (list == null ? "*" : "") }]";
     }
     
     public interface ISerializableLinkedList { }
@@ -113,7 +130,7 @@ namespace Prota
         void Free(int cur)
         {
             if(cur == -1) return;
-            
+            (0 <= cur && cur < capacity).Assert();
             if(data[cur].inuse)
             {
                 var p = data[cur].prev;
@@ -198,7 +215,23 @@ namespace Prota
             return true;
         }
         
-        public static void UnitTest(Action<string> log)
+        public string InternalArrayToString()
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append("[");
+            for(int i = 0; i < capacity; i++)
+            {
+                if(i != 0) sb.Append("\n");
+                sb.Append($"{i} :: prev[{ data[i].prev }] next[{ data[i].next }] inuse[{ data[i].inuse }]");
+            }
+            sb.Append("]");
+            return sb.ToString();
+        }
+    }
+    
+    public static partial class UnitTest
+    {
+        public static void UnitTestSerializableLinkedList(Action<string> log)
         {
             var ax = new ArrayLinkedList<(int a, int b, int c)>();
             var a1 = ax.Take();
@@ -235,6 +268,42 @@ namespace Prota
             foreach(var i in ax.EnumerateKey())
             {
                 log(i.ToString());
+            }
+            
+            {
+                var list = new SerializableLinkedList<int>();
+                var set = new HashSet<int>();
+                
+                // 添加元素
+                for (int i = 0; i < 100; i++)
+                {
+                    var key = list.Take();
+                    list[key] = i;
+                    set.Add(i);
+                }
+                
+                // 检查元素数量
+                Debug.Assert(list.Count == set.Count);
+                
+                // 检查元素是否相同
+                foreach(var item in list) Debug.Assert(set.Contains(item));
+                foreach(var i in list.keys) Debug.Assert(set.Contains(list[i]));
+                
+                // 删除元素
+                foreach (var key in list.keys.ToArray())
+                {
+                    if(key.id % 2 != 0) continue;
+                    // Debug.Log($"remove { key.id } start { list.freeHead } { list.head }\n{ list.InternalArrayToString() }");
+                    var val = list[key];
+                    list.Release(key);
+                    // Debug.Log($"remove { key.id } finish { list.freeHead } { list.head }\n{ list.InternalArrayToString() }");
+                    set.Remove(val);
+                    // 检查元素数量
+                    Debug.Assert(list.Count == set.Count);
+                }
+                
+                // 检查元素是否相同
+                foreach (var item in list) Debug.Assert(set.Contains(item));
             }
         }
     }

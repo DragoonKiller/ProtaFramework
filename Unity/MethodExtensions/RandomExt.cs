@@ -5,6 +5,16 @@ namespace Prota.Unity
 {
     public static partial class UnityMethodExtensions
     {
+        
+        
+        public static int SegmentRandom(this float x)
+        {
+            (x >= 0).Assert();
+            var b = x.FloorToInt();
+            x -= b;
+            return b + ((0f, 1f).Random() <= x ? 1 : 0);
+        }
+        
         public static int Random(this (int a, int b) v)
         {
             return UnityEngine.Random.Range(v.a, v.b);

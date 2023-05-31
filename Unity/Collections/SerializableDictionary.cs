@@ -2,6 +2,11 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Collections;
+using System.Data.Common;
+using System.Linq;
+using System.Text;
+using System.ComponentModel;
+using UnityEngine.UIElements;
 
 namespace Prota
 {
@@ -86,11 +91,11 @@ namespace Prota
         [Serializable]
         public struct Entry
         {
-            public TKey key;
-            public TValue value;
-            public SerializableLinkedListKey? next;
+            [SerializeField] public TKey key;
+            [SerializeField] public TValue value;
+            [SerializeField] public SerializableLinkedListKey next;
 
-            public Entry(TKey key, TValue value, SerializableLinkedListKey? next)
+            public Entry(TKey key, TValue value, SerializableLinkedListKey next)
             {
                 this.key = key;
                 this.value = value;
@@ -98,12 +103,12 @@ namespace Prota
             }
         }
         
-        // 一个可复用节点集合, 我们不使用里面的链表结构.
+        // 一个可复用节点集合.
         // 有效节点个数(count)就是 hashmap 元素个数.
-        [SerializeField] SerializableLinkedList<Entry> _entries = new SerializableLinkedList<Entry>();
+        [SerializeField, Prota.Unity.Readonly] SerializableLinkedList<Entry> _entries = new SerializableLinkedList<Entry>();
         
         // 拉链法哈希表, 这些是链表表头, 一个表头就是一个桶(bucket).
-        public List<SerializableLinkedListKey?> heads = new List<SerializableLinkedListKey?>().Fill(baseCapacity);
+        public List<SerializableLinkedListKey> heads = new List<SerializableLinkedListKey>().Fill(baseCapacity);
         
         public SerializableLinkedList<Entry> entries => _entries;
         int modnum => heads.Count;
@@ -122,31 +127,34 @@ namespace Prota
             }
             set
             {
-                if(TryGetEntry(key, out var headIndex, out var index))
+                if(TryGetEntry(key, out var index))
                 {
                     // 替换 value.
                     entries[index].value = value;
                     return;
                 }
-                else AddInternal(headIndex, key, value);
+                else AddInternal(key, value);
             }
         }
         
-        bool TryGetEntry(TKey key, out int headIndex, out SerializableLinkedListKey index)
+        bool TryGetEntry(TKey key, out SerializableLinkedListKey index)
         {
             index = default;
-            headIndex = key.GetHashCode() % modnum;
-            var head = heads[headIndex];
-            if(head.HasValue)       // 有条目, 不知道是不是这个 key.
+            var bucketIndex = key.GetHashCode().Repeat(modnum);
+            var head = heads[bucketIndex];
+            
+            // Debug.Log($"searching[{ key }] hash&index[{ bucketIndex }] bucket[{ head }]");
+            
+            // 遍历该桶的链表.
+            for(var i = head; i.valid; i = entries[i].next)
             {
-                for(var i = head; i.HasValue; i = entries[i.Value].next)
+                // Debug.Log($"searching[{ key }] visit { i }");
+                
+                var entry = entries[i];
+                if(entry.key.Equals(key))
                 {
-                    var entry = entries[i.Value];
-                    if(entry.key.Equals(key))
-                    {
-                        index = i.Value;
-                        return true;
-                    }
+                    index = i;
+                    return true;
                 }
             }
             return false;
@@ -154,17 +162,19 @@ namespace Prota
         
         public void Add(TKey key, TValue value)
         {
-            if(TryGetEntry(key, out var headIndex, out var index)) throw new Exception("entry already exists.");
-            AddInternal(headIndex, key, value);
+            if(TryGetEntry(key, out var index)) throw new Exception("entry already exists.");
+            AddInternal(key, value);
         }
         
-        void AddInternal(int headIndex, TKey key, TValue value)
+        void AddInternal(TKey key, TValue value)
         {
             if(entries.Count > heads.Count) Rehash();
+            
             // 新增一个节点.
             var newIndex = entries.Take();
-            entries[newIndex] = new Entry(key, value, heads[headIndex]);
-            heads[headIndex] = newIndex;
+            var bucketIndex = key.GetHashCode().Repeat(modnum);
+            entries[newIndex] = new Entry(key, value, heads[bucketIndex]);
+            heads[bucketIndex] = newIndex;
         }
         
         void Rehash()
@@ -176,42 +186,45 @@ namespace Prota
             
             foreach(var k in entries.keys)
             {
-                var e = entries[k];
+                ref Entry e = ref entries[k];
                 
                 // 这是新的 hashcode.
-                var headIndex = e.key.GetHashCode() % modnum;
+                var bucketIndex = e.key.GetHashCode().Repeat(modnum);
                 
                 // 遍历到的 next 都是要改的. 接到表头那边去.
-                e.next = heads[headIndex];
+                e.next = heads[bucketIndex];
                 
                 // 重新整理表头.
-                heads[headIndex] = k;
+                heads[bucketIndex] = k;
+                
+                // Debug.Log($"rehash[{ e.key }] newhash[{ bucketIndex }] [{ k }]next[{ e.next }]");
             }
         }
 
-        public bool ContainsKey(TKey key) => TryGetEntry(key, out _, out _);
+        public bool ContainsKey(TKey key) => TryGetEntry(key, out _);
         
         public bool Remove(TKey key)
         {
-            var headIndex = key.GetHashCode() % modnum;
-            var index = heads[headIndex];
-            if(!index.HasValue) return false; // 整个链表没东西, 没有那个元素.
+            var bucketIndex = key.GetHashCode().Repeat(modnum);
+            var index = heads[bucketIndex];
             
-            for(SerializableLinkedListKey? prev = null; index.HasValue; index = entries[index.Value].next)
+            if(!index.valid) return false; // 整个链表没有那个元素.
+            
+            for(var prev = SerializableLinkedListKey.none; index.valid; index = entries[index].next)
             {
                 // 找到了想要删除的元素.
-                if(key.Equals(entries[index.Value].key))
+                if(key.Equals(entries[index].key))
                 {
-                    var next = entries[index.Value].next;
-                    if(prev == null)        // 想要删除的元素是表头.
+                    var next = entries[index].next;
+                    if(!prev.valid)        // 想要删除的元素是表头.
                     {
-                        heads[headIndex] = next;    // 直接接上表头就行.
+                        heads[bucketIndex] = next;    // 直接接上表头就行.
                     }
                     else
                     {
-                        entries[prev.Value].next = next;    // 让上一个节点跳过这个元素.
+                        entries[prev].next = next;    // 让上一个节点跳过这个元素.
                     }
-                    entries.Release(index.Value);   // 要把元素删除.
+                    entries.Release(index);   // 要把元素删除.
                     return true;
                 }
                 prev = index;
@@ -223,7 +236,7 @@ namespace Prota
         public bool TryGetValue(TKey key, out TValue value)
         {
             value = default;
-            if(!TryGetEntry(key, out _, out var index)) return false;
+            if(!TryGetEntry(key, out var index)) return false;
             value = entries[index].value;
             return true;
         }
@@ -239,7 +252,7 @@ namespace Prota
 
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
-            if(!TryGetEntry(item.Key, out _, out var index)) return false;
+            if(!TryGetEntry(item.Key, out var index)) return false;
             if(!entries[index].value.Equals(item.Value)) return false;
             return true;
         }
@@ -250,15 +263,17 @@ namespace Prota
             foreach(var i in this) if(c + arrayIndex < array.Length)
             {
                 array[c + arrayIndex] = i;
+                c++;
             }
         }
 
         public bool Remove(KeyValuePair<TKey, TValue> item)
         {
-            if(!TryGetEntry(item.Key, out var headIndex, out var index)) return false;
+            if(!TryGetEntry(item.Key, out var index)) return false;
             if(!entries[index].value.Equals(item.Value)) return false;
             var next = entries[index].next;
-            if(heads[headIndex]?.Equals(index) ?? false) heads[headIndex] = next;
+            var bucketIndex = item.Key.GetHashCode().Repeat(modnum);
+            if(heads[bucketIndex] == index) heads[bucketIndex] = next;
             entries.Release(index);
             return true;
         }
@@ -267,18 +282,115 @@ namespace Prota
         {
             foreach(var k in entries.keys)
             {
+                // Debug.Log($"get key { k } : { entries[k].key }=>{ entries[k].value }");
                 yield return new KeyValuePair<TKey, TValue>(entries[k].key, entries[k].value);
             }
         }
 
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
         
-        
-        
-        
-        public static void UnitTest()
+        public string InternalArrayToString()
         {
+            var sb = new StringBuilder();
+            sb.Append("heads: \n");
+            for(int i = 0; i < heads.Count; i++) sb.Append($":: i[{ i }] head[{ heads[i] }]\n");
+            sb.Append("\n");
+            sb.Append("entries: \n");
+            foreach(var k in entries.keys)
+            {
+                var i = entries[k];
+                sb.Append($":: index[{ k }] key[{ i.key }] value[{ i.value }] next[{ i.next }] khash[{ i.key.GetHashCode().Repeat(modnum) }]\n");
+            }
+            sb.Append("\n");
+            sb.Append(entries.InternalArrayToString());
+            sb.Append("\n");
+            return sb.ToString();
+        }
+    }
+    
+    public static partial class UnitTest
+    {
+        public static void UnitTestSerializableDictionary()
+        {
+            var dictionary = new SerializableDictionary<int, string>();
             
+            // Test Add
+            dictionary.Add(1, "one");
+            ("one" == dictionary[1]).Assert();
+
+            // Test Remove
+            dictionary.Remove(1);
+            (!dictionary.ContainsKey(1)).Assert();
+
+            // Test Clear
+            dictionary.Add(1, "one");
+            dictionary.Clear();
+            (0 == dictionary.Count).Assert();
+
+            // Test Count
+            dictionary.Add(1, "one");
+            dictionary.Add(2, "two");
+            (2 == dictionary.Count).Assert();
+            
+            // Test ContainsKey
+            dictionary.ContainsKey(1).Assert();
+            dictionary.ContainsKey(2).Assert();
+            (!dictionary.ContainsKey(3)).Assert();
+            
+            // Test TryGetValue
+            dictionary.TryGetValue(1, out var one);
+            ("one" == one).Assert();
+            dictionary.TryGetValue(2, out var two);
+            ("two" == two).Assert();
+            dictionary.TryGetValue(3, out var three);
+            (null == three).Assert();
+            
+            // Test Enumerate.
+            var count = 0;
+            foreach(var i in dictionary)
+            {
+                count++;
+            }
+            (2 == count).Assert();
+            
+            var c = dictionary.ToArray();
+            (c[0].Key != c[1].Key).Assert();
+            (c[0].Key == 1 || c[0].Key == 2).Assert();
+            (c[1].Key == 2 || c[1].Key == 1).Assert();
+            
+            (c[0].Value != c[1].Value).Assert();
+            (c[0].Value == "one" || c[1].Value == "one").Assert();
+            (c[0].Value == "two" || c[1].Value == "two").Assert();
+            
+            
+            var ax = new Dictionary<string, string>();
+            var bx = new SerializableDictionary<string, string>();
+            
+            for(int i = 0; i < 2000; i++)
+            {
+                var k = UnityEngine.Random.Range(0, 100).ToString();
+                var v = UnityEngine.Random.Range(0, 100).ToString();
+                ax[k] = v;
+                bx[k] = v;
+                // Debug.Log($"adding { i } :: { k } = { v }");
+                // Debug.Log($"{ bx.InternalArrayToString() }");
+                for(int j = 0; j < 100; j++)
+                {
+                    (ax.ContainsKey(j.ToString()) == bx.ContainsKey(j.ToString())).PassValue(out var xx).Assert(j.ToString());
+                }
+            }
+            
+            for(int i = 0; i < 2000; i++)
+            {
+                if(i % 2 == 0) continue;
+                var k = i.ToString();
+                ax.Remove(k);
+                bx.Remove(k);
+                for(int j = 0; j < 2000; j++) (ax.ContainsKey(j.ToString()) == bx.ContainsKey(j.ToString())).Assert(j.ToString());
+                
+                var z = UnityEngine.Random.Range(0, 2000);
+                (ax.ContainsKey(z.ToString()) == bx.ContainsKey(z.ToString())).Assert();
+            }
         }
         
     }

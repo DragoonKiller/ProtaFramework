@@ -72,7 +72,7 @@ namespace Prota.Unity
         
         public virtual void Update()
         {
-            cells.SetLength(n, internalNewCell, internalUpdateCell, internalDisableCell);
+            cells.SyncData(n, internalNewCell, internalUpdateCell, internalDisableCell);
             scroll.content.RectTransform().sizeDelta = ContentSize();
         }
         

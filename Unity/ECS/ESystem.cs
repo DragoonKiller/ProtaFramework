@@ -30,12 +30,17 @@ namespace Prota.Unity
         void UpdateHierarchy()
         {
             subSystems = this.transform.AsList<ESystem>()
-                .Select(x => x.GetComponent<ESystem>())
+                .Select(x => x?.GetComponent<ESystem>())
                 .Where(x => x != null)
                 .ToList();
         }
         
-        void OnValidate()
+        void OnTransformChildrenChanged()
+        {
+            UpdateHierarchy();
+        }
+        
+        protected virtual void OnValidate()
         {
             Update();
             UpdateHierarchy();

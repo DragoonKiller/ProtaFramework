@@ -7,6 +7,20 @@ namespace Prota
 {
     public static partial class MethodExtensions
     {
+        public static string ToStandardPath(this string file)
+        {
+            return file.Replace("\\", "/").Trim('/');
+        }
+        
+        public static string GetRelativePath(string parent, string sub)
+        {
+            var fpParent = Path.GetFullPath(parent);
+            var fpSub = Path.GetFullPath(sub);
+            if(fpSub.StartsWith(fpParent)) return fpSub.Substring(fpParent.Length + 1);
+            // throw new System.Exception("给定路径不是包含关系.");
+            return null;
+        }
+        
         // standardFormat == true: /.
         // standardFormat == false: \.
         public static string ConvertSlash(this string name, bool standardFormat = true)
@@ -25,6 +39,16 @@ namespace Prota
         
         public static string SubPath(this string fullPath, string subName)
             => Path.Combine(fullPath, subName);
+            
+        public static string RelativePath(this DirectoryInfo d, FileSystemInfo f)
+        {
+            var dpath = d.FullName;
+            var fpath = f.FullName;
+            if(!fpath.StartsWith(dpath)) throw new Exception($"file { fpath } not in directory { dpath }");
+            var pp = fpath.Substring(dpath.Length);
+            if(pp[0] == '\\' || pp[0] == '/') pp = pp.Substring(1);
+            return pp.ToStandardPath();
+        }
         
         // ====================================================================================================
         // ====================================================================================================
@@ -121,6 +145,30 @@ namespace Prota
         
         public static DirectoryInfo AppendExtension(this DirectoryInfo f, string appendExtension)
             => f.Parent.SubDirectory(f.Name + appendExtension);
+            
+            
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        public static bool Same(this FileSystemInfo a, FileSystemInfo b, bool caseSensitive = false)
+        {
+            if(a.GetType() != b.GetType()) return false;
+            if(caseSensitive) return a.FullName == b.FullName;
+            return a.FullName.Equals(b.FullName, StringComparison.OrdinalIgnoreCase);
+        }
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        public static bool IsInDirectory(this FileSystemInfo f, DirectoryInfo d)
+            => f.FullName.StartsWith(d.FullName);
+        
+        public static bool IsInDirectroyDirectly(this FileSystemInfo f, DirectoryInfo d)
+            => f.Directory().FullName.Length == d.FullName.Length;
+        
+        
+        
+        
     }
     
 }

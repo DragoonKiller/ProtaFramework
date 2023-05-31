@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 
 namespace Prota
 {
@@ -119,9 +120,6 @@ namespace Prota
             if(x > fullEnd) return x.XMap(fullEnd, end, 1, 0);
             return 1;
         }
-        
-        
-        
         
         // ====================================================================================================
         // ====================================================================================================
@@ -257,5 +255,6 @@ namespace Prota
             for(ulong i = 2, sqrt = (ulong)Math.Sqrt(x); i <= sqrt; i += 2) if(x % i == 0) return false;
             return true;
         }
+        
     }
 }

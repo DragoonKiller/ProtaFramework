@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using Prota.Unity;
-using Prota.Timer;
 
 namespace Prota.Animation
 {
@@ -15,48 +14,40 @@ namespace Prota.Animation
         
         [Header("state")]
         
-        [Range(0, 1)] public float currentRate = 0;
+        [Range(0, 1)] public float process = 0;
         
-        public float currentTime => currentRate * (asset != null ? asset.duration * currentRate : 0);
-        
-        public bool autoUpdate = true;
-        
-        public bool playOnStart = false;
-        
-        public float playOnStartDelay = 0;
+        public float currentTime
+        {
+            get
+            {
+                if(asset == null) throw new InvalidOperationException("Cannot get time when asset is null.");
+                return process * asset.duration;
+            }
+            
+            set
+            {
+                if(asset == null) throw new InvalidOperationException("Cannot set time when asset is null.");
+                process = value / asset.duration;
+            }
+        }
+        public bool autoPlay = true;
         
         public float speedMultiply = 1;
         
         public SpriteRenderer sprite => this.GetComponent<SpriteRenderer>();
         
-        [SerializeField] bool _mirror = false;
         public bool mirror
         {
-            get => _mirror;
-            set
-            {
-                if(value == _mirror) return;
-                _mirror = value;
-                var localScale = this.transform.localScale;
-                localScale.x *= -1;
-                this.transform.localScale = localScale;
-            }
+            get => sprite.flipX;
+            set => sprite.flipX = value;
         }
         
-        public float duration => asset?.duration ?? 0;
-        
-        void Start()
+        public float duration
         {
-            if(!playOnStart) return;
-            if(asset == null) return;
-            if(playOnStartDelay <= 0) Play(asset, true);
-            else
+            get
             {
-                this.gameObject.SetActive(false);
-                this.NewTimer(playOnStartDelay, () => {
-                    this.gameObject.SetActive(true);
-                    this.Play(asset, true);
-                });
+                if(asset == null) throw new InvalidOperationException("Cannot get duration when asset is null.");
+                return asset.duration;
             }
         }
         
@@ -64,17 +55,16 @@ namespace Prota.Animation
         {
             if(asset == null)
             {
-                sprite.sprite = null;
-                this.name = "Animation:None";
+                Clear();
                 return;
             }
             
-            this.name = $"Animation:{ asset?.name }";
+            this.name = $"Animation:{ asset.name }";
             
-            if(autoUpdate)
+            if(autoPlay)
             {
-                if(Application.isPlaying) currentRate += Time.deltaTime * speedMultiply / asset.duration;
-                currentRate = currentRate.Repeat(1f);
+                if(Application.isPlaying) process += ECS.dt * speedMultiply / asset.duration;
+                process = process.Repeat(1f);
             }
             
             Refresh();
@@ -98,26 +88,30 @@ namespace Prota.Animation
             return this;
         }
         
-        public SimpleAnimation Play(SimpleAnimationAsset asset, bool restartWithTheSameAnim = false)
+        public SimpleAnimation Play(SimpleAnimationAsset asset, float startTime = 0f, bool restartWithTheSameAnim = true)
         {
+            if(asset == null)
+            {
+                Clear();
+                return this;
+            }
+            
             if(this.asset == asset)
             {
-                if(restartWithTheSameAnim) Restart();
+                if(restartWithTheSameAnim) currentTime = startTime;
                 return this;
             }
             
             this.asset = asset;
-            Restart();
+            currentTime = startTime;
             return this;
         }
         
-        public SimpleAnimation Restart() => SetTime(0);
-        
-        public SimpleAnimation SetTime(float time)
+        public void Clear()
         {
-            this.currentRate = time / asset.duration;
-            Refresh();
-            return this;
+            this.asset = null;
+            sprite.sprite = null;
+            this.name = "Animation:None";
         }
         
     }

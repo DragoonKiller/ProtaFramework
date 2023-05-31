@@ -29,7 +29,7 @@ namespace Prota.Editor
             onUpdate.AssertNotNull();
             onRemove.AssertNotNull();
             
-            collection.SetSync<K, T, V, Dictionary<K, T>>(getEnumerable, tryGetValue, onCreate, onUpdate, onRemove);
+            collection.SyncData<K, T, V, Dictionary<K, T>>(getEnumerable, tryGetValue, onCreate, onUpdate, onRemove);
             return this;
         }
         

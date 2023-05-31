@@ -13,7 +13,10 @@ namespace Prota.Editor
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            var button = new Button(() => property.boolValue = true);
+            var button = new Button(() => {
+                property.boolValue = true;
+                property.serializedObject.ApplyModifiedProperties();
+            });
             button.text = property.displayName;
             return button;
         }

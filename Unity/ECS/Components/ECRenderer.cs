@@ -1,17 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using NUnit.Framework;
 using Prota;
 using Prota.Unity;
-using UnityEditor.U2D;
 using UnityEngine;
 using UnityEngine.UI;
-
-
-
+using TMPro;
 
 public class ECRenderer : EComponent
 {
@@ -31,8 +26,8 @@ public class ECRenderer : EComponent
         [SerializeField] SpriteRenderer target;
         public override void Init(GameObject g) => target = g.GetComponent<SpriteRenderer>();
         public override Color color { get => target.color; set => target.color = value; }
-        public override Material mat { get => target.material; set => target.material = value; }
-        public override Texture2D texture { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        public override Material mat { get => target.GetMaterialInstance(); set => target.sharedMaterial = value; }
+        public override Texture2D texture { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
         public override Sprite sprite { get => target.sprite; set => target.sprite = value; }
     }
     
@@ -42,9 +37,9 @@ public class ECRenderer : EComponent
         [SerializeField] MeshRenderer target;
         public override void Init(GameObject g) => target = g.GetComponent<MeshRenderer>();
         public override Color color { get => target.material.color; set => target.material.color = value; }
-        public override Material mat { get => target.material; set => target.material = value; }
-        public override Texture2D texture { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-        public override Sprite sprite { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        public override Material mat { get => target.GetMaterialInstance(); set => target.sharedMaterial = value; }
+        public override Texture2D texture { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
+        public override Sprite sprite { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
     }
     
     [Serializable]
@@ -53,9 +48,9 @@ public class ECRenderer : EComponent
         [SerializeField] SkinnedMeshRenderer target;
         public override void Init(GameObject g) => target = g.GetComponent<SkinnedMeshRenderer>();
         public override Color color { get => target.material.color; set => target.material.color = value; }
-        public override Material mat { get => target.material; set => target.material = value; }
-        public override Texture2D texture { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-        public override Sprite sprite { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        public override Material mat { get => target.GetMaterialInstance(); set => target.sharedMaterial = value; }
+        public override Texture2D texture { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
+        public override Sprite sprite { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
     }
     
     [Serializable]
@@ -64,9 +59,9 @@ public class ECRenderer : EComponent
         [SerializeField] LineRenderer target;
         public override void Init(GameObject g) => target = g.GetComponent<LineRenderer>();
         public override Color color { get => target.material.color; set => target.material.color = value; }
-        public override Material mat { get => target.material; set => target.material = value; }
-        public override Texture2D texture { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-        public override Sprite sprite { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        public override Material mat { get => target.GetMaterialInstance(); set => target.sharedMaterial = value; }
+        public override Texture2D texture { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
+        public override Sprite sprite { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
     }
     
     [Serializable]
@@ -75,9 +70,9 @@ public class ECRenderer : EComponent
         [SerializeField] TrailRenderer target;
         public override void Init(GameObject g) => target = g.GetComponent<TrailRenderer>();
         public override Color color { get => target.material.color; set => target.material.color = value; }
-        public override Material mat { get => target.material; set => target.material = value; }
-        public override Texture2D texture { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-        public override Sprite sprite { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        public override Material mat { get => target.GetMaterialInstance(); set => target.sharedMaterial = value; }
+        public override Texture2D texture { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
+        public override Sprite sprite { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
     }
     
     [Serializable]
@@ -99,7 +94,7 @@ public class ECRenderer : EComponent
         public override Color color { get => target.color; set => target.color = value; }
         public override Material mat { get => target.material; set => target.material = value; }
         public override Texture2D texture { get => (Texture2D)target.texture; set => target.texture = value; }
-        public override Sprite sprite { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        public override Sprite sprite { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
     }
     
     [Serializable]
@@ -109,8 +104,8 @@ public class ECRenderer : EComponent
         public override void Init(GameObject g) => target = g.GetComponent<Text>();
         public override Color color { get => target.color; set => target.color = value; }
         public override Material mat { get => target.material; set => target.material = value; }
-        public override Texture2D texture { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-        public override Sprite sprite { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        public override Texture2D texture { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
+        public override Sprite sprite { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
     }
     
     [Serializable]
@@ -119,9 +114,31 @@ public class ECRenderer : EComponent
         [SerializeField] CanvasGroup target;
         public override void Init(GameObject g) => target = g.GetComponent<CanvasGroup>();
         public override Color color { get => new Color(0, 0, 0, target.alpha); set => target.alpha = value.a; }
-        public override Material mat { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-        public override Texture2D texture { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
-        public override Sprite sprite { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        public override Material mat { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
+        public override Texture2D texture { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
+        public override Sprite sprite { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
+    }
+    
+    [Serializable]
+    sealed class TextMeshProWrapper : RendererWrapper
+    {
+        [SerializeField] TextMeshPro target;
+        public override void Init(GameObject g) => target = g.GetComponent<TextMeshPro>();
+        public override Color color { get => target.color; set => target.color = value; }
+        public override Material mat { get => target.material; set => target.material = value; }
+        public override Texture2D texture { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
+        public override Sprite sprite { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
+    }
+    
+    [Serializable]
+    sealed class TextMeshProUGUIWrapper : RendererWrapper
+    {
+        [SerializeField] TextMeshProUGUI target;
+        public override void Init(GameObject g) => target = g.GetComponent<TextMeshProUGUI>();
+        public override Color color { get => target.color; set => target.color = value; }
+        public override Material mat { get => target.material; set => target.material = value; }
+        public override Texture2D texture { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
+        public override Sprite sprite { get => throw new System.NotSupportedException(); set => throw new System.NotSupportedException(); }
     }
     
     [SerializeReference, Readonly] RendererWrapper rendererWrapper;
@@ -156,10 +173,8 @@ public class ECRenderer : EComponent
         set => rendererWrapper.color = rendererWrapper.color.WithA(value);
     }
     
-    protected override void OnValidate()
+    protected void OnValidate()
     {
-        base.OnValidate();
-        
         RendererWrapper newWrapper = null;
         if(TryGetComponent<SpriteRenderer>(out var spriteRenderer))
         {
@@ -193,6 +208,18 @@ public class ECRenderer : EComponent
         {
             newWrapper = new TextWrapper();
         }
+        else if(TryGetComponent<CanvasGroup>(out var canvasGroup))
+        {
+            newWrapper = new CanvasGroupWrapper();
+        }
+        else if(TryGetComponent<TextMeshPro>(out var textMeshPro))
+        {
+            newWrapper = new TextMeshProWrapper();
+        }
+        else if(TryGetComponent<TextMeshProUGUI>(out var textMeshProUGUI))
+        {
+            newWrapper = new TextMeshProUGUIWrapper();
+        }
         
         newWrapper.Init(gameObject);
         
@@ -200,7 +227,7 @@ public class ECRenderer : EComponent
         {
             var t = new ProtaReflectionType(rendererWrapper.GetType());
             bool same = true;
-            foreach(var field in t.fields)
+            foreach(var field in t.allFields)
             {
                 var v1 = field.GetValue(rendererWrapper);
                 var v2 = field.GetValue(newWrapper);
