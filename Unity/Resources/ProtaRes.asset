@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e21820dd954b6b40b8f182b4e24ef2c, type: 3}
+  m_Name: ProtaRes
+  m_EditorClassIdentifier: 
+  lists:
+  - {fileID: 11400000, guid: da27495bf0add434499595f73c8f745e, type: 2}
+  - {fileID: 11400000, guid: e4e0edc3553123f4d863179db5d26f77, type: 2}
+  - {fileID: 11400000, guid: bc007643d8460d94ebf9b36ee8aa848a, type: 2}
+  - {fileID: 11400000, guid: 1ec8023271d021643b3420db0ef3fe17, type: 2}
+  - {fileID: 11400000, guid: 77b0d7c4f635bf948a716c439cfc8602, type: 2}

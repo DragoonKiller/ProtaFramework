@@ -2,19 +2,24 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-using Prota;
-using MessagePack.Formatters;
 using System.Linq;
-using Prota.Unity;
 using System.Threading.Tasks;
-using System.Globalization;
-using System.Runtime.CompilerServices;
+using UnityEditor;
 
 namespace Prota.Unity
 {
     [RequireComponent(typeof(ESystem))]
     public sealed class ECS : Singleton<ECS>
     {
+        
+        readonly static List<Type> systemTypes = new List<Type>();
+        
+        static ECS()
+        {
+            systemTypes.AddRange(Prota.ProtaReflection.GetTypesDerivedFrom<ESystem>().Where(x => !x.IsAbstract));
+        }
+        
+        
         // ====================================================================================================
         // 公共接口.
         // ====================================================================================================
@@ -112,13 +117,13 @@ namespace Prota.Unity
         [SerializeField, Readonly] float physicsTimer = 0f;
         [SerializeField, Readonly] float maxFixedDeltaTime = 0f;
         
-        ESystem root;
+        [SerializeReference] List<ESystem> systems = new List<ESystem>();
         
         void OnValidate()
         {
             maxFixedDeltaTime = Time.fixedDeltaTime;
-            root = GetComponent<ESystem>();
-            CheckSystemOrder(root);
+            
+            InitSystems();
         }
         
         void Awake()
@@ -132,7 +137,6 @@ namespace Prota.Unity
             if(stopPhysicsUpdate) throw new InvalidOperationException("Physics update cannot be stopped when controlled by Unity.");
             fixedUpdateFrame++;
             physicsAsyncControl.Step();
-            root.InvokeSystemFixedUpdate();
         }
         
         void LateUpdate()
@@ -140,7 +144,7 @@ namespace Prota.Unity
             isInLateUpdate = true;
             lateUpdateFrame++;
             lateAsyncControl.Step();
-            root.InvokeSystemLateUpdate();
+            foreach(var i in systems) i.InvokeLateUpdate();
             isInLateUpdate = false;
         }
         
@@ -158,7 +162,7 @@ namespace Prota.Unity
                     physicsTimer += Time.fixedDeltaTime;
                     Physics2D.Simulate(Time.fixedDeltaTime);
                     isInFixedUpdate = true;
-                    root.InvokeSystemFixedUpdate();
+                    foreach(var i in systems) i.InvokeFixedUpdate();
                     isInFixedUpdate = false;
                 }
             }
@@ -166,15 +170,14 @@ namespace Prota.Unity
             isInUpdate = true;
             updateFrame++;
             asyncControl.Step();
-            root.InvokeSystemUpdate();
+            foreach(var i in systems) i.InvokeUpdate();
             isInUpdate = false;
         }
         
-        public static void CheckSystemOrder(ESystem root)
+        public void CheckSystemOrder()
         {
-            var stack = new List<ESystem>();
-            stack.Add(root);
-            for(int i = 0; i < stack.Count; i++) stack.AddRange(stack[i].subSystems);
+            using var _ = TempList<ESystem>.Get(out var stack);
+            stack.AddRange(systems);
             for(int i = 0; i < stack.Count; i++)
             {
                 var cur = stack[i].ProtaReflection().type;
@@ -207,7 +210,22 @@ namespace Prota.Unity
                 if(s.ProtaReflection().GetTypeAttribute<ESystemAllowDuplicate>() == null)
                     Debug.LogError($"ECS: System { s.Name } 重复.");
         }
-    
+        
+        public void InitSystems()
+        {
+            systems.RemoveAll(x => x == null);
+            using var _h = TempHashSet<Type>.Get(out var types);
+            types.AddRange(systemTypes);
+            foreach(var i in systems) types.Remove(i.GetType());
+            foreach(var ss in types)
+            {
+                var s = Activator.CreateInstance(ss) as ESystem;
+                s.ProtaReflection().SetAs<ESystem>("name", s.GetType().Name);
+                systems.Add(s);
+            }
+            
+            CheckSystemOrder();
+        }
     }
     
     
@@ -220,10 +238,14 @@ namespace Prota.Unity
             => g.GetComponentInParent<ERoot>();
         
         public static Task Wait(this AsyncControl control, float seconds, TaskCanceller.Token? token = null)
-            => control.Wait(seconds, () => ECS.dt, token);
-            
+        {
+            if(ECS.instance == null) throw new InvalidOperationException("Cannot use this in non-ECS mode.");
+            return control.Wait(seconds, () => ECS.dt, token);
+        }
+        
         public static Task WaitRealtime(this AsyncControl control, float seconds, TaskCanceller.Token? token = null)
         {
+            if(ECS.instance == null) throw new InvalidOperationException("Cannot use this in non-ECS mode.");
             var currentTime = ECS.realtime;
             return control.Wait(seconds, () => {
                 var res = ECS.realtime - currentTime;

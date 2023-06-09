@@ -3,6 +3,28 @@ using System.Collections.Generic;
 
 namespace Prota
 {
+    public class TempStack<T>
+    {
+        static Action<Stack<T>> onReturn = list => list.Clear(); 
+        
+        static TempStack()
+        {
+            ConcurrentPool<Stack<T>>.instance.onReturn = onReturn;
+        }
+        
+        public static ConcurrentPool<Stack<T>>.Handle Get()
+        {
+            return ConcurrentPool<Stack<T>>.instance.Get();
+        }
+        
+        public static ConcurrentPool<Stack<T>>.Handle Get(out Stack<T> value)
+        {
+            var handle = ConcurrentPool<Stack<T>>.instance.Get();
+            value = handle.value;
+            return handle;
+        }
+    }
+    
     public class TempList<T>
     {
         static Action<List<T>> onReturn = list => list.Clear(); 

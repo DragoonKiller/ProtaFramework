@@ -19,6 +19,8 @@ namespace Prota.Unity
             public GameObject target;
         }
         
+        public bool includeSelf = false;
+        
         [SerializeField] List<Entry> data = new List<Entry>();
         
         readonly Dictionary<string, GameObject> cache = new Dictionary<string, GameObject>();
@@ -39,54 +41,23 @@ namespace Prota.Unity
         {
             if(Application.isPlaying) return;
             
-            using var _ = TempHashSet<GameObject>.Get(out var h);
+            using var _ = TempHashSet<string>.Get(out var g);
             
-            for(int i = 0; i < data.Count; i++)
-            {
-                if(data[i].target == null
-                || data[i].target.name.Substring(1) != data[i].name
-                || data[i].target.name[0] != featureCharacter)
-                    data.RemoveBySwap(i);
-            }
-            
-            h.AddRange(data.Select(x => x.target));
-            
-            // 删除原来记录有, 但是被修改/不存在的.
-            for(int i = 0; i < data.Count; i++)
-            {
-                if(data[i].target == null || data[i].name != data[i].target.name.Substring(1))
-                {
-                    h.Remove(data[i].target);
-                }
-            }
-            
+            data.Clear();
             
             transform.ForeachTransformRecursively(t =>
             {
-                if(t.name.StartsWith(featureCharacter)) h.Add(t.gameObject);
+                if(t.name.StartsWith(featureCharacter)
+                    && (includeSelf || this.transform != t))
+                {
+                    var s = t.name.Substring(1);
+                    data.Add(new Entry { name = s, target = t.gameObject });
+                    if(g.Contains(s)) Debug.LogError($"DataBinding[{ this.gameObject.name }] 有重复的名字 { s }");
+                    g.Add(s);
+                }
                 if(t.GetComponent<DataBinding>().PassValue(out var tt) != null && tt != this) return false;
                 return true;
             });
-            
-            for(int i = 0; i < data.Count; i++)
-            {
-                if(data[i].target.name.Substring(1) == data[i].name)
-                {
-                    h.Remove(data[i].target);
-                    continue;
-                }
-            }
-            
-            using var __ = TempHashSet<string>.Get(out var g);
-            
-            foreach(var x in h)
-            {
-                var s = x.name.Substring(1);
-                data.Add(new Entry { name = s, target = x });
-                if(g.Contains(s))
-                    Debug.LogError($"DataBinding[{ this.gameObject.name }] 有重复的名字 { s }");
-                g.Add(s);
-            }
         }
         
         public GameObject this[string name] => Get(name);
@@ -105,7 +76,7 @@ namespace Prota.Unity
             if(!cache.TryGetValue(name, out var res))
                 throw new Exception($"DataBinding[{ this.gameObject.name }] 找不到 GameObject { name }");
             if(!res.TryGetComponent<T>(out var c))
-                throw new Exception($"DataBinding[{ this.gameObject.name }] 找到了GameObject { name } 但是找不到组件 { nameof(T) }");
+                throw new Exception($"DataBinding[{ this.gameObject.name }] 找到了GameObject { name } 但是找不到组件 { typeof(T).Name }");
             return c;
         }
         

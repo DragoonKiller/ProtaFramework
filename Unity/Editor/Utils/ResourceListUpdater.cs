@@ -20,7 +20,7 @@ namespace Prota.Editor
         {
             listsNeedToUpdate.AddRange(Resources.LoadAll<ResourceList>("/"));
             UpdateAllNeedsToUpdate();
-            UpdateResourceCollection();
+            UpdateProtaResource();
         }
         
         [InitializeOnLoadMethod]
@@ -51,7 +51,7 @@ namespace Prota.Editor
             
             AssetTree.instance.afterRefresh += () => {
                 UpdateAllNeedsToUpdate();
-                UpdateResourceCollection();
+                UpdateProtaResource();
             };
         }
         
@@ -65,9 +65,9 @@ namespace Prota.Editor
             listsNeedToUpdate.Clear();
         }
         
-        static void UpdateResourceCollection()
+        static void UpdateProtaResource()
         {
-            var r = Resources.Load<ResourceCollection>("ResourceCollection");
+            var r = Resources.Load<ProtaRes>("ProtaRes");
             if(r == null) throw new Exception("a ResourceCollection must put into Resources folder.");
             var lists = Resources.LoadAll<ResourceList>("/");
             var originList = r.lists;
@@ -129,6 +129,8 @@ namespace Prota.Editor
             resList.resources = new List<ResourceList.Entry>();
             FindRecursive(r.parent);
             
+            resList.InvalidateCache();
+            
             if(originList.SameContent(resList.resources)) return;
             EditorUtility.SetDirty(resList);
             AssetDatabase.SaveAssetIfDirty(resList);
@@ -139,7 +141,7 @@ namespace Prota.Editor
             if(f.extension == ".meta") return;
             var assetPath = f.fullPath.FullPathToAssetPath();
             var assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
-            if(assetType == null || assetType == typeof(ResourceCollection)) return;
+            if(assetType == null || assetType == typeof(ProtaRes)) return;
             var mainAsset = AssetDatabase.LoadAssetAtPath(assetPath, assetType);
             if(mainAsset == null) return;
             var allAssets = null as UnityEngine.Object[];

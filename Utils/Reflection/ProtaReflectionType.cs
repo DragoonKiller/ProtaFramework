@@ -3,13 +3,14 @@ using System.Reflection;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
-using MessagePack.Formatters;
 
 namespace Prota
 {
     public class ProtaReflectionType
     {
-        const BindingFlags BindingAttr = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+        const BindingFlags BindingAttr = BindingFlags.Public | BindingFlags.NonPublic
+            | BindingFlags.Instance | BindingFlags.Static
+            | BindingFlags.FlattenHierarchy;
         
         public readonly Type type;
         

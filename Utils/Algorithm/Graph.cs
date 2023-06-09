@@ -81,7 +81,7 @@ namespace Prota
         // ====================================================================================================
         
         
-        Algorithm.DFS<T> DFS(T from)
+        public Algorithm.DFS<T> DFS(T from)
         {
             var res = new Algorithm.DFS<T>();
             Action<List<T>> setInitialNode = list => list.Add(from);
@@ -89,10 +89,10 @@ namespace Prota
                 foreach (var edge in edges[node]) nextNodes.Add(edge.to);
             };
             res.Init(setInitialNode, getNextNodes);
-            return res;            
+            return res;
         }
         
-        Algorithm.BFS<T> BFS(T from)
+        public Algorithm.BFS<T> BFS(T from)
         {
             var res = new Algorithm.BFS<T>();
             Action<List<T>> setInitialNode = list => list.Add(from);
@@ -100,7 +100,39 @@ namespace Prota
                 foreach (var edge in edges[node]) nextNodes.Add(edge.to);
             };
             res.Init(setInitialNode, getNextNodes);
-            return res;            
+            return res;
+        }
+        
+        public Algorithm.BFS<T> Toposort()
+        {
+            var touched = new Dictionary<T, int>();
+            
+            var res = new Algorithm.BFS<T>();
+            
+            Action<List<T>> setInitialNode = list => {
+                touched.Clear();
+                foreach(var node in nodes) touched[node] = 0;
+                foreach(var node in nodes)
+                {
+                    var edgeCount = edges.TryGetValue(node, out var nodeEdges) ? nodeEdges.Count : 0;
+                    if(edgeCount == touched[node])
+                        list.Add(node);
+                }
+            };
+            
+            Action<T, List<T>> getNextNodes = (node, nextNodes) => {
+                foreach (var edge in edges[node])
+                {
+                    touched[edge.to]++;
+                    var edgeCount = edges.TryGetValue(edge.to, out var nodeEdges) ? nodeEdges.Count : 0;
+                    if(edgeCount == touched[edge.to])
+                        nextNodes.Add(edge.to);
+                }
+            };
+            
+            res.Init(setInitialNode, getNextNodes);
+            
+            return res;
         }
     }
 }

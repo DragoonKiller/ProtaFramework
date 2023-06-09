@@ -66,7 +66,7 @@ namespace Prota
             }
         }
         
-        public object this[object key]
+        object IDictionary.this[object key]
         {
             get => (dict as IDictionary)[key];
             set

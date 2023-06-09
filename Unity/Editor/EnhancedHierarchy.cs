@@ -155,6 +155,21 @@ namespace Prota.Editor
                 // r.yMin = r.yMax - 1;
                 // GUI.DrawTexture(r, backTexture);
             }
+            
+            // 标记当前选择的 GameObject 的 DataBinding.
+            if(Selection.activeGameObject != null
+                && Selection.activeGameObject.TryGetComponent<DataBinding>(out var dataBinding))
+            {
+                var list = (List<DataBinding.Entry>)dataBinding.ProtaReflection().Get("data");
+                if(list.Any(x => x.target == g))
+                {
+                    var r = new Rect(area);
+                    r.xMin = r.xMax;
+                    r.xMax = r.xMin + 2;
+                    GUI.color = new Color(1f, 0.6f, 0.6f, 1f);
+                    GUI.DrawTexture(r, backTexture);
+                }
+            }
 
             GUI.color = originalGUIColor;
         }

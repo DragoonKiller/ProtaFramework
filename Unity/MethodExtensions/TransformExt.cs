@@ -64,8 +64,10 @@ namespace Prota.Unity
         
         public TransformAsList<T> CloneAddWithTemplate(T template)
         {
+            template.CheckNull().AssertNotNull();
             var clone = template.CloneAsTemplate(root);
             clone.transform.SetAsLastSibling();
+            template.gameObject.SetActive(false);
             return this;
         }
         
@@ -119,10 +121,11 @@ namespace Prota.Unity
         
         public void EnsureCountWithCloneAddTemplate(int count, T prefab)
         {
+            prefab.AssertNotNull();
             while(Count < count) CloneAddWithTemplate(prefab);
         }
         
-        public void SetSync(int n, T template, Action<int, T> onActivate = null, Action<int, T> onDeactivate = null)
+        public void SyncData(int n, T template, Action<int, T> onActivate = null, Action<int, T> onDeactivate = null)
         {
             this.EnsureCountWithCloneAddTemplate(n, template);
             for(int i = 0; i < Count; i++)

@@ -26,6 +26,12 @@ namespace Prota.Unity
         
         public static string GetNamePath(this GameObject g) => g.transform.GetNamePath();
         
+        public static GameObject Activate(this GameObject g, bool active = true)
+        {
+            g.SetActive(active);
+            return g;
+        }
+        
         public static void ActiveDestroy(this GameObject g)
         {
             // 主动销毁的时候, 发送 OnActiveDestroy 事件.
@@ -93,5 +99,24 @@ namespace Prota.Unity
             var e = g.EnumerateComponents();
             return e.Count() != new HashSet<Component>(e).Count;
         }
+        
+        public static F SyncData<F>(this F l, int n, GameObject template, Action<int, GameObject> onEnable)
+            where F: List<GameObject>
+        {
+            for(int i = 0; i < n; i++)
+            {
+                if(i >= l.Count)
+                {
+                    l.Add(template.CloneAsTemplate());
+                }
+                
+                onEnable(i, l[i]);
+                l[i].SetActive(true);
+            }
+            
+            for(int i = n; i < l.Count; i++) l[i].SetActive(false);
+            return l;
+        }
+        
     }
 }

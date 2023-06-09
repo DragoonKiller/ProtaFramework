@@ -10,11 +10,11 @@ using System.Linq;
 
 namespace Prota.Editor
 {
-    [CustomEditor(typeof(PhysicsContactRecorder), false)]
+    [CustomEditor(typeof(PhysicsContactRecorder3D), false)]
     public class PhysicsContactRecorderInspector : UpdateInspector
     {
         VisualElement list;
-        PhysicsContactRecorder t => serializedObject.targetObject as PhysicsContactRecorder;
+        PhysicsContactRecorder3D t => serializedObject.targetObject as PhysicsContactRecorder3D;
         
         public override VisualElement CreateInspectorGUI()
         {

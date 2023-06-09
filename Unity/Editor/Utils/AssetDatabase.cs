@@ -1,8 +1,6 @@
 using System;
 using UnityEngine;
 using System.IO;
-using MessagePack.Unity.Extension;
-using UnityEditor;
 
 namespace Prota.Editor
 {

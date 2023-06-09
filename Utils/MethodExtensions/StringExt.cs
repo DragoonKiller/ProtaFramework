@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Prota
@@ -41,6 +42,11 @@ namespace Prota
                 _stringBuilder.Append(s);
             }
             return _stringBuilder.ToString();
+        }
+        
+        public static string ToByteSeqString(this string s)
+        {
+            return s.Select(x => (int)x).ToStringJoined(",");
         }
     }
     

@@ -19,8 +19,8 @@ public class ECRigid : EComponent
     [SerializeField, Readonly] PhysicsContactRecorder2D _physicsContactRecorder2D;
     public PhysicsContactRecorder2D recorder => _physicsContactRecorder2D ? _physicsContactRecorder2D : _physicsContactRecorder2D = GetComponent<PhysicsContactRecorder2D>();
     
-    [SerializeField, Readonly] PhysicsContactRecorder _physicsContactRecorder;
-    public PhysicsContactRecorder rdxRecorder => _physicsContactRecorder ? _physicsContactRecorder : _physicsContactRecorder = GetComponent<PhysicsContactRecorder>();
+    [SerializeField, Readonly] PhysicsContactRecorder3D _physicsContactRecorder;
+    public PhysicsContactRecorder3D rdxRecorder => _physicsContactRecorder ? _physicsContactRecorder : _physicsContactRecorder = GetComponent<PhysicsContactRecorder3D>();
     
     public List<Collider2D> notTriggerOriginally;
     

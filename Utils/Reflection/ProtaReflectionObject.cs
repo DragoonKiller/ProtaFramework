@@ -66,6 +66,42 @@ namespace Prota
             }
         }
         
+        public bool TryGetAs<T>(string name, out object value)
+        {
+            try
+            {
+                GetAs<T>(name, out value);
+                return true;
+            }
+            catch(ProtaReflectionFailException)
+            {
+                value = null;
+                return false;
+            }
+        }
+        
+        public void GetAs<T>(string name, out object value)
+        {
+            var getType = typeof(T).ProtaReflection();
+            if(getType.HasProperty(name))
+            {
+                var property = getType.GetProperty(name);
+                if(property.GetGetMethod(true).IsStatic) value = property.GetValue(null);
+                else value = property.GetValue(target);
+                return;
+            }
+            
+            if(getType.HasField(name))
+            {
+                var field = getType.GetField(name);
+                if(field.IsStatic) value = field.GetValue(null);
+                else value = field.GetValue(target);
+                return;
+            }
+            
+            throw new ProtaReflectionFailException($"member {name} as type { nameof(T) } not found");
+        }
+        
         public bool TrySet(string name, object value)
         {
             try
@@ -96,6 +132,39 @@ namespace Prota
             }
             
             throw new ProtaReflectionFailException($"member {name} not found");
+        }
+        
+        
+        public void TrySetAs<T>(string name, object value)
+        {
+            try
+            {
+                SetAs<T>(name, value);
+            }
+            catch(ProtaReflectionFailException) { }
+        }
+        
+        public void SetAs<T>(string name, object value)
+        {
+            var setType = typeof(T).ProtaReflection();
+            if(setType.HasProperty(name))
+            {
+                var property = setType.GetProperty(name);
+                if(property.GetSetMethod(true).IsStatic) property.SetValue(null, value);
+                else property.SetValue(target, value);
+                return;
+            }
+            
+            if(setType.HasField(name))
+            {
+                var field = setType.GetField(name);
+                if(field.IsStatic) field.SetValue(null, value);
+                else if(field.IsLiteral) throw new ProtaReflectionFailException("cannot set constant.");
+                else field.SetValue(target, value);
+                return;
+            }
+            
+            throw new ProtaReflectionFailException($"member {name} as type { nameof(T) } not found");
         }
         
         public object GetIndexer(params object[] index)

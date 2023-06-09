@@ -28,6 +28,7 @@ namespace Prota
         public bool isDirectory => node.isDirectory;
         public bool isFile => node.isFile;
         public string path => node.fullPath;
+        // extension is with dot.
         public string extension => Path.GetExtension(path);
         public string nameNoExt => Path.GetFileNameWithoutExtension(path);
         public string name => Path.GetFileName(path);
@@ -294,6 +295,7 @@ namespace Prota
         object lockObj = new object();
         object tagObj = null;
         public event Action afterRefresh;
+        public event Action<List<FileChangeEvent>> afterRefreshDetailed;
         
         public FileTree(string fullPath, SynchronizationContext cc = null)
         {
@@ -335,6 +337,7 @@ namespace Prota
                     var diff = ori.Diff(root);
                     foreach(var e in diff) e.node.NotifyEvent(e);
                     afterRefresh?.Invoke();
+                    afterRefreshDetailed?.Invoke(diff);
                 }
             }
         }

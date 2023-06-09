@@ -10,6 +10,33 @@ namespace Prota
 {
     public static partial class MethodExtensions
     {
+        public static T RandomSelect<T>(this IEnumerable<T> e)
+        {
+            var s = e.Count();
+            var ss = rand.Next(0, s);
+            return e.ElementAt(ss);
+        }
+        
+        public static T RandomSelect<T>(this IEnumerable<T> e, Func<T, float> weight)
+        {
+            if(e.Count() == 0) return default;
+            if(e.Count() == 1)
+            {
+                if(weight(e.First()) > 0) return e.First();
+                throw new Exception("weight sum is zero.");
+            }
+            var s = e.Select(weight).Where(x => x > 0).Sum();
+            var ss = rand.NextDouble() * s;
+            foreach(var i in e)
+            {
+                var w = weight(i);
+                if(w <= 0) continue;
+                ss -= w;
+                if(ss <= 0) return i;
+            }
+            throw new Exception("weight sum is zero.");
+        }
+        
         public static T FirstElement<T>(this IEnumerable<T> e)
         {
             var s = e.GetEnumerator();
@@ -59,6 +86,24 @@ namespace Prota
                 if(na != nb) return false;
                 if(!na) return true;
                 if(!ea.Current.Equals(eb.Current)) return false;
+            }
+        }
+        
+        public static void Diff<T>(this IEnumerable<T> a, IEnumerable<T> b, Action<T, T> f)
+        {
+            using var _ = TempHashSet<T>.Get(out var ha);
+            using var __ = TempHashSet<T>.Get(out var hb);
+            ha.AddRange(a);
+            hb.AddRange(b);
+            foreach(var i in ha)
+            {
+                if(hb.Contains(i)) continue;
+                f(i, default);
+            }
+            foreach(var i in hb)
+            {
+                if(ha.Contains(i)) continue;
+                f(default, i);
             }
         }
         

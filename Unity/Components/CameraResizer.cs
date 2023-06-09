@@ -38,7 +38,17 @@ namespace Prota.Unity
             }
             else
             {
-                throw new NotImplementedException();
+                var targetAspect = minSize.x / minSize.y;
+                if(targetAspect > curAspect)
+                {
+                    var curX = minSize.x;
+                    var curY = minSize.x / curAspect;
+                    cam.fieldOfView = Mathf.Atan2(curY / 2, cam.transform.position.z) * Mathf.Rad2Deg * 2;
+                }
+                else
+                {
+                    cam.fieldOfView = Mathf.Atan2(minSize.y / 2, cam.transform.position.z) * Mathf.Rad2Deg * 2;
+                }
             }
         }
         

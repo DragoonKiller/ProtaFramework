@@ -409,6 +409,9 @@ namespace Prota.Unity
             (count > 0).Assert();
             for (var i = 0; i < count; i++) yield return v.from + (v.to - v.from) * (i + 1) / (count + 1);
         }
+        
+        
+        
     }
     
 }

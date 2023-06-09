@@ -62,7 +62,7 @@ namespace Prota
         // 同步目标是一个字典 IDictionary<K, V> dict.
         // 同步者是 IDictionary<K, G> target.
         // 同步时需要提供 V => G 的对映逻辑.
-        public static F SetSync<K, V, G, F>(
+        public static F SyncData<K, V, G, F>(
             this F target,
             IDictionary<K, V> dict,
             Func<K, V, G> newFunc,
@@ -77,5 +77,19 @@ namespace Prota
         {
             return new Dictionary<K, V>(x);
         }
+        
+        public static Dictionary<K, V> AddRange<K, V>(this Dictionary<K, V> x, IEnumerable<KeyValuePair<K, V>> y)
+        {
+            foreach(var e in y) x.Add(e.Key, e.Value);
+            return x;
+        }
+        
+        public static Dictionary<K, V> AddRange<K, V, P>(this Dictionary<K, V> x, IEnumerable<P> y, Func<P, K> fkey, Func<P, V> fval)
+        {
+            foreach(var e in y) x.Add(fkey(e), fval(e));
+            return x;
+        }
+        
+        
     }
 }
