@@ -6,25 +6,39 @@ using Prota.Unity;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
-public class ECRigid : EComponent
+public class ECRigid2D : EComponent
 {
-    public IEnumerable<ECCollider> colliders => this.ComponentsAside<ECCollider>();
+    public IReadOnlyList<Collider2D> colliders;
     
     [SerializeField, Readonly] Rigidbody2D _rigidbody2D;
     public Rigidbody2D rd => _rigidbody2D ? _rigidbody2D : _rigidbody2D = GetComponent<Rigidbody2D>();
     
-    [SerializeField, Readonly] Rigidbody _rigidbody;
-    public Rigidbody rdx => _rigidbody ? _rigidbody : _rigidbody = GetComponent<Rigidbody>();
-    
     [SerializeField, Readonly] PhysicsContactRecorder2D _physicsContactRecorder2D;
     public PhysicsContactRecorder2D recorder => _physicsContactRecorder2D ? _physicsContactRecorder2D : _physicsContactRecorder2D = GetComponent<PhysicsContactRecorder2D>();
     
-    [SerializeField, Readonly] PhysicsContactRecorder3D _physicsContactRecorder;
-    public PhysicsContactRecorder3D rdxRecorder => _physicsContactRecorder ? _physicsContactRecorder : _physicsContactRecorder = GetComponent<PhysicsContactRecorder3D>();
+    
+    protected override void Awake()
+    {
+        base.Awake();
+        
+        var colliders = new List<Collider2D>();
+        this.transform.ForeachTransformRecursively(t => {
+            if(t.TryGetComponent<Rigidbody2D>(out _) && this.rd != t.GetComponent<Rigidbody2D>()) return false;
+            if(t.TryGetComponent<Collider2D>(out var collider))
+                colliders.Add(collider);
+            return true;
+        });
+        this.colliders = colliders;
+    }
+    
+    // ====================================================================================================
+    // ====================================================================================================
+    
+    [field: SerializeField, Readonly]
+    public bool isSetToTriggerState { get; private set; }
+    
     
     public List<Collider2D> notTriggerOriginally;
-    
-    public bool isSetToTriggerState { get; private set; }
     
     public void SetCollidersTrigger(bool isTrigger)
     {
@@ -32,10 +46,10 @@ public class ECRigid : EComponent
         {
             foreach(var collider in colliders)
             {
-                if(collider.cc.isTrigger) continue;
+                if(collider.isTrigger) continue;
                 notTriggerOriginally = notTriggerOriginally ?? new List<Collider2D>();
-                notTriggerOriginally.Add(collider.cc);
-                collider.cc.isTrigger = true;
+                notTriggerOriginally.Add(collider);
+                collider.isTrigger = true;
             }
             isSetToTriggerState = true;
         }
@@ -48,6 +62,10 @@ public class ECRigid : EComponent
             isSetToTriggerState = false;
         }
     }
+    
+    // ====================================================================================================
+    // ====================================================================================================
+    
     
     public void SetCollidersEnabled(bool enabled)
     {

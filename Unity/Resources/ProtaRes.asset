@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: ProtaRes
   m_EditorClassIdentifier: 
   lists:
-  - {fileID: 11400000, guid: da27495bf0add434499595f73c8f745e, type: 2}
   - {fileID: 11400000, guid: e4e0edc3553123f4d863179db5d26f77, type: 2}
-  - {fileID: 11400000, guid: bc007643d8460d94ebf9b36ee8aa848a, type: 2}
-  - {fileID: 11400000, guid: 1ec8023271d021643b3420db0ef3fe17, type: 2}
-  - {fileID: 11400000, guid: 77b0d7c4f635bf948a716c439cfc8602, type: 2}
+  - {fileID: 11400000, guid: af444ae34b83e664a85416f67b7efaf8, type: 2}
+  - {fileID: 11400000, guid: 0e76d05640970d344aac5d0ff23bf6eb, type: 2}
+  - {fileID: 11400000, guid: 2d86929babfbf7947b0fe04accff1bfc, type: 2}

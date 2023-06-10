@@ -117,7 +117,7 @@ namespace Prota.Unity
         [SerializeField, Readonly] float physicsTimer = 0f;
         [SerializeField, Readonly] float maxFixedDeltaTime = 0f;
         
-        [SerializeReference] List<ESystem> systems = new List<ESystem>();
+        [SerializeReference, ReferenceEditor(flat = true)] List<ESystem> systems = new List<ESystem>();
         
         void OnValidate()
         {
@@ -126,8 +126,9 @@ namespace Prota.Unity
             InitSystems();
         }
         
-        void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             OnValidate();
         }
         

@@ -20,5 +20,17 @@ namespace Prota.Editor
             UnityEngine.Profiling.Profiler.EndSample();
             return cache[x.GetType()] = image;
         }
+        
+        static Dictionary<Type, GUIContent> guiContentCache = new Dictionary<Type, GUIContent>();
+        public static GUIContent FindEditorIconGUIContent(this UnityEngine.Object x)
+        {
+            var type = x.GetType();
+            if(guiContentCache.ContainsKey(type)) return new GUIContent(guiContentCache[type]);
+            
+            UnityEngine.Profiling.Profiler.BeginSample("FindEditorIconGUIContent");
+            var guiContent = new GUIContent(x.FindEditorIcon());
+            UnityEngine.Profiling.Profiler.EndSample();
+            return guiContentCache[type] = guiContent;
+        }
     }
 }

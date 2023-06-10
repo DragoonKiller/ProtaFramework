@@ -85,7 +85,7 @@ namespace Prota.Unity
     {
         Float = 0,     // 标准浮点数.
         Int,        // 限制在整数范围. 如果某些 modifier 让它变成小数, 那么下取整.
-        OneZero,    // 只能填 0 或 1.
+        Bool,    // 只能填 0 或 1.
     }
     
     
@@ -177,6 +177,8 @@ namespace Prota.Unity
             return new ModifierHandle(res);
         }
         
+        public ModifierHandle AddModifierTrue() => AddModifier(1, 0, 0, 1);
+        
         public GameProperty RemoveModifier(ModifierHandle handle)
         {
             modifiers.Release(handle.key);
@@ -203,24 +205,29 @@ namespace Prota.Unity
             
             var res = ((baseValue + addBase) * (1 + mulBase) + addFinal) * mulFinal;
             
-            switch(behaviour)
-            {
-                case PropertyBehaviour.Float:
-                    this.value = res;
-                    break;
-                case PropertyBehaviour.Int:
-                    this.value = Mathf.FloorToInt(res);
-                    break;
-                case PropertyBehaviour.OneZero:
-                    this.value = res != 0 ? 1 : 0;
-                    break;
-                default: throw new Exception($"Unknown behaviour [{behaviour}].");
-            }
+            this.value = ValueConvert(res);
             
             onPropertyChange.InvokeAll(ori, value);
         }
 
         public void OnPropertyChange(Action<float, float> f) => onPropertyChange.Add(f);
+        public void OnPropertyChangeInt(Action<int, int> f) => onPropertyChange.Add((from, to) => {
+            f((int)ValueConvert(from), (int)ValueConvert(to));
+        });
+        public void OnPropertyChangeBool(Action<bool, bool> f) => onPropertyChange.Add((from, to) => {
+            f(ValueConvert(from) != 0, ValueConvert(to) != 0);
+        });
+        
+        float ValueConvert(float x)
+        {
+            switch(behaviour)
+            {
+                case PropertyBehaviour.Float: return x;
+                case PropertyBehaviour.Int: return x.Floor();
+                case PropertyBehaviour.Bool: return x != 0 ? 1 : 0;
+                default: throw new Exception($"Unknown behaviour [{behaviour}].");
+            }
+        }
         
         public override string ToString() => $"GameProperty[{ name }]:[{ value }]";
         

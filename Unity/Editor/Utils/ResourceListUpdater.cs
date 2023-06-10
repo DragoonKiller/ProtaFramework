@@ -68,7 +68,7 @@ namespace Prota.Editor
         static void UpdateProtaResource()
         {
             var r = Resources.Load<ProtaRes>("ProtaRes");
-            if(r == null) throw new Exception("a ResourceCollection must put into Resources folder.");
+            if(r == null) throw new Exception("a ProtaRes must put into Resources folder.");
             var lists = Resources.LoadAll<ResourceList>("/");
             var originList = r.lists;
             r.lists = lists;

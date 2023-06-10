@@ -19,11 +19,8 @@ namespace Prota.Editor
             if(ecsComponentMap == null)
             {
                 ecsComponentMap = new Dictionary<Type, Type>();
-                ecsComponentMap.Add(typeof(Rigidbody2D), typeof(ECRigid));
-                ecsComponentMap.Add(typeof(Rigidbody), typeof(ECRigid));
-                
-                ecsComponentMap.Add(typeof(Collider2D), typeof(ECCollider));
-                ecsComponentMap.Add(typeof(Collider), typeof(ECCollider));
+                ecsComponentMap.Add(typeof(Rigidbody2D), typeof(ECRigid2D));
+                // ecsComponentMap.Add(typeof(Rigidbody), typeof(ECRigid2D));
                 
                 ecsComponentMap.Add(typeof(SpriteRenderer), typeof(ECRenderer));
                 ecsComponentMap.Add(typeof(Image), typeof(ECRenderer));

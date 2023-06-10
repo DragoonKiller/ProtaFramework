@@ -20,9 +20,13 @@ namespace Prota.Editor
         
         public static SerializedProperty FindPropertyOfCSProperty(this SerializedObject s, string name)
         {
-            return s.FindProperty($"<{ name }>k__BackingField");
+            return s.FindProperty(name.ToBackingFieldName());
         }
         
+        public static string ToBackingFieldName(this string ss)
+        {
+            return $"<{ss}>k__BackingField";
+        }
         
         static Color recordColor;
         public static void SetColor(this EditorWindow w, Color c)

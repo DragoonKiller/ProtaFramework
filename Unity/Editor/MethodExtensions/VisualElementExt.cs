@@ -120,6 +120,14 @@ namespace Prota.Editor
             return x;
         }
         
+        public static T SetInteractable<T>(this T x) where T: VisualElement
+        {
+            // x.focusable = false;
+            // x.pickingMode = PickingMode.Ignore;
+            x.SetEnabled(true);
+            return x;
+        }
+        
         public static T SetAbsolute<T>(this T x) where T: VisualElement
         {
             x.style.position = Position.Absolute;
@@ -173,19 +181,19 @@ namespace Prota.Editor
             return x;
         }
         
-        public static T SetTextColor<T>(this T x, Color a) where T: Label
+        public static Label SetTextColor(this Label x, Color a)
         {
             x.style.color = a;
             return x;
         }
         
-        public static T SetTextBold<T>(this T x) where T: Label
+        public static Label SetTextBold(this Label x)
         {
             x.style.unityFontStyleAndWeight = new StyleEnum<FontStyle>(FontStyle.Bold);
             return x;
         }
         
-        public static T SetTextNormal<T>(this T x) where T: Label
+        public static Label SetTextNormal(this Label x)
         {
             x.style.unityFontStyleAndWeight = new StyleEnum<FontStyle>(FontStyle.Normal);
             return x;
@@ -196,6 +204,31 @@ namespace Prota.Editor
             x.style.unityTextAlign = new StyleEnum<TextAnchor>(TextAnchor.MiddleCenter);
             return x;
         }
+        
+        public static TextField SetTextColor(this TextField x, Color a)
+        {
+            x.style.color = new StyleColor(a);
+            return x;
+        }
+        
+        public static TextField SetTextBold(this TextField x)
+        {
+            x.style.unityFontStyleAndWeight = new StyleEnum<FontStyle>(FontStyle.Bold);
+            return x;
+        }
+        
+        public static TextField SetTextNormal(this TextField x)
+        {
+            x.style.unityFontStyleAndWeight = new StyleEnum<FontStyle>(FontStyle.Normal);
+            return x;
+        }
+        
+        public static TextField SetTextCentered(this TextField x)
+        {
+            x.style.unityTextAlign = new StyleEnum<TextAnchor>(TextAnchor.MiddleCenter);
+            return x;
+        }
+        
         
         public static T SetCentered<T>(this T x) where T: VisualElement
         {

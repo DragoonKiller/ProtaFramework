@@ -118,5 +118,23 @@ namespace Prota.Unity
             return l;
         }
         
+        public static bool SetToDontDestroyScene(this GameObject x)
+        {
+            if(x.scene.name == "DontDestroyOnLoad") return false;
+            x.transform.SetParent(null);
+            GameObject.DontDestroyOnLoad(x);
+            return true;
+        }
+        
+        public static bool IsInDontDestroyScene(this GameObject x)
+        {
+            return x.scene.name == "DontDestroyOnLoad";
+        }
+        
+        public static bool TryGetComponentInParent<T>(this GameObject x, out T v) where T : Component
+        {
+            v = x.GetComponentInParent<T>(true);
+            return v != null;
+        }
     }
 }

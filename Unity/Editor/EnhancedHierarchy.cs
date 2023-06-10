@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Prota.Unity;
+using System.Runtime.ConstrainedExecution;
+using NUnit.Framework;
 
 namespace Prota.Editor
 {
@@ -56,6 +58,10 @@ namespace Prota.Editor
         
         static Texture2D barTexture = null;
         static Texture2D backTexture = null;
+        static Texture2D ecompTexture = null;
+        static Texture2D ecompTextureActivated = null;
+        static Texture2D erootTexture = null;
+        static Texture2D erootTextureActivated = null;
         
         const int maxIconCount = 10;
         
@@ -63,6 +69,12 @@ namespace Prota.Editor
         {
             if(barTexture == null) barTexture = Resources.Load<Texture2D>("ProtaFramework/line_vertical_16_2");
             if(backTexture == null) backTexture = Resources.Load<Texture2D>("ProtaFramework/rect_16");
+            if(erootTexture == null) erootTexture = Resources.Load<Texture2D>("ProtaFramework/icon_eroot_1");
+            if(erootTextureActivated == null) erootTextureActivated = Resources.Load<Texture2D>("ProtaFramework/icon_eroot_2");
+            if(ecompTexture == null) ecompTexture = Resources.Load<Texture2D>("ProtaFramework/icon_ecomponent_1");
+            if(ecompTextureActivated == null) ecompTextureActivated = Resources.Load<Texture2D>("ProtaFramework/icon_ecomponent_2");
+            
+            var curSelectedERoot = Selection.activeGameObject?.GetComponentInParent<ERoot>(true);
             
             var originalGUIColor = GUI.color;
             
@@ -86,22 +98,44 @@ namespace Prota.Editor
             
             // 这个 gameobject 下属的 gameobject.
             g.GetComponents<Component>(comps);
-            // comps.Sort(Compare);
+            comps.Sort(Compare);
             comps.Reverse();
-            comps.RemoveAll(x => x == null);
+            comps.RemoveAll(x => x == null || x is Transform);
             
             // Component 图标部分.
             int n = 0;
+            bool entityDrawed = false;
             foreach(var c in comps)
             {
+                GUIContent r = null;
                 n++;
                 if(n > maxIconCount) break;
                 
-                var ctype = c.GetType();
-                if(ctype == typeof(UnityEngine.Transform)) continue;
-                GUI.Label(new Rect(rightMargin, area.yMax - area.height, 16, 16), new GUIContent(c.FindEditorIcon()));
+                if(c is EComponent)
+                {
+                    if(entityDrawed) continue;
+                    entityDrawed = true;
+                    bool current = curSelectedERoot != null
+                        && g.TryGetComponentInParent<ERoot>(out var eroot)
+                        && curSelectedERoot == eroot;
+                    r = new GUIContent(current ? ecompTextureActivated : ecompTexture);
+                }
+                
+                if(c is ERoot)
+                {
+                    bool current = curSelectedERoot != null
+                        && g.TryGetComponentInParent<ERoot>(out var eroot)
+                        && curSelectedERoot == eroot;
+                    r = new GUIContent(current ? erootTextureActivated : erootTexture);
+                }
+                
+                if(r == null) r = c.FindEditorIconGUIContent();
+                
+                rightMargin -= 1;
+                GUI.Label(new Rect(rightMargin, area.yMax - area.height, 16, 16), r);
                 rightMargin -= space;
             }
+            
             
             // Canvas 标记部分. 如果一个物体被挂在 canvas 下方则有一个蓝色竖线标记.
             if(g.GetComponentInParent<Canvas>() != null)
@@ -170,13 +204,36 @@ namespace Prota.Editor
                     GUI.DrawTexture(r, backTexture);
                 }
             }
-
+            
             GUI.color = originalGUIColor;
+        }
+        
+        static int GetWeight(Component x)
+        {
+            // if(typeof(EComponent).IsAssignableFrom(x.GetType())) return 99;
+            switch(x)
+            {
+                case ERoot _: return 100;
+                case EComponent _ : return 99;
+                
+                case Rigidbody _: return 90;
+                case PhysicsContactRecorder3D _: return 89;
+                case Collider _: return 88;
+                
+                case Rigidbody2D _: return 90;
+                case PhysicsContactRecorder2D _: return 89;
+                case Collider2D _: return 88;
+                
+                case DataBinding _: return 10;
+                
+            }
+            
+            return 0;
         }
         
         static int Compare(Component a, Component b)
         {
-            return a.GetType().Name.CompareTo(b.GetType().Name);
+            return GetWeight(a).CompareTo(GetWeight(b));
         }
     }
 }

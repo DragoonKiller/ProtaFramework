@@ -21,6 +21,7 @@ namespace Prota.Unity
             #endif
             
             if(_instance != null) return _instance;
+            
             if(_instance == null && !object.ReferenceEquals(null, _instance)) return null;
             var g = new GameObject("#" + typeof(T).Name);
             GameObject.DontDestroyOnLoad(g);
@@ -31,6 +32,10 @@ namespace Prota.Unity
         
         protected Singleton() => _instance = (T)this;
         
+        protected virtual void Awake()
+        {
+            DontDestroyOnLoad(gameObject);
+        }
     }
     
 }   
