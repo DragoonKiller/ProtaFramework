@@ -43,24 +43,6 @@ namespace Prota.Unity
         public static RectTransform RectTransform(this Component x) => x.transform as RectTransform;
         
         
-        // ============================================================================================================
-        // ============================================================================================================
-        
-        public static SortingOrderController SortingOrderController(this GameObject x)
-            => x.GetOrCreate<SortingOrderController>();
-            
-        public static SortingOrderController SortingOrderController(this Component x)
-            => x.GetOrCreate<SortingOrderController>();
-        
-        public static void SetSortingLayer(this GameObject x, int? layerId = null, int? orderInLayer = null)
-        {
-            var a = x.SortingOrderController();
-            if(layerId.HasValue)  a.layer = layerId.Value;
-            if(orderInLayer.HasValue) a.layer = orderInLayer.Value;
-        }
-        
-        public static void SetSortingLayer(this Component x, int? layerId = null, int? orderInLayer = null)
-            => x.gameObject.SetSortingLayer(layerId, orderInLayer);
     }
     
 }

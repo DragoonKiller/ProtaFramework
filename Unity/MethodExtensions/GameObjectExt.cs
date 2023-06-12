@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Prota.Unity
 {
@@ -136,5 +137,70 @@ namespace Prota.Unity
             v = x.GetComponentInParent<T>(true);
             return v != null;
         }
+        
+        
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        
+        public static GameObject SetText(this GameObject x, string text)
+        {
+            foreach(var c in x.EnumerateComponents())
+            {
+                switch(c)
+                {
+                    case Text t: t.text = text; break;
+                    case InputField t: t.text = text; break;
+                    case TMPro.TMP_Text t: t.text = text; break;
+                    case TMPro.TMP_InputField t: t.text = text; break;
+                    default: throw new NotSupportedException($"Component type: {c.GetType()}");
+                }
+            }
+            return x;
+        }
+        
+        public static GameObject SetSprite(this GameObject x, Sprite sprite)
+        {
+            foreach(var c in x.EnumerateComponents())
+            {
+                switch(c)
+                {
+                    case Image t: t.sprite = sprite; break;
+                    case SpriteRenderer t: t.sprite = sprite; break;
+                    default: throw new NotSupportedException($"Component type: {c.GetType()}");
+                }
+            }
+            return x;
+        }
+        
+        public static GameObject SetTexture(this GameObject x, Texture texture)
+        {
+            foreach(var c in x.EnumerateComponents())
+            {
+                switch(c)
+                {
+                    case RawImage t: t.texture = texture; break;
+                    default: throw new NotSupportedException($"Component type: {c.GetType()}");
+                }
+            }
+            return x;
+        }
+        
+        public static GameObject SetColor(this GameObject x, Color color)
+        {
+            foreach(var c in x.EnumerateComponents())
+            {
+                switch(c)
+                {
+                    case MaskableGraphic t: t.color = color; break;
+                    case Renderer t: t.material.color = color; break;
+                    default: throw new NotSupportedException($"Component type: {c.GetType()}");
+                }
+            }
+            return x;
+        }
+        
+        
     }
 }

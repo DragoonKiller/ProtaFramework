@@ -30,6 +30,8 @@ namespace Prota.Unity
             if(list == null) return;
             foreach(var g in list) if(g != null) UnityEngine.Object.DestroyImmediate(g);
         }
+        
+        
     }
     
 }

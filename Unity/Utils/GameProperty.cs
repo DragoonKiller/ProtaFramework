@@ -13,68 +13,6 @@ using UnityEngine;
 
 namespace Prota.Unity
 {
-    [Serializable]
-    public class GamePropertyList : IEnumerable<GameProperty>
-    {
-        [SerializeField] List<GameProperty> properties = new List<GameProperty>();
-        
-        public GameProperty this[string name]
-        {
-            get
-            {
-                foreach(var property in properties)
-                {
-                    if(property.name == name) return property;
-                }
-                throw new Exception($"Property [{name}] not found.");
-            }
-        }
-        
-        public GameProperty this[int index]
-        {
-            get
-            {
-                if(index < 0 || index >= properties.Count) throw new Exception($"Index [{index}] out of range.");
-                return properties[index];
-            }
-        }
-        
-        public bool TryGet(string name, out GameProperty value)
-        {
-            foreach(var property in properties)
-            {
-                if (property.name != name) continue;
-                value = property;
-                return true;
-            }
-            value = null;
-            return false;
-        }
-        
-        public GamePropertyList Add(string name, float value)
-        {
-            if(TryGet(name, out GameProperty property)) throw new Exception($"Property [{name}] already exists.");
-            property = new GameProperty(name, value);
-            properties.Add(property);
-            return this;
-        }
-        
-        public bool Get(string name, out GameProperty value)
-        {
-            if(TryGet(name, out value)) return true;
-            throw new Exception($"Property [{name}] not found.");
-        }
-        
-        public void Clear()
-        {
-            properties.Clear();
-        }
-
-        public IEnumerator<GameProperty> GetEnumerator() => properties.GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-    }
-    
     public struct ModifierHandle
     {
         public readonly ArrayLinkedListKey key;

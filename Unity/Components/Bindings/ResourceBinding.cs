@@ -20,8 +20,6 @@ namespace Prota.Unity
         
         readonly Dictionary<string, UnityEngine.Object> cache = new Dictionary<string, UnityEngine.Object>();
         
-        public char featureCharacter = '$';
-        
         void Awake()
         {
             if(Application.isPlaying) foreach(var x in data) cache.Add(x.name, x.target);
