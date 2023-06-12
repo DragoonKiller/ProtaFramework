@@ -6,9 +6,23 @@ using System.Reflection;
 
 using Prota.Unity;
 using System;
+using System.Runtime.Serialization;
 
 namespace Prota.Editor
 {
+    [CustomPropertyDrawer(typeof(GamePropertyList))]
+    public class GamePropertyListDrawer : PropertyDrawer
+    {
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
+        {
+            var root = new VisualElement();
+            
+            root.AddChild(new PropertyField(property.SubField("properties")));
+            
+            return root;
+        }
+    }
+    
     [CustomPropertyDrawer(typeof(GameProperty))]
     public class GamePropertyPropertyDrawer : PropertyDrawer
     {
@@ -16,121 +30,48 @@ namespace Prota.Editor
         {
             var root = new VisualElement();
             
-            if(fieldInfo.GetCustomAttribute<SerializeReference>() == null)
-                Debug.LogError($"GameProperty can only be used on fields with the SerializeReference attribute. Field: {fieldInfo.Name}");
-            
-            var obj = property.managedReferenceValue as GameProperty;
+            if(property.IsManagedRef()) throw new Exception("[ManagedReference] for [GameProperty] is not supported.");
             
             root.SetHorizontalLayout();
-            root.AddChild(new Toggle() { value = obj != null }.PassValue(out var toggle)
-                .SetWidth(18)
-            ).AddChild(new VisualElement().PassValue(out var info)
+            root.AddChild(new VisualElement().PassValue(out var info)
                 .SetHorizontalLayout()
                 .SetGrow()
-                .AddChild(
-                    new TextField() {
-                        value = obj == null || obj.name.NullOrEmpty()
-                            ? property.displayName
-                            : obj.name
-                        }.PassValue(out var nameField)
+                .AddChild(new TextField().PassValue(out var nameField)
+                    .WithBinding(property.SubBackingField("name"))
                     .SetGrow()
-                )
-                .AddChild(new Label("*").PassValue(out var tag)
-                    .SetMargin(2, -4, 0, 0)
+                    .SetMinWidth(100)
                 )
                 .AddChild(new VisualElement().PassValue(out var instInfo)
                     .SetHorizontalLayout()
-                    .AddChild(new FloatField(){ value = obj?.baseValue ?? 0 }.PassValue(out var baseValueField)
-                        .SetWidth(80)
+                    .AddChild(new FloatField().PassValue(out var baseValueField)
+                        .WithBinding(property.SubField("_baseValue"))
+                        .SetWidth(60)
                     )
                     .AddChild(new TextField().PassValue(out var actualValueField)
-                        .SetWidth(80)
+                        .SetWidth(60)
                         .SetNoInteraction()
                     )
-                    .AddChild(new EnumField(obj == null ? PropertyBehaviour.Float : obj.behaviour).PassValue(out var behaviourField)
-                        .SetWidth(80)
+                    .AddChild(new EnumField().PassValue(out var behaviourField)
+                        .WithBinding(property.SubBackingField("behaviour"))
+                        .SetWidth(50)
                     )
                 )
             );
             
-            
-            toggle.OnValueChange<Toggle, bool>(e => {
-                Undo.RecordObject(property.serializedObject.targetObject, "Change GameProperty");
-                if(e.newValue)
-                {
-                    property.managedReferenceValue = obj = new GameProperty();
-                    behaviourField.value = PropertyBehaviour.Float;
-                    baseValueField.value = obj.baseValue;
-                    SyncValueString();
-                }
-                else
-                {
-                    property.managedReferenceValue = null;
-                }
-                instInfo.SetVisible(e.newValue);
-                property.serializedObject.ApplyModifiedProperties();
-                property.serializedObject.UpdateIfRequiredOrScript();
-                EditorUtility.SetDirty(property.serializedObject.targetObject);
-            });
-            
-            nameField.OnValueChange<TextField, string>(e => {
-                Undo.RecordObject(property.serializedObject.targetObject, "Change GameProperty");
-                obj.ProtaReflection().Set("name", e.newValue);
-                SyncNameProp();
-                property.serializedObject.ApplyModifiedProperties();
-                property.serializedObject.UpdateIfRequiredOrScript();
-                EditorUtility.SetDirty(property.serializedObject.targetObject);
-                if(e.newValue.NullOrEmpty()) nameField.SetValueWithoutNotify(property.displayName);
-            });
-            
-            baseValueField.OnValueChange<FloatField, float>(e => {
-                Undo.RecordObject(property.serializedObject.targetObject, "Change GameProperty");
-                obj.baseValue = e.newValue;
-                SyncValueString();
-                property.serializedObject.ApplyModifiedProperties();
-                property.serializedObject.UpdateIfRequiredOrScript();
-                EditorUtility.SetDirty(property.serializedObject.targetObject);
-            });
-            
-            behaviourField.OnValueChange<EnumField, Enum>(e => {
-                Undo.RecordObject(property.serializedObject.targetObject, "Change GameProperty");
-                obj.ProtaReflection().Set("behaviour", e.newValue);
-                SyncValueString();
-                property.serializedObject.ApplyModifiedProperties();
-                property.serializedObject.UpdateIfRequiredOrScript();
-                EditorUtility.SetDirty(property.serializedObject.targetObject);
-            });
-            
-            SyncNameProp();
-            SyncValueString();
-            instInfo.SetVisible(obj != null);
-        
-            return root;
-            
-            void SyncValueString()
-            {
-                if(obj == null) return;
-                var display = obj.behaviour switch {
+            actualValueField.ReactOnChange(s => {
+                var b = property.SubBackingField("behaviour");
+                var display = (PropertyBehaviour)b.enumValueIndex switch {
                     PropertyBehaviour.Float => ProeprtyDisplay.Float,
                     PropertyBehaviour.Int => ProeprtyDisplay.Int,
                     PropertyBehaviour.Bool => ProeprtyDisplay.TrueOrFalse,
                     _ => throw new ArgumentOutOfRangeException()
                 };
-                actualValueField.value = obj.ToString(display);
-            }
+                s.value = GameProperty.ToString(display, property.SubBackingField("value").floatValue);
+            }, behaviourField, baseValueField, nameField);
             
-            void SyncNameProp()
-            {
-                if(obj == null)
-                {
-                    nameField.SetNoInteraction();
-                    return;
-                }
-                
-                nameField.SetInteractable();
-                tag.text = obj.name.NullOrEmpty() ? "*" : "";
-            }
+            root.Bind(property.serializedObject);
             
+            return root;
         }
         
     }

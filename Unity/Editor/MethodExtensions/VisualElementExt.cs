@@ -5,6 +5,8 @@ using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Prota.Unity;
 
 namespace Prota.Editor
 {
@@ -384,7 +386,7 @@ namespace Prota.Editor
         {
             return new VisualElement() { name = ":" + name }
                 .SetHorizontalLayout()
-                .AddChild(new Toggle() { name = name }.WithBind(prop).SetMargin(0, 4, 0, 0))
+                .AddChild(new Toggle() { name = name }.WithBinding(prop).SetMargin(0, 4, 0, 0))
                 .AddChild(new Label(hint) { name = "hint" });
         }
         
@@ -402,7 +404,7 @@ namespace Prota.Editor
         {
             return new VisualElement()
                 .SetHorizontalLayout()
-                .AddChild(new Toggle().WithBind(prop).SetMargin(0, 4, 0, 0))
+                .AddChild(new Toggle().WithBinding(prop).SetMargin(0, 4, 0, 0))
                 .AddChild(new Label(hint) { name = "hint" });
         }
         
@@ -415,10 +417,82 @@ namespace Prota.Editor
             return s;
         }
         
-        public static T WithBind<T>(this T bindable, SerializedProperty prop) where T: VisualElement, IBindable
+        public static T WithBinding<T>(this T bindable, SerializedProperty prop) where T: VisualElement, IBindable
         {
             bindable.BindProperty(prop);
             return bindable;
+        }
+        
+        public static T ReactOnChange<T>(this T self, Action<T> a, params VisualElement[] g) where T: VisualElement
+        {
+            foreach(var x in g)
+            {
+                switch(x)
+                {
+                    case INotifyValueChanged<bool> b:
+                        b.RegisterValueChangedCallback<bool>(e => a(self));
+                        break;
+                    
+                    case INotifyValueChanged<int> b:
+                        b.RegisterValueChangedCallback<int>(e => a(self));
+                        break;
+                    
+                    case INotifyValueChanged<float> b:
+                        b.RegisterValueChangedCallback<float>(e => a(self));
+                        break;
+                    
+                    case INotifyValueChanged<string> b:
+                        b.RegisterValueChangedCallback<string>(e => a(self));
+                        break;
+                    
+                    case INotifyValueChanged<Enum> b:
+                        b.RegisterValueChangedCallback<Enum>(e => a(self));
+                        break;
+                        
+                    case INotifyValueChanged<Vector2> b:
+                        b.RegisterValueChangedCallback<Vector2>(e => a(self));
+                        break;
+                    
+                    case INotifyValueChanged<Vector3> b:
+                        b.RegisterValueChangedCallback<Vector3>(e => a(self));
+                        break;
+                    
+                    case INotifyValueChanged<Vector4> b:
+                        b.RegisterValueChangedCallback<Vector4>(e => a(self));
+                        break;
+                        
+                    case INotifyValueChanged<Color> b:
+                        b.RegisterValueChangedCallback<Color>(e => a(self));
+                        break;
+                    
+                    case INotifyValueChanged<Gradient> b:
+                        b.RegisterValueChangedCallback<Gradient>(e => a(self));
+                        break;
+                    
+                    case INotifyValueChanged<AnimationCurve> b:
+                        b.RegisterValueChangedCallback<AnimationCurve>(e => a(self));
+                        break;
+                    
+                    case INotifyValueChanged<UnityEngine.Object> b:
+                        b.RegisterValueChangedCallback<UnityEngine.Object>(e => a(self));
+                        break;
+                    
+                    case INotifyValueChanged<Quaternion> b:
+                        b.RegisterValueChangedCallback<Quaternion>(e => a(self));
+                        break;
+                    
+                    case INotifyValueChanged<Rect> b:
+                        b.RegisterValueChangedCallback<Rect>(e => a(self));
+                        break;
+                    
+                    default: throw new Exception("type not handled.");
+                }
+            }
+            
+            // initial value.
+            a(self);
+            
+            return self;
         }
     }
 }

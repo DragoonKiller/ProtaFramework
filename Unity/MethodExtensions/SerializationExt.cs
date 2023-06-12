@@ -30,6 +30,5 @@ namespace Prota.Unity
             key.Clear();
             value.Clear();
         }
-        
     }
 }

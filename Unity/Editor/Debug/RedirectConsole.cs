@@ -13,10 +13,15 @@ namespace Prota.Editor
             {
                 base.Write(value);
                 value = value.Replace("\0", "");
-                if(string.IsNullOrWhiteSpace(value)) return;
+                if(string.IsNullOrWhiteSpace(value)
+                    || value.StartsWith("[MODES]")
+                    || value.StartsWith("[LAYOUT]")
+                    || value.StartsWith("[ScriptCompilation]")
+                ) return;
+                
                 if(value.StartsWith("[Exception]") || value.StartsWith("[Error]") || value.Contains("exception: "))
                     Debug.LogError(value);
-                else if(value.StartsWith("[Warning]") || value.StartsWith("[warning]"))
+                else if(value.StartsWith("[Warning]", System.StringComparison.OrdinalIgnoreCase))
                     Debug.LogWarning(value);
                 else
                     Debug.Log(value);

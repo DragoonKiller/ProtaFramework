@@ -14,45 +14,48 @@ using UnityEngine;
 namespace Prota.Unity
 {
     [Serializable]
-    public class GamePropertyCollection : IEnumerable<GameProperty>
+    public class GamePropertyList : IEnumerable<GameProperty>
     {
-        public Dictionary<string, GameProperty> cache;
-        
         [SerializeField] List<GameProperty> properties = new List<GameProperty>();
         
-        public void InvalidateCache()
+        public GameProperty this[string name]
         {
-            cache = null;
+            get
+            {
+                foreach(var property in properties)
+                {
+                    if(property.name == name) return property;
+                }
+                throw new Exception($"Property [{name}] not found.");
+            }
         }
         
-        void AddCache(string name, GameProperty val)
+        public GameProperty this[int index]
         {
-            if(cache == null) cache = new Dictionary<string, GameProperty>();
-            cache.Add(name, val);
+            get
+            {
+                if(index < 0 || index >= properties.Count) throw new Exception($"Index [{index}] out of range.");
+                return properties[index];
+            }
         }
         
         public bool TryGet(string name, out GameProperty value)
         {
-            if(cache != null && cache.TryGetValue(name, out value)) return true;
-            
-            foreach (var property in properties)
+            foreach(var property in properties)
             {
                 if (property.name != name) continue;
-                AddCache(name, property);
                 value = property;
                 return true;
             }
-
             value = null;
             return false;
         }
         
-        public GamePropertyCollection Add(string name, float value)
+        public GamePropertyList Add(string name, float value)
         {
             if(TryGet(name, out GameProperty property)) throw new Exception($"Property [{name}] already exists.");
             property = new GameProperty(name, value);
             properties.Add(property);
-            InvalidateCache();
             return this;
         }
         
@@ -64,7 +67,6 @@ namespace Prota.Unity
         
         public void Clear()
         {
-            InvalidateCache();
             properties.Clear();
         }
 
@@ -231,7 +233,9 @@ namespace Prota.Unity
         
         public override string ToString() => $"GameProperty[{ name }]:[{ value }]";
         
-        public string ToString(ProeprtyDisplay display)
+        public string ToString(ProeprtyDisplay display) => ToString(display, value);
+        
+        public static string ToString(ProeprtyDisplay display, float value)
         {
             switch(display)
             {

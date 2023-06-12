@@ -4,6 +4,8 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Net.Http.Headers;
+using UnityEditor.Build.Content;
 
 namespace Prota
 {
@@ -118,7 +120,7 @@ namespace Prota
             {
                 var property = type.GetProperty(name);
                 if(property.GetSetMethod(true).IsStatic) property.SetValue(null, value);
-                else property.SetValue(target, value);
+                else property.SetValue(target, DynamicCast(property.PropertyType, value));
                 return;
             }
             
@@ -127,7 +129,7 @@ namespace Prota
                 var field = type.GetField(name);
                 if(field.IsStatic) field.SetValue(null, value);
                 else if(field.IsLiteral) throw new ProtaReflectionFailException("cannot set constant.");
-                else field.SetValue(target, value);
+                else field.SetValue(target, DynamicCast(field.FieldType, value));
                 return;
             }
             
@@ -151,7 +153,7 @@ namespace Prota
             {
                 var property = setType.GetProperty(name);
                 if(property.GetSetMethod(true).IsStatic) property.SetValue(null, value);
-                else property.SetValue(target, value);
+                else property.SetValue(target, DynamicCast(property.PropertyType, value));
                 return;
             }
             
@@ -160,7 +162,7 @@ namespace Prota
                 var field = setType.GetField(name);
                 if(field.IsStatic) field.SetValue(null, value);
                 else if(field.IsLiteral) throw new ProtaReflectionFailException("cannot set constant.");
-                else field.SetValue(target, value);
+                else field.SetValue(target, DynamicCast(field.FieldType, value));
                 return;
             }
             
@@ -187,7 +189,7 @@ namespace Prota
             {
                 var property = type.GetIndexerProperty(argTypes);
                 if(property.GetSetMethod(true).IsStatic) property.SetValue(null, value, index);
-                else property.SetValue(target, value, index);
+                else property.SetValue(target, DynamicCast(property.PropertyType, value), index);
                 return;
             }
             
@@ -221,6 +223,38 @@ namespace Prota
         }
         
         
+        // https://stackoverflow.com/questions/18369681/using-setvalue-with-implicit-conversion
+        object DynamicCast(Type fieldType, object value)
+        {
+            object valueToSet = null;
+
+            if (value == null  || value == DBNull.Value)
+            {
+            valueToSet = null;
+            }
+            else
+            {
+                // assign enum
+                if (fieldType.IsEnum) valueToSet = Enum.ToObject(fieldType, value);
+                
+                // support for nullable enum types
+                else if (fieldType.IsValueType)
+                {
+                    Type underlyingType = Nullable.GetUnderlyingType(fieldType);
+                    if(underlyingType != null)
+                    {
+                        valueToSet = underlyingType.IsEnum ? Enum.ToObject(underlyingType, value) : value;
+                    }
+                }
+                else
+                {
+                    //we always need ChangeType, it will convert the value to the proper number type, for example.
+                    valueToSet = Convert.ChangeType(value, fieldType);
+                }
+            }
+            
+            return valueToSet;
+        }
     }
     
 }

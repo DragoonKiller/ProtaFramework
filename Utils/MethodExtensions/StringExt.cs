@@ -5,7 +5,6 @@ using System.Text;
 
 namespace Prota
 {
-    
     public static partial class MethodExtensions
     {
         public static bool NullOrEmpty(this string s) => string.IsNullOrEmpty(s);
@@ -48,6 +47,8 @@ namespace Prota
         {
             return s.Select(x => (int)x).ToStringJoined(",");
         }
+        
+        
     }
     
 }

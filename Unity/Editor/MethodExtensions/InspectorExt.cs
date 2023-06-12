@@ -3,11 +3,34 @@ using UnityEditor;
 using UnityEngine;
 using Prota.Unity;
 using System;
+using UnityEngine.UIElements;
+using System.Text;
 
 namespace Prota.Editor
 {
     public static partial class UnityMethodExtensions
     {
+        public static SerializedObject UpdateAndApply(this SerializedObject x)
+        {
+            x.Update(); // read value from obj.
+            
+            // var it = x.GetIterator();
+            // var s = new StringBuilder();
+            // while(it.Next(true))
+            //     if(it.propertyType == SerializedPropertyType.Float)
+            //         s.AppendLine(it.propertyPath + " " + it.floatValue);
+            // Debug.LogError(s.ToString());
+            
+            x.ApplyModifiedProperties();    // tell editor that the object is edited.
+            return x;
+        }
+        
+        public static void RecordUndo(this UnityEngine.Object x, string info)
+        {
+            Undo.RecordObject(x, info);
+            if(x is GameObject g && g.IsPrefab()) PrefabUtility.RecordPrefabInstancePropertyModifications(g);
+        }
+        
         public static Type GetActualFieldPropertyType(this PropertyDrawer self, SerializedProperty s)
         {
             if(self.fieldInfo.FieldType.IsConstructedGenericType)
@@ -16,7 +39,6 @@ namespace Prota.Editor
             }
             return self.fieldInfo.FieldType;
         }
-        
         
         public static SerializedProperty FindPropertyOfCSProperty(this SerializedObject s, string name)
         {

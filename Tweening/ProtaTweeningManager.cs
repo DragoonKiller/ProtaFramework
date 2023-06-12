@@ -53,11 +53,13 @@ namespace Prota.Tween
                     v.update(handle, 1);
                     v.onFinish?.Invoke(handle);
                     if(v.reverseOnLoopFinish) handle.SetReverse();
+                    // Debug.Log($"Tween {v.tid} on {v.target} is finished.");
                 }
                 else    // tween 被其它事物终止, 调用另一个回调函数.
                 {
                     Debug.Assert(v.invalid);
                     v.onInterrupted?.Invoke(handle);
+                    // Debug.Log($"Tween {v.tid} on {v.target} is interrupted.");
                 }
                 
                 if(v.loop) handle.Restart();
@@ -71,6 +73,7 @@ namespace Prota.Tween
                     // onRemove 的时候不允许再改变 tween 的状态.
                     Debug.Assert(v.invalid == invalid && v.isTimeout == timeout);
                     
+                    // Debug.Log($"Tween {v.tid} on {v.target} is removed.");
                     ActualDelete(key);
                 }
             }

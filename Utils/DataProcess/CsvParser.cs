@@ -7,6 +7,13 @@ using System.Text;
 
 namespace Prota
 {
+    public enum CsvGridType
+    {
+        String = 0,
+        Float = 1,
+        Int = 2,
+    }
+    
     
     // specific CSV format:
     // use " to quote a field.
@@ -21,15 +28,19 @@ namespace Prota
             readonly Dictionary<string, int> index = new Dictionary<string, int>();
             public readonly int headerLine = -1;
             public int this[string name] => index[name];
+            public readonly IReadOnlyList<string> properties;
             public HeaderInfo(CsvParser parser, int headerLine)
             {
+                var props = new List<string>();
                 this.headerLine = headerLine;
                 for(int i = 0; i < parser.columnN; i++)
                 {
-                    bool success = parser.Get(headerLine, i, out string name);
+                    var name = parser.GetString(0, i);
                     if(name.NullOrEmpty()) continue;
                     index[name] = i;
+                    props.Add(name);
                 }
+                properties = props;
             }
         }
         
@@ -39,20 +50,26 @@ namespace Prota
         
         public readonly string content;
         
-        public HeaderInfo headerInfo { get; private set; }
+        public readonly HeaderInfo headerInfo;
         
         public readonly int rowN;
         
         public readonly int columnN;
         
+        public int dataRowN => rowN - dataRowBeginFrom;
+        
         readonly List<List<int>> index;
         
-        public CsvParser(string originalContent) : this("Unknown", originalContent)
+        public int dataRowBeginFrom => headerInfo != null ? headerInfo.headerLine : 0;
+        
+        public readonly IReadOnlyList<CsvGridType> gridType;
+        
+        public CsvParser(string originalContent, int headerLine) : this("Unknown", originalContent, headerLine)
         {
             
         }
         
-        public CsvParser(string name, string originalContent)
+        public CsvParser(string name, string originalContent, int headerLine)
         {
             this.name = name;
             
@@ -118,6 +135,7 @@ namespace Prota
             }
             
             RecordGrid();
+            index[currentLine].Add(sb.Length);
             
             content = sb.ToString();
             
@@ -139,55 +157,84 @@ namespace Prota
             
             rowN = currentLine + 1;
             columnN = maxColumn;
+            
+            if(headerLine != 0) headerInfo = new HeaderInfo(this, headerLine);
+            
+            // 检查行数是否一致.
+            for(int i = 0; i < index.Count; i++)
+            {
+                if(index[i].Count != columnN + 1)
+                    throw new Exception($"CSV [{name}] has inconsistent column number at line {i}.");
+            }
+            
+            // 检查第 0 行是否有空字符串. 只有在启用 header 时生效.
+            if(headerInfo != null)
+            {
+                for(int i = 0; i < columnN; i++)
+                {
+                    if(GetString(-dataRowBeginFrom, i).NullOrEmpty())
+                        throw new Exception($"CSV [{name}] has empty string at row 0 column {i}.");
+                }
+            }
+            
+            // 获取所有行的类型. 跳过 header.
+            var gtype = new CsvGridType[columnN];
+            for(int col = 0; col < columnN; col++)
+            {
+                bool supportsInt = true;
+                bool supportsFloat = true;
+                for(int row = 0; row < dataRowN; row++)
+                {
+                    var str = GetString(row, col);
+                    if(str.NullOrEmpty()) continue;
+                    if(!int.TryParse(str, out var intResult)) supportsInt = false;
+                    if(!float.TryParse(str, out var floatResult)) supportsFloat = false;
+                    if(!supportsInt && !supportsFloat) break;
+                }
+                
+                if(supportsInt) gtype[col] = CsvGridType.Int;
+                else if(supportsFloat) gtype[col] = CsvGridType.Float;
+                else gtype[col] = CsvGridType.String;
+                this.gridType = gtype;
+            }
         }
         
-        public void SetHeader(int headerLine)
-        {
-            headerInfo = new HeaderInfo(this, headerLine);
-        }
-        
-        bool GetDataIndex(int i, int j, out int from, out int to)
+        void GetDataIndex(int i, int j, out int from, out int to)
         {
             from = to = -1;
-            if(this.index.Count <= i) return false;
-            if(this.index[i].Count - 1 <= j) return false;
+            if(this.index.Count <= i) throw new Exception($"CSV [{name}] has no row [{i}].");
+            if(this.index[i].Count - 1 <= j) throw new Exception($"CSV [{name}] has no column [{j}] at row [{i}].");
             from = this.index[i][j];
             to = this.index[i][j + 1] - 1;
-            return true;
         }
-                
+        
         // ====================================================================================================
         // ====================================================================================================
         
-        public bool Get(int row, int col, out string v)
+        public string GetString(int row, int col)
         {
-            if(!GetDataIndex(row, col, out var from, out var to))
-            {
-                v = null;
-                return false;
-            }
-            v = content.Substring(from, to - from);
-            return true;
+            GetDataIndex(row + dataRowBeginFrom, col, out var from, out var to);
+            return content.Substring(from, to - from);
         }
         
-        public bool Get(int row, int col, out int v)
+        public int GetInt(int row, int col)
         {
-            if(!GetDataIndex(row, col, out var from, out var to))
-            {
-                v = 0;
-                return false;
-            }
-            return int.TryParse(content.AsSpan(from, to - from), out v);
+            GetDataIndex(row + dataRowBeginFrom, col, out var from, out var to);
+            var str = content.AsSpan(from, to - from);
+            if(str.Length == 0) return 0;       // 默认值.
+            if(!int.TryParse(str, out var v))
+                throw new Exception($"CSV [{name}] has invalid int at row [{row}] column [{col}] value [{ new string(content.AsSpan(from, to - from)) }].");
+            return v;
         }
         
-        public bool Get(int row, int col, out float v)
+        public float GetFloat(int row, int col)
         {
-            if(!GetDataIndex(row, col, out var from, out var to))
-            {
-                v = 0;
-                return false;
-            }
-            return float.TryParse(content.AsSpan(from, to - from), NumberStyles.Float, CultureInfo.InvariantCulture, out v);
+            GetDataIndex(row + dataRowBeginFrom, col, out var from, out var to);
+            var str = content.AsSpan(from, to - from);
+            if(str.Length == 0) return 0;       // 默认值.
+            if(!float.TryParse(str, out var v))
+                throw new Exception($"CSV [{name}] has invalid float at row [{row}] column [{col}] value [{ new string(content.AsSpan(from, to - from)) }].");
+            return v;
         }
         
         
