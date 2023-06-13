@@ -194,8 +194,8 @@ namespace Prota.Editor
             if(Selection.activeGameObject != null
                 && Selection.activeGameObject.TryGetComponent<DataBinding>(out var dataBinding))
             {
-                var list = (List<DataBinding.Entry>)dataBinding.ProtaReflection().Get("data");
-                if(list.Any(x => x.target == g))
+                var list = (SerializableDictionary<string, GameObject>)dataBinding.ProtaReflection().Get("data");
+                if(list.Any(x => x.Value == g))
                 {
                     var r = new Rect(area);
                     r.xMin = r.xMax;

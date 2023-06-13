@@ -3,52 +3,41 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 namespace Prota.Unity
 {
-
     public class GamePropertyList : MonoBehaviour, IEnumerable<GameProperty>
     {
-        [SerializeField] List<GameProperty> properties = new List<GameProperty>();
+        [Serializable] public class _List : SerializableDictionary<string, GameProperty> { }
+        [SerializeField] _List properties = new _List();
         
         public GameProperty this[string name]
         {
             get
             {
-                foreach(var property in properties)
-                {
-                    if(property.name == name) return property;
-                }
-                throw new Exception($"Property [{name}] not found.");
-            }
-        }
-        
-        public GameProperty this[int index]
-        {
-            get
-            {
-                if(index < 0 || index >= properties.Count) throw new Exception($"Index [{index}] out of range.");
-                return properties[index];
+                if(TryGet(name, out var value)) return value;
+                throw new Exception($"Game Property [{name}] not found.");
             }
         }
         
         public bool TryGet(string name, out GameProperty value)
         {
-            foreach(var property in properties)
-            {
-                if (property.name != name) continue;
-                value = property;
-                return true;
-            }
-            value = null;
-            return false;
+            return properties.TryGetValue(name, out value);
         }
         
         public GamePropertyList Add(string name, float value)
         {
             if(TryGet(name, out GameProperty property)) throw new Exception($"Property [{name}] already exists.");
             property = new GameProperty(name, value);
-            properties.Add(property);
+            properties.Add(name, property);
+            return this;
+        }
+        
+        public GamePropertyList Remove(string name)
+        {
+            if(!TryGet(name, out GameProperty property)) throw new Exception($"Property [{name}] not found.");
+            properties.Remove(name);
             return this;
         }
         
@@ -63,9 +52,17 @@ namespace Prota.Unity
             properties.Clear();
         }
 
-        public IEnumerator<GameProperty> GetEnumerator() => properties.GetEnumerator();
+        public IEnumerator<GameProperty> GetEnumerator() => properties.Select(x => x.Value).GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        
+        void OnValidate()
+        {
+            foreach(var property in properties)
+            {
+                property.Value.UpdateValue();
+            }
+        }
     }
     
     

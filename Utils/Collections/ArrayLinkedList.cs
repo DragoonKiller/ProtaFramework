@@ -6,7 +6,7 @@ using System.Collections;
 
 namespace Prota
 {
-    public struct ArrayLinkedListKey : IEquatable<ArrayLinkedListKey>
+    public readonly struct ArrayLinkedListKey : IEquatable<ArrayLinkedListKey>
     {
         public readonly int id;
         public readonly int version;

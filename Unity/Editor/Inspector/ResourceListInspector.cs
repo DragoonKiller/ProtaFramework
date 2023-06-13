@@ -1,29 +1,24 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.UIElements;
-using System.Collections.Generic;
 
 using Prota.Unity;
-using Prota.Editor;
 using UnityEditor.UIElements;
 using System.Linq;
-using NUnit.Framework;
 
 namespace Prota.Editor
 {
-    [CustomEditor(typeof(DataBinding), false)]
-    public class DataBindingInspector : UpdateInspector
+    [CustomEditor(typeof(ResourceList), false)]
+    public class ResourceListInspector : UpdateInspector
     {
         public override VisualElement CreateInspectorGUI()
         {
             var root = new VisualElement();
-            var binding = serializedObject.targetObject as DataBinding;
-            var data = binding.ProtaReflection().Get("data") as SerializableDictionary<string, GameObject>;
+            var list = serializedObject.targetObject as ResourceList;
+            var data = list.resources;
             var d = data.ToList();
             
-            root.AddChild(new PropertyField(serializedObject.FindProperty("includeSelf")));
-            root.AddChild(new PropertyField(serializedObject.FindProperty("featureCharacter")));
-            root.AddChild(new ListView(d, -1, MakeItem, BindItem).PassValue(out var list).SetMaxHeight(500));
+            root.AddChild(new ListView(d, -1, MakeItem, BindItem).PassValue(out var ll).SetMaxHeight(500));
             
             return root;
             
@@ -42,8 +37,6 @@ namespace Prota.Editor
         
         protected override void Update()
         {
-            var binding = serializedObject.targetObject as DataBinding;
-            
             
         }
     }

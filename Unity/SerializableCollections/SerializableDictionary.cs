@@ -2,18 +2,23 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Collections;
-using System.Data.Common;
 using System.Linq;
 using System.Text;
-using System.ComponentModel;
-using UnityEngine.UIElements;
+using System.Net.Http.Headers;
+using System.Reflection;
 
 namespace Prota
 {
+    public interface ISerializableDictionary
+    {
+        Type keyType { get; }
+        Type valueType { get; }
+    }
+    
     // 使用自定义链表.
     // 必须使用 SerializedReference 才能正确序列化.
     [Serializable]
-    public class SerializableDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>
+    public class SerializableDictionary<TKey, TValue> : ISerializableDictionary, IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>
     {
         public const int baseCapacity = 6;
         
@@ -93,9 +98,9 @@ namespace Prota
         {
             [SerializeField] public TKey key;
             [SerializeField] public TValue value;
-            [SerializeField] public SerializableLinkedListKey next;
+            [SerializeField] public int next;
 
-            public Entry(TKey key, TValue value, SerializableLinkedListKey next)
+            public Entry(TKey key, TValue value, int next)
             {
                 this.key = key;
                 this.value = value;
@@ -105,10 +110,10 @@ namespace Prota
         
         // 一个可复用节点集合.
         // 有效节点个数(count)就是 hashmap 元素个数.
-        [SerializeField, Prota.Unity.Readonly] SerializableLinkedList<Entry> _entries = new SerializableLinkedList<Entry>();
+        [SerializeField] SerializableLinkedList<Entry> _entries = new SerializableLinkedList<Entry>();
         
         // 拉链法哈希表, 这些是链表表头, 一个表头就是一个桶(bucket).
-        public List<SerializableLinkedListKey> heads = new List<SerializableLinkedListKey>().Fill(baseCapacity);
+        [SerializeField] List<int> heads = new List<int>();
         
         public SerializableLinkedList<Entry> entries => _entries;
         int modnum => heads.Count;
@@ -118,6 +123,11 @@ namespace Prota
         public bool IsReadOnly => false;
         IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => new KeysCollection(this);
         IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => new ValuesCollection(this);
+
+        public Type keyType => typeof(TKey);
+
+        public Type valueType => typeof(TValue);
+
         public TValue this[TKey key]
         {
             get
@@ -140,18 +150,19 @@ namespace Prota
         bool TryGetEntry(TKey key, out SerializableLinkedListKey index)
         {
             index = default;
+            if(entries.Count == 0) return false;
             var bucketIndex = key.GetHashCode().Repeat(modnum);
-            var head = heads[bucketIndex];
+            var head = entries.GetIndex(heads[bucketIndex]);
             
             // Debug.Log($"searching[{ key }] hash&index[{ bucketIndex }] bucket[{ head }]");
             
             // 遍历该桶的链表.
-            for(var i = head; i.valid; i = entries[i].next)
+            for(var i = head; i.valid; i = entries.GetIndex(entries[i].next))
             {
                 // Debug.Log($"searching[{ key }] visit { i }");
                 
                 var entry = entries[i];
-                if(entry.key.Equals(key))
+                if(object.Equals(entry.key, key))
                 {
                     index = i;
                     return true;
@@ -166,23 +177,32 @@ namespace Prota
             AddInternal(key, value);
         }
         
+        public void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> collection)
+        {
+            foreach(var i in collection) Add(i.Key, i.Value);
+        }
+        
+        public void AddRange<G>(IEnumerable<G> a, Func<G, TKey> keySelector, Func<G, TValue> valueSelector)
+        {
+            foreach(var i in a) Add(keySelector(i), valueSelector(i));
+        }
+        
         void AddInternal(TKey key, TValue value)
         {
-            if(entries.Count > heads.Count) Rehash();
+            if(entries.Count >= heads.Count) Rehash();
             
             // 新增一个节点.
             var newIndex = entries.Take();
             var bucketIndex = key.GetHashCode().Repeat(modnum);
             entries[newIndex] = new Entry(key, value, heads[bucketIndex]);
-            heads[bucketIndex] = newIndex;
+            heads[bucketIndex] = newIndex.id;
         }
         
         void Rehash()
         {
-            var nextN = Mathf.CeilToInt(heads.Count * 1.6f);
+            var nextN = Mathf.CeilToInt(heads.Count * 1.6f).Max(baseCapacity);
             
-            heads.Clear();
-            heads.Fill(nextN);
+            heads = new List<int>().Fill(nextN, -1);
             
             foreach(var k in entries.keys)
             {
@@ -195,7 +215,7 @@ namespace Prota
                 e.next = heads[bucketIndex];
                 
                 // 重新整理表头.
-                heads[bucketIndex] = k;
+                heads[bucketIndex] = k.id;
                 
                 // Debug.Log($"rehash[{ e.key }] newhash[{ bucketIndex }] [{ k }]next[{ e.next }]");
             }
@@ -206,11 +226,11 @@ namespace Prota
         public bool Remove(TKey key)
         {
             var bucketIndex = key.GetHashCode().Repeat(modnum);
-            var index = heads[bucketIndex];
+            var index = entries.GetIndex(heads[bucketIndex]);
             
             if(!index.valid) return false; // 整个链表没有那个元素.
             
-            for(var prev = SerializableLinkedListKey.none; index.valid; index = entries[index].next)
+            for(var prev = SerializableLinkedListKey.none; index.valid; index = entries.GetIndex(entries[index].next))
             {
                 // 找到了想要删除的元素.
                 if(key.Equals(entries[index].key))
@@ -245,9 +265,8 @@ namespace Prota
 
         public void Clear()
         {
-            heads.Clear();
-            heads.Fill(baseCapacity);
-            entries.Clear();
+            heads = new List<int>();
+            _entries = new SerializableLinkedList<Entry>();
         }
 
         public bool Contains(KeyValuePair<TKey, TValue> item)
@@ -273,7 +292,8 @@ namespace Prota
             if(!entries[index].value.Equals(item.Value)) return false;
             var next = entries[index].next;
             var bucketIndex = item.Key.GetHashCode().Repeat(modnum);
-            if(heads[bucketIndex] == index) heads[bucketIndex] = next;
+            var head = entries.GetIndex(heads[bucketIndex]);
+            if(head == index) heads[bucketIndex] = next;
             entries.Release(index);
             return true;
         }

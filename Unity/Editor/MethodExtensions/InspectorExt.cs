@@ -87,6 +87,70 @@ namespace Prota.Editor
         
         public static bool AnyField(this UnityEditor.Editor editor, string label, object target, FieldInfo f) => AnyFieldInternal(label, target, f);
         
+        public static bool AnyField(this PropertyDrawer editor, string label, object target, FieldInfo f) => AnyFieldInternal(label, target, f);
+        
+        public static bool AnyObject(this UnityEditor.EditorWindow editor, string label, object target) => AnyObjectInternal(label, target);
+        
+        public static bool AnyObject(this UnityEditor.Editor editor, string label, object target) => AnyObjectInternal(label, target);
+        
+        public static bool AnyObject(this PropertyDrawer editor, string label, object target) => AnyObjectInternal(label, target);
+        
+        
+        
+        public static bool AnyObjectInternal(string label, object target)
+        {
+            if(target == null) return false;
+            
+            var type = target.GetType();
+            if(type == typeof(int))
+            {
+                EditorGUILayout.IntField(label, (int)target);
+            }
+            else if(type == typeof(float))
+            {
+                EditorGUILayout.FloatField(label, (float)target);
+            }
+            else if(type == typeof(long))
+            {
+                EditorGUILayout.LongField(label, (long)target);
+            }
+            else if(type == typeof(double))
+            {
+                EditorGUILayout.DoubleField(label, (double)target);
+            }
+            else if(type == typeof(Vector2))
+            {
+                EditorGUILayout.Vector2Field(label, (Vector2)target);
+            }
+            else if(type == typeof(Vector3))
+            {
+                EditorGUILayout.Vector3Field(label, (Vector3)target);
+            }
+            else if(type == typeof(Vector4))
+            {
+                EditorGUILayout.Vector4Field(label, (Vector4)target);
+            }
+            else if(type == typeof(Color))
+            {
+                EditorGUILayout.ColorField(label, (Color)target);
+            }
+            else if(type == typeof(Quaternion))
+            {
+                EditorGUILayout.Vector4Field(label, ((Quaternion)target).ToVec4()).ToQuaternion();
+            }
+            else if(type == typeof(Rect))
+            {
+                EditorGUILayout.RectField((Rect)target);
+            }
+            else if(typeof(UnityEngine.Object).IsAssignableFrom(type))
+            {
+                EditorGUILayout.ObjectField(label, target as UnityEngine.Object, typeof(UnityEngine.Object), true);
+            }
+            else return false;
+            
+            return true;
+        }
+        
         public static bool AnyFieldInternal(string label, object target, FieldInfo f)
         {
             if(f.FieldType == typeof(int))

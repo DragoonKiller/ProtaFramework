@@ -12,10 +12,10 @@ using System.Data;
 namespace Prota
 {
     [Serializable]
-    public struct SerializableLinkedListKey : IEquatable<SerializableLinkedListKey>
+    public readonly struct SerializableLinkedListKey : IEquatable<SerializableLinkedListKey>
     {
-        [SerializeField, Readonly] public int id;
-        [SerializeReference, Readonly] public ISerializableLinkedList list;
+        [SerializeField, Readonly] public readonly int id;
+        [SerializeReference, Readonly] public readonly ISerializableLinkedList list;
         
         public SerializableLinkedListKey(int id, ISerializableLinkedList list)
         {
@@ -25,7 +25,7 @@ namespace Prota
         
         public bool Equals(SerializableLinkedListKey other) => id == other.id && list == other.list;
         
-        public bool valid => list != null;
+        public bool valid => list != null && id >= 0;
         
         public bool Valid(ISerializableLinkedList list) => this.list == list;
         
@@ -103,6 +103,17 @@ namespace Prota
             if(!data[i.id].inuse) return false;
             Free(i.id);
             return true;
+        }
+        
+        public SerializableLinkedListKey GetIndex(int i)
+        {
+            return new SerializableLinkedListKey(i, this);
+        }
+        
+        public T ElementAt(int i)
+        {
+            if(!data[i].inuse) throw new IndexOutOfRangeException();
+            return data[i].value;
         }
         
         public SerializableLinkedList<T> Clear()

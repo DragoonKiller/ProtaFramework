@@ -28,17 +28,17 @@ namespace Prota.Unity
     [CreateAssetMenu(fileName = "ResourcesList", menuName = "Prota Framework/ResourcesCollection", order = 1)]
     public class ProtaRes : ScriptableObject
     {
-        public ResourceList[] lists = new ResourceList[0];
+        [Serializable]
+        public class _ListSet : SerializableDictionary<string, UnityEngine.Object> { }
+        [SerializeField] public _ListSet lists = new _ListSet();
         
         public ResourceList this[string name]
         {
             get
             {
-                foreach(var x in lists)
-                {
-                    if(x.name == name) return x;
-                }
-                return null;
+                // lists.Select(x => $"{x.Key} :: {x.Value}").ToStringJoined().LogError();
+                // Debug.LogError(name);
+                return lists[name].AssertNotNull() as ResourceList;
             }
         }
         

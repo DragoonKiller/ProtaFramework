@@ -12,35 +12,16 @@ namespace Prota.Unity
     [ExecuteAlways]
     public class DataBinding : MonoBehaviour
     {
-        [Serializable]
-        public struct Entry
-        {
-            public string name;
-            public GameObject target;
-        }
-        
         public bool includeSelf = false;
         
-        [SerializeField] List<Entry> data = new List<Entry>();
-        
-        readonly Dictionary<string, GameObject> cache = new Dictionary<string, GameObject>();
-        
-        bool inited;
+        [Serializable]
+        public class _Data : SerializableDictionary<string, GameObject> {}
+        [SerializeField] _Data data = new _Data();
         
         public char featureCharacter = '$';
         
-        void Init()
+        void OnValidate()
         {
-            if(inited) return;
-            cache.Clear();
-            foreach(var x in data) cache.Add(x.name, x.target);
-            inited = true;
-        }
-        
-        void Update()
-        {
-            if(Application.isPlaying) return;
-            
             using var _ = TempHashSet<string>.Get(out var g);
             
             data.Clear();
@@ -51,7 +32,7 @@ namespace Prota.Unity
                     && (includeSelf || this.transform != t))
                 {
                     var s = t.name.Substring(1);
-                    data.Add(new Entry { name = s, target = t.gameObject });
+                    data.Add(s, t.gameObject);
                     if(g.Contains(s)) Debug.LogError($"DataBinding[{ this.gameObject.name }] 有重复的名字 { s }");
                     g.Add(s);
                 }
@@ -60,20 +41,23 @@ namespace Prota.Unity
             });
         }
         
+        void Update()
+        {
+            if(Application.isPlaying) return;
+        }
+        
         public GameObject this[string name] => Get(name);
         
         public GameObject Get(string name)
         {
-            Init();
-            if(!cache.TryGetValue(name, out var res))
+            if(!data.TryGetValue(name, out var res))
                 throw new Exception($"DataBinding[{ this.gameObject.name }] 找不到 GameObject { name }");
             return res.gameObject;
         }
         
         public T Get<T>(string name)
         {
-            Init();
-            if(!cache.TryGetValue(name, out var res))
+            if(!data.TryGetValue(name, out var res))
                 throw new Exception($"DataBinding[{ this.gameObject.name }] 找不到 GameObject { name }");
             if(!res.TryGetComponent<T>(out var c))
                 throw new Exception($"DataBinding[{ this.gameObject.name }] 找到了GameObject { name } 但是找不到组件 { typeof(T).Name }");
@@ -82,18 +66,16 @@ namespace Prota.Unity
         
         public bool TryGet(string name, out GameObject res)
         {
-            Init();
             res = null;
-            if(!cache.TryGetValue(name, out var t)) return false;
+            if(!data.TryGetValue(name, out var t)) return false;
             res = t.gameObject;
             return true;
         }
         
         public bool TryGet<T>(string name, out T res)
         {
-            Init();
             res = default;
-            if(!cache.TryGetValue(name, out var t)) return false;
+            if(!data.TryGetValue(name, out var t)) return false;
             res = t.GetComponent<T>();
             if(res == null) return false;
             return true;
@@ -101,16 +83,14 @@ namespace Prota.Unity
         
         public IEnumerable<GameObject> All()
         {
-            Init();
-            return cache.Values.Select(t => t.gameObject);
+            return data.Values.Select(t => t.gameObject);
         }
         
         public IEnumerable<(string name, GameObject g)> all
         {
             get
             {
-                Init();
-                return cache.Select(kv => (kv.Key, kv.Value.gameObject));
+                return data.Select(kv => (kv.Key, kv.Value.gameObject));
             }
         }
     }

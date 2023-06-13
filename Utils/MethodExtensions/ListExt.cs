@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 using UnityEngine;
+using System.Threading.Tasks;
 
 namespace Prota
 {
@@ -197,6 +198,12 @@ namespace Prota
         public static List<T> Fill<T>(this List<T> list, int n, Func<int, T> content)
         {
             for(int i = 0; i < n; i++) list.Add(content(i));
+            return list;
+        }
+        
+        public static List<T> Fill<T>(this List<T> list, int n, T content)
+        {
+            for(int i = 0; i < n; i++) list.Add(content);
             return list;
         }
         

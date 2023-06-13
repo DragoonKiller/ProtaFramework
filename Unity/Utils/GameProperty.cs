@@ -86,9 +86,17 @@ namespace Prota.Unity
         // ====================================================================================================
         // ====================================================================================================
         
-        public bool boolValue => value != 0;
+        public bool boolValue
+        {
+            get => value != 0;
+            set => this.value = value ? 1 : 0;
+        }
         
-        public int intValue => Mathf.FloorToInt(value);
+        public int intValue
+        {
+            get => Mathf.FloorToInt(value);
+            set => this.value = value;
+        }
         
         readonly ArrayLinkedList<Modifier> modifiers = new ArrayLinkedList<Modifier>();
         

@@ -50,8 +50,15 @@ namespace Prota.Editor
             };
             
             AssetTree.instance.afterRefresh += () => {
-                UpdateAllNeedsToUpdate();
-                UpdateProtaResource();
+                try
+                {
+                    UpdateAllNeedsToUpdate();
+                    UpdateProtaResource();
+                }
+                catch(Exception e)
+                {
+                    Debug.LogException(e);
+                }
             };
         }
         
@@ -70,9 +77,13 @@ namespace Prota.Editor
             var r = Resources.Load<ProtaRes>("ProtaRes");
             if(r == null) throw new Exception("a ProtaRes must put into Resources folder.");
             var lists = Resources.LoadAll<ResourceList>("/");
+            // lists.Select(x => x.name).ToStringJoined().LogError();
             var originList = r.lists;
-            r.lists = lists;
+            r.lists.Clear();
+            r.lists.AddRange(lists, x => x.name, x => x);
+            
             if(originList.SameContent(r.lists)) return;
+            
             EditorUtility.SetDirty(r);
             AssetDatabase.SaveAssetIfDirty(r);
         }
@@ -126,12 +137,11 @@ namespace Prota.Editor
             }
             
             var originList = resList.resources;
-            resList.resources = new List<ResourceList.Entry>();
+            originList.Clear();
             FindRecursive(r.parent);
             
-            resList.InvalidateCache();
-            
             if(originList.SameContent(resList.resources)) return;
+            
             EditorUtility.SetDirty(resList);
             AssetDatabase.SaveAssetIfDirty(resList);
         }
@@ -169,26 +179,25 @@ namespace Prota.Editor
             
             foreach(var a in allAssets)
             {
-                var entry = new ResourceList.Entry();
                 var pathToAsset = a.name;
+                var name = null as string;
                 
                 if(mainAsset == a)
                 {
-                    entry.name = pathToAsset;
+                    name = pathToAsset;
                 }
                 else
                 {
                     if(a.name == pathToAsset)
                     {
-                        entry.name = ":" + pathToAsset;
+                        name = ":" + pathToAsset;
                     }
                     else
                     {
-                        entry.name = pathToAsset + ":" + a.name;
+                        name = pathToAsset + ":" + a.name;
                     }
                 }
-                entry.target = a;
-                r.resources.Add(entry);
+                r.resources.Add(name.ToLower(), a);
             }
         }
     }
