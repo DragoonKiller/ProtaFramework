@@ -366,7 +366,9 @@ namespace Prota.Editor
             return x.SetVisible(f(default, listenTarget.value));
         }
         
-        public static T SyncData<G, T>(this T l, int n, Func<int, G> onCreate, Action<int, G> onUpdate, Action<int, G> onDisable) where T: VisualElement where G:VisualElement
+        public static T SyncData<G, T>(this T l, int n, Func<int, G> onCreate, Action<int, G> onUpdate, Action<int, G> onDisable)
+            where T: VisualElement
+            where G:VisualElement
         {
             for(int i = 0; i < n; i++)
             {
@@ -379,6 +381,25 @@ namespace Prota.Editor
             }
             
             for(int i = n; i < l.childCount; i++) onDisable(i, l[i] as G);
+            return l;
+        }
+        
+        public static T SyncData<G, T, V>(this T l, IEnumerable<V> data, Func<V, G> onCreate, Action<V, G> onUpdate)
+            where T: VisualElement
+            where G: VisualElement
+        {
+            int i = 0;
+            foreach(var e in data)
+            {
+                if(i >= l.childCount)
+                {
+                    l.AddChild(onCreate(e));
+                }
+                onUpdate(e, l[i] as G);
+                i++;
+            }
+            
+            for(; i < l.childCount; i++) l[i].SetVisible(false);
             return l;
         }
         

@@ -7,6 +7,7 @@ using System.Reflection;
 using Prota.Unity;
 using System;
 using System.Runtime.Serialization;
+using Mono.Cecil;
 
 namespace Prota.Editor
 {
@@ -38,6 +39,7 @@ namespace Prota.Editor
                 .SetGrow()
                 .AddChild(new TextField().PassValue(out var nameField)
                     .WithBinding(property.SubBackingField("name"))
+                    .SetNoInteraction()
                     .SetGrow()
                     .SetMinWidth(100)
                 )
@@ -47,7 +49,13 @@ namespace Prota.Editor
                         .WithBinding(property.SubField("_baseValue"))
                         .SetWidth(60)
                     )
-                    .AddChild(new TextField().PassValue(out var actualValueField)
+                    .AddChild(new FloatField().PassValue(out var actualValueField)
+                        .WithBinding(property.SubBackingField("value"))
+                        .SetWidth(60)
+                        .SetNoInteraction()
+                        .SetVisible(false)
+                    )
+                    .AddChild(new TextField().PassValue(out var actualValueDisplayField)
                         .SetWidth(60)
                         .SetNoInteraction()
                     )
@@ -58,7 +66,7 @@ namespace Prota.Editor
                 )
             );
             
-            actualValueField.ReactOnChange(s => {
+            actualValueDisplayField.ReactOnChange(s => {
                 var b = property.SubBackingField("behaviour");
                 var display = (PropertyBehaviour)b.enumValueIndex switch {
                     PropertyBehaviour.Float => ProeprtyDisplay.Float,
@@ -66,10 +74,26 @@ namespace Prota.Editor
                     PropertyBehaviour.Bool => ProeprtyDisplay.TrueOrFalse,
                     _ => throw new ArgumentOutOfRangeException()
                 };
-                s.value = GameProperty.ToString(display, property.SubBackingField("value").floatValue);
-            }, behaviourField, baseValueField, nameField);
+                s.value = GameProperty.ToString(display, actualValueField.value);
+            }, actualValueField);
             
             root.Bind(property.serializedObject);
+            
+            // void TagDirty() => EditorUtility.SetDirty(property.serializedObject.targetObject);
+            // 
+            // nameField.OnValueChange((ChangeEvent<string> e) =>{
+            //     if(e.newValue != e.previousValue) TagDirty();
+            // });
+            // baseValueField.OnValueChange((ChangeEvent<float> e) =>{
+            //     if(e.newValue != e.previousValue) TagDirty();
+            // });
+            // behaviourField.OnValueChange((ChangeEvent<Enum> e) => {
+            //     if(e.newValue != e.previousValue) TagDirty();
+            // });
+            // actualValueField.OnValueChange((ChangeEvent<float> e) => {
+            //     if(e.newValue != e.previousValue) TagDirty();
+            // });
+            // 
             
             return root;
         }
