@@ -23,7 +23,7 @@ namespace Prota
         
         public static bool SetAndCompare<T>(this ref T x, T value) where T : struct
         {
-            var res = x.Equals(value);
+            var res = EqualityComparer<T>.Default.Equals(x, value);
             x = value;
             return res;
         }

@@ -93,7 +93,9 @@ namespace Prota
         
         public static bool Contains<T>(this T[] list, T element)
         {
-            for(int i = 0; i < list.Length; i++) if(list[i].Equals(element)) return true;
+            for(int i = 0; i < list.Length; i++) if(
+                EqualityComparer<T>.Default.Equals(list[i], element))
+                    return true;
             return false;
         }
         

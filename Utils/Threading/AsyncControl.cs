@@ -52,11 +52,22 @@ namespace Prota
         
         public AsyncControl Step()
         {
-            using var _ = TempList<Action>.Get(out var callbacks);
+            using var _ = TempList.Get<Action>(out var callbacks);
             callbacks.AddRange(this.callbacks);
             this.callbacks.Clear();
             foreach(var callback in callbacks) callback();
             stepId += 1;
+            return this;
+        }
+        
+        public AsyncControl StepUntilClear(int max = 10000)
+        {
+            for(int i = 0; i <= max; i++)
+            {
+                if(callbacks.Count == 0) break;
+                Step();
+                if(i == max) throw new Exception("AsyncControl.StepUntilClear() reached max. There could be a dead loop.");
+            }
             return this;
         }
         

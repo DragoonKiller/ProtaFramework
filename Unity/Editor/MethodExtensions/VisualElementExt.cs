@@ -232,6 +232,12 @@ namespace Prota.Editor
         }
         
         
+        public static TextInputBaseField<string> SetEditable(this TextInputBaseField<string> x, bool editable)
+        {
+            x.textEdition.isReadOnly = !editable;
+            return x;
+        }
+        
         public static T SetCentered<T>(this T x) where T: VisualElement
         {
             x.style.alignSelf = Align.Center;

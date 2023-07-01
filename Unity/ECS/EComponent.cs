@@ -79,6 +79,8 @@ namespace Prota.Unity
         
         public T ComponentAside<T>() where T : EComponent => entity.GetEntityComponent<T>();
         
+        public bool HasComponentAside<T>() where T: EComponent => entity.HasEntityComponent<T>();
+        
         public IEnumerable<T> ComponentsAside<T>() where T : EComponent => entity.GetEntityComponents<T>();
         
         public T ComponentAside<T>(string name) where T : EComponent
@@ -92,14 +94,12 @@ namespace Prota.Unity
         
         public bool ComponentAside<T>(out T res) where T : EComponent
         {
-            res = entity.GetEntityComponent<T>();
-            return res != null;
+            return entity.TryGetEntityComponent<T>(out res);
         }
         
         public bool ComponentsAside<T>(out IEnumerable<T> res) where T: EComponent
         {
-            res = entity.GetEntityComponents<T>();
-            return res != null;
+            return entity.TryGetEntityComponents<T>(out res);
         }
         
         // ====================================================================================================

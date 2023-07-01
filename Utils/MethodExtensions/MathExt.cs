@@ -5,6 +5,19 @@ namespace Prota
 {
     public static partial class MethodExtensions
     {
+        public static bool CompareAndReplace<T>(this ref T record, T current) where T: struct
+        {
+            var res = EqualityComparer<T>.Default.Equals(record, current);
+            record = current;
+            return res;
+        }
+        
+        public static T CompareChanged<T>(this T record, T current, out bool changed)
+        {
+            changed = EqualityComparer<T>.Default.Equals(record, current);
+            return changed ? current : record;
+        }
+        
         public static bool ApproximatelyEqual(this float x, float y) => Math.Abs(x - y) < 1e-6f;
         
         public static float Sqr(this float x) => x * x;

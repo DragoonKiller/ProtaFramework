@@ -61,8 +61,8 @@ namespace Prota
         {
             if((a == null) != (b == null)) return false;
             
-            using var _ = TempHashSet<T>.Get(out var ha);
-            using var __ = TempHashSet<T>.Get(out var hb);
+            using var _ = TempHashSet.Get<T>(out var ha);
+            using var __ = TempHashSet.Get<T>(out var hb);
             ha.AddRange(a);
             hb.AddRange(b);
             foreach(var i in ha)
@@ -73,7 +73,7 @@ namespace Prota
             return hb.Count == 0;
         }
         
-        public static bool SameContentAndOrder(this IEnumerable a, IEnumerable b)
+        public static bool SameContentAndOrder<T>(this IEnumerable<T> a, IEnumerable<T> b)
         {
             if((a == null) != (b == null)) return false;
             
@@ -85,14 +85,14 @@ namespace Prota
                 var nb = eb.MoveNext();
                 if(na != nb) return false;
                 if(!na) return true;
-                if(!ea.Current.Equals(eb.Current)) return false;
+                if(!EqualityComparer<T>.Default.Equals(ea.Current, eb.Current)) return false;
             }
         }
         
         public static void Diff<T>(this IEnumerable<T> a, IEnumerable<T> b, Action<T, T> f)
         {
-            using var _ = TempHashSet<T>.Get(out var ha);
-            using var __ = TempHashSet<T>.Get(out var hb);
+            using var _ = TempHashSet.Get<T>(out var ha);
+            using var __ = TempHashSet.Get<T>(out var hb);
             ha.AddRange(a);
             hb.AddRange(b);
             foreach(var i in ha)
@@ -111,8 +111,8 @@ namespace Prota
         {
             if((a == null) != (b == null)) return false;
             
-            using var _ = TempDict<T, int>.Get(out var ha);
-            using var __ = TempDict<T, int>.Get(out var hb);
+            using var _ = TempDict.Get<T, int>(out var ha);
+            using var __ = TempDict.Get<T, int>(out var hb);
             
             foreach(var i in a)
             {

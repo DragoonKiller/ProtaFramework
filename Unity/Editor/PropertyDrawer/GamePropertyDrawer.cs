@@ -6,8 +6,9 @@ using System.Reflection;
 
 using Prota.Unity;
 using System;
-using System.Runtime.Serialization;
-using Mono.Cecil;
+
+using Behaviour = Prota.Unity.GameProperty.Behaviour;
+using Display = Prota.Unity.GameProperty.Display;
 
 namespace Prota.Editor
 {
@@ -68,10 +69,10 @@ namespace Prota.Editor
             
             actualValueDisplayField.ReactOnChange(s => {
                 var b = property.SubBackingField("behaviour");
-                var display = (PropertyBehaviour)b.enumValueIndex switch {
-                    PropertyBehaviour.Float => ProeprtyDisplay.Float,
-                    PropertyBehaviour.Int => ProeprtyDisplay.Int,
-                    PropertyBehaviour.Bool => ProeprtyDisplay.TrueOrFalse,
+                var display = (Behaviour)b.enumValueIndex switch {
+                    Behaviour.Float => Display.Float,
+                    Behaviour.Int => Display.Int,
+                    Behaviour.Bool => Display.TrueOrFalse,
                     _ => throw new ArgumentOutOfRangeException()
                 };
                 s.value = GameProperty.ToString(display, actualValueField.value);

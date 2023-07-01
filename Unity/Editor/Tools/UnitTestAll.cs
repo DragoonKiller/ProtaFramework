@@ -10,7 +10,7 @@ namespace Prota.Editor
         {
             UnitTest.UnitTestSerializableLinkedList(Debug.Log);
             UnitTest.UnitTestSerializableDictionary();
-            
+            IniParser.UnitTest();
         }
     }
 }

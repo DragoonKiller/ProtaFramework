@@ -7,11 +7,18 @@ using System.Linq;
 
 using Prota.Unity;
 using System.Collections.Generic;
+using NUnit.Framework;
 
 namespace Prota.Editor
 {
     public class ProtaInspector : EditorWindow
     {
+        static bool useLogicalOrder
+        {
+            get => EditorPrefs.GetBool("prota::ProtaInspector_UseLogicalOrder", true);
+            set => EditorPrefs.SetBool("prota::ProtaInspector_UseLogicalOrder", value);
+        }
+        
         static class SelectCache
         {
             readonly static List<(GameObject g, int i)> recordSelect = new List<(GameObject, int)>();
@@ -108,6 +115,11 @@ namespace Prota.Editor
                         .SetGrow()
                     )
                     .AddChild(new VisualElement().AsHorizontalSeperator(2))
+                    .AddChild(copyPastePart = new VisualElement() { name = "settingsPart" }
+                        .AddChild(new VisualElement().SetHorizontalLayout()
+                            .AddChild(new Toggle("use logical order") { name = "useLogicalOrder" })
+                        )
+                    )
                     .AddChild(copyPastePart = new VisualElement() { name = "copyPastePart" }
                         .AddChild(new VisualElement().SetHorizontalLayout()
                             .AddChild(new Button(CopyComponent) { text = "copy" })
@@ -127,6 +139,12 @@ namespace Prota.Editor
             gameObjectInspectorPart.SetVisible(false);
             normalPart.SetVisible(false);
             noSelectedPart.SetVisible(true);
+            
+            root.Q<Toggle>("useLogicalOrder").value = useLogicalOrder;
+            root.Q<Toggle>("useLogicalOrder").RegisterValueChangedCallback(x => {
+                useLogicalOrder = x.newValue;
+                RebuildInspector();
+            });
             
             return root;
         }
@@ -269,10 +287,32 @@ namespace Prota.Editor
                 
                 if(i == curSelect) UpdateSelect(i);
             }
-            
-            
         }
         
+        static Dictionary<Type, int> priority = new Dictionary<Type, int> {
+            [typeof(Transform)] = -1000,
+            [typeof(Rigidbody)] = -100,
+            [typeof(Rigidbody2D)] = -100,
+            [typeof(Collider)] = -100,
+            [typeof(Collider2D)] = -100,
+            [typeof(Renderer)] = -20,
+            [typeof(UnityEngine.UI.Graphic)] = -10,
+            [typeof(CanvasGroup)] = -10,
+            [typeof(CanvasRenderer)] = -10,
+            [typeof(ECS)] = 1000,
+            [typeof(ERoot)] = 1000,
+            [typeof(EComponent)] = 1001,
+            [typeof(DataBinding)] = 10000,
+            [typeof(GamePropertyList)] = 10000,
+            [typeof(ResourceBinding)] = 10000,
+            [typeof(DontDestroyOnLoad)] = 10000,
+        };
+        static int GetPriority(Type x)
+        {
+            if(priority.TryGetValue(x, out var p)) return p;
+            return 0;
+        }
+            
         void SetupComponentData(out bool hasInvalidData)
         {
             hasInvalidData = false;
@@ -300,6 +340,20 @@ namespace Prota.Editor
             groups.Clear();
             foreach(var c in components) groups.AddNoDuplicate((c.type, c.index));
             
+            // sort the group.
+            if(useLogicalOrder)
+            {
+                var _ = TempDict.Get<Type, int>(out var indexOfType);
+                for(int i = 0; i < groups.Count; i++) indexOfType[groups[i].type] = i;
+                
+                groups.Sort((x, y) => {
+                    var p1 = GetPriority(x.type);
+                    var p2 = GetPriority(y.type);
+                    if(p1 != p2) return p1.CompareTo(p2);
+                    return indexOfType[x.type].CompareTo(indexOfType[y.type]);
+                });
+            }
+            
             // filter all components that are not in the groups.
             targetObjects.Clear();
             for(int i = 0; i < groups.Count; i++)
@@ -308,6 +362,7 @@ namespace Prota.Editor
                 targetObjects.Add(i, new List<Component>().PassValue(out var list));
                 list.AddRange(components.Where(x => x.type == curGroup.type && x.index == curGroup.index).Select(x => x.component));
             }
+            
         }
         
         void UpdateComponentContent()

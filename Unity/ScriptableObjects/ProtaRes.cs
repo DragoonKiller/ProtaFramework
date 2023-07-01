@@ -25,7 +25,7 @@ using UnityEngine;
 
 namespace Prota.Unity
 {
-    [CreateAssetMenu(fileName = "ResourcesList", menuName = "Prota Framework/ResourcesCollection", order = 1)]
+    [CreateAssetMenu(fileName = "ProtaRes", menuName = "Prota Framework/ProtaRes", order = 1)]
     public class ProtaRes : ScriptableObject
     {
         [Serializable]
@@ -38,7 +38,7 @@ namespace Prota.Unity
             {
                 // lists.Select(x => $"{x.Key} :: {x.Value}").ToStringJoined().LogError();
                 // Debug.LogError(name);
-                return lists[name].AssertNotNull() as ResourceList;
+                return lists[name.ToLower()].AssertNotNull() as ResourceList;
             }
         }
         
@@ -47,7 +47,7 @@ namespace Prota.Unity
         {
             get
             {
-                if(_instance == null) _instance = Resources.Load<ProtaRes>("ProtaRes");
+                if(_instance == null) _instance = Resources.Load<ProtaRes>("ProtaRes").AssertNotNull();
                 _instance.AssertNotNull();
                 return _instance;
             }
@@ -55,11 +55,13 @@ namespace Prota.Unity
         
         public static T Load<T>(string list, string name) where T : UnityEngine.Object
         {
+            name = name.ToLower();
             return instance[list].Get<T>(name);
         }
         
         public static bool TryLoad<T>(string list, string name, out T res) where T : UnityEngine.Object
         {
+            name = name.ToLower();
             return instance[list].TryGet<T>(name, out res);
         }
     }

@@ -86,7 +86,7 @@ namespace Prota
         
         public void Remove(Func<KeyValuePair<A, List<B>>, bool> f)
         {
-            using var _ = TempList<A>.Get(out var toBeRemoved);
+            using var _ = TempList.Get<A>(out var toBeRemoved);
             foreach(var kv in this) if(f(kv)) toBeRemoved.Add(kv.Key);
             foreach(var k in toBeRemoved) this.Remove(k);
         }

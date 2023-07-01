@@ -35,11 +35,17 @@ namespace Prota.Editor
                         if (components[i] == null)
                         {
                             Debug.Log($"Removing missing component from {t.name}");
-                            GameObjectUtility.RemoveMonoBehavioursWithMissingScript(t.gameObject);
+                            int cnt = GameObjectUtility.RemoveMonoBehavioursWithMissingScript(t.gameObject);
+                            if(cnt > 0) Debug.Log($"Removed {cnt} missing components from {t.name}");
                             continue;
                         }
                         
-                        SerializationUtility.ClearAllManagedReferencesWithMissingTypes(components[i]);
+                        if(!(components[i] is MonoBehaviour)) continue;
+                        
+                        if(SerializationUtility.ClearAllManagedReferencesWithMissingTypes(components[i]))
+                        {
+                            Debug.Log($"Removed missing references from {t.name}");
+                        }
                     }
                     
                 });

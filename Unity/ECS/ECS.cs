@@ -177,7 +177,7 @@ namespace Prota.Unity
         
         public void CheckSystemOrder()
         {
-            using var _ = TempList<ESystem>.Get(out var stack);
+            using var _ = TempList.Get<ESystem>(out var stack);
             stack.AddRange(systems);
             for(int i = 0; i < stack.Count; i++)
             {
@@ -215,7 +215,7 @@ namespace Prota.Unity
         public void InitSystems()
         {
             systems.RemoveAll(x => x == null);
-            using var _h = TempHashSet<Type>.Get(out var types);
+            using var _h = TempHashSet.Get<Type>(out var types);
             types.AddRange(systemTypes);
             foreach(var i in systems) types.Remove(i.GetType());
             foreach(var ss in types)

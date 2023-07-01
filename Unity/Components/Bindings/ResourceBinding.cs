@@ -32,7 +32,7 @@ namespace Prota.Unity
             for(int i = 0; i < data.Count; i++)
             {
                 if(data[i].target == null) continue;
-                if(data[i].name == null || data[i].name.Length == 0)
+                if(data[i].name.NullOrEmpty())
                 {
                     data[i] = new Entry { name = data[i].target.name, target = data[i].target };
                 }

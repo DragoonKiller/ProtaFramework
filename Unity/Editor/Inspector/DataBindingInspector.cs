@@ -42,8 +42,6 @@ namespace Prota.Editor
         
         protected override void Update()
         {
-            var binding = serializedObject.targetObject as DataBinding;
-            
             
         }
     }

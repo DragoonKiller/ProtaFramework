@@ -214,13 +214,14 @@ namespace Prota.Unity
             return d;
         }
         
-        public static string GetNamePath(this Transform t)
+        public static string GetNamePath(this Component t)
         {
+            t = t.transform;
             var sb = new List<string>();
             while(t != null)
             {
                 sb.Add(t.gameObject.name);
-                t = t.parent;
+                t = (t as Transform).parent;
             }
             sb.Reverse();
             return sb.ToStringJoined("/");

@@ -42,7 +42,9 @@ namespace Prota
 
         public bool Contains(T item)
         {
-            foreach(var i in data) if(item.Equals(i)) return true;
+            foreach(var i in data)
+                if(EqualityComparer<T>.Default.Equals(item, i))
+                    return true;
             return false;
         }
 
@@ -101,7 +103,9 @@ namespace Prota
 
         public int IndexOf(T item)
         {
-            for(int i = 0; i < Count; i++) if(item.Equals(data[i])) return i;
+            for(int i = 0; i < Count; i++)
+                if(EqualityComparer<T>.Default.Equals(item, data[i]))
+                    return i;
             return -1;
         }
 

@@ -1,12 +1,6 @@
 using UnityEngine;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using Prota.Unity;
 using System.Threading.Tasks;
-using System.ComponentModel;
-using UnityEditorInternal;
 
 namespace Prota.Unity
 {

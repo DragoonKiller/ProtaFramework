@@ -24,6 +24,18 @@ namespace Prota.Unity
             return c != null;
         }
         
+        public bool TryGetEntityComponents<T>(out IEnumerable<T> c) where T : EComponent
+        {
+            c = Enumerable.Empty<T>();
+            return components.TryGetValue(typeof(T), out var res) && res.Count > 0;
+        }
+        
+        public bool TryGetEntityComponents(Type t, out IEnumerable<EComponent> c)
+        {
+            c = Enumerable.Empty<EComponent>();
+            return components.TryGetValue(t, out var res) && res.Count > 0;
+        }
+        
         public T GetEntityComponent<T>() where T : EComponent => GetEntityComponent(typeof(T)) as T;
         
         public EComponent GetEntityComponent(Type t)

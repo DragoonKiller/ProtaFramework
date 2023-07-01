@@ -90,7 +90,7 @@ namespace Prota.Unity
         
         public static IEnumerable<Component> EnumerateComponents(this GameObject g)
         {
-            using var _ = TempList<Component>.Get(out var t);
+            using var _ = TempList.Get<Component>(out var t);
             g.GetComponents(typeof(Component), t);
             foreach(var x in t) yield return x;
         }
@@ -201,6 +201,19 @@ namespace Prota.Unity
             return x;
         }
         
+        public static GameObject SetMaterial(this GameObject x, Material material)
+        {
+            foreach(var c in x.EnumerateComponents())
+            {
+                switch(c)
+                {
+                    case Renderer t: t.material = material; break;
+                    case MaskableGraphic t: t.material = material; break;
+                    default: throw new NotSupportedException($"Component type: {c.GetType()}");
+                }
+            }
+            return x;
+        }
         
     }
 }

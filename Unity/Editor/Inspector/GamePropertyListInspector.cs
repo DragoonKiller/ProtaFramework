@@ -5,17 +5,11 @@ using UnityEngine.UIElements;
 using Prota.Unity;
 using UnityEditor.UIElements;
 using System.Linq;
-using System.Collections.Generic;
-using UnityEditor.Graphs;
-using UnityEditor.PackageManager;
-using NUnit.Framework;
-using System.Runtime.InteropServices;
 using static Prota.Unity.GameProperty;
-using System.Linq.Expressions;
 
 namespace Prota.Editor
 {
-    [CustomEditor(typeof(GamePropertyList), false)]
+    [CustomEditor(typeof(GamePropertyList), true)]
     [CanEditMultipleObjects]
     public class GamePropertyListInspector : UpdateInspector
     {
@@ -76,9 +70,9 @@ namespace Prota.Editor
             if(lList == null) return;
             if(serializedObject.targetObject == null) return;
             
-            using var _ = TempList<int>.Get(out var list);
+            using var _ = TempList.Get<int>(out var list);
             
-            var filter = nameField.value;
+            var filter = nameField.value.StartsWith("?") ? nameField.value.Substring(1) : "";
             var arrayProperty = serializedObject.FindProperty("properties._entries.data");
             for(int i = 0; i < arrayProperty.arraySize; i++)
             {

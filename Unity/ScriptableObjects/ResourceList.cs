@@ -37,20 +37,9 @@ namespace Prota.Unity
         public class _Entry : SerializableDictionary<string, UnityEngine.Object> { }
         [SerializeField] public _Entry resources;
         
-        static Dictionary<string, string> toLowerCache = new Dictionary<string, string>();
-        
-        string CachedToLower(string name)
-        {
-            if(name == null) return null;
-            if(toLowerCache.TryGetValue(name, out var x)) return x;
-            x = name.ToLower();
-            toLowerCache.Add(name, x);
-            return x;
-        }
-        
         public bool HasResource(string name)
         {
-            return resources.ContainsKey(CachedToLower(name));
+            return resources.ContainsKey(name.ToLower());
         }
         
         public UnityEngine.Object Get(string name) => Get<UnityEngine.Object>(name);
@@ -59,14 +48,14 @@ namespace Prota.Unity
         {
             x = null;
             if(name.NullOrEmpty()) return false;
-            return resources.TryGetValue(CachedToLower(name), out x);
+            return resources.TryGetValue(name.ToLower(), out x);
         }
         
         public bool TryGet<T>(string name, out T x) where T: UnityEngine.Object
         {
             x = null;
             if(name.NullOrEmpty()) return false;
-            if(resources.TryGetValue(CachedToLower(name), out var y))
+            if(resources.TryGetValue(name.ToLower(), out var y))
             {
                 x = (T)y;
                 return true;
@@ -77,9 +66,9 @@ namespace Prota.Unity
         
         public T Get<T>(string name) where T: UnityEngine.Object
         {
-            if(name == null || !resources.TryGetValue(CachedToLower(name), out var x))
+            if(name == null || !resources.TryGetValue(name.ToLower(), out var x))
             {
-                Debug.Log($"ResourceList find[{ name }||{ CachedToLower(name) }] list[{ resources.Keys.ToStringJoined(",") }]");
+                Debug.Log($"ResourceList find[{ name }||{ name.ToLower() }] list[{ resources.Keys.ToStringJoined(",") }]");
                 Debug.LogError($"Resource in [{ this.name }] with name [{name}] not found");
                 return null;
             }
@@ -90,7 +79,7 @@ namespace Prota.Unity
         {
             if(resources == null || resources.Count == 0)
             {
-                Debug.LogWarning("ResourceList resources is null");
+                Debug.LogWarning($"ResourceList [{this.name}] is null");
                 return;
             }
         }

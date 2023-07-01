@@ -36,7 +36,7 @@ namespace Prota
                 }
             }
             
-            using var _ = TempList<K>.Get(out var temp);
+            using var _ = TempList.Get<K>(out var temp);
             foreach(var e in target)
             {
                 // 有 key 的更新.

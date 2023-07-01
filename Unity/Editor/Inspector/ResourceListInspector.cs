@@ -5,6 +5,8 @@ using UnityEngine.UIElements;
 using Prota.Unity;
 using UnityEditor.UIElements;
 using System.Linq;
+using System.Dynamic;
+using NUnit.Framework.Internal;
 
 namespace Prota.Editor
 {
@@ -24,14 +26,21 @@ namespace Prota.Editor
             
             VisualElement MakeItem()
             {
-                return new ObjectField().SetNoInteraction();
+                return new VisualElement()
+                    .SetHorizontalLayout()
+                    .SetGrow()
+                    .AddChild(new TextField(){ name = "text" }.SetMaxWidth(200).SetGrow())
+                    .AddChild(new ObjectField(){ name = "obj" }.SetNoInteraction().SetGrow());
             }
             
             void BindItem(VisualElement x, int i)
             {
-                var g = x as ObjectField;
-                var entry = d[i].Key;
-                g.value = d[i].Value;
+                var text = x.Q<TextField>("text");
+                var obj = x.Q<ObjectField>("obj");
+                text.textEdition.isReadOnly = true;
+                
+                text.value = d[i].Key;
+                obj.value = d[i].Value;
             }
         }
         

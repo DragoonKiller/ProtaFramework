@@ -5,9 +5,6 @@ using System.Linq;
 
 using Prota.Unity;
 using System.Collections;
-using UnityEditor.Overlays;
-using System.Diagnostics.Contracts;
-using System.Data;
 
 namespace Prota
 {
@@ -32,7 +29,8 @@ namespace Prota
         public static SerializableLinkedListKey none => new SerializableLinkedListKey(-1, null);
 
         public override bool Equals(object obj) => obj is SerializableLinkedListKey other && Equals(other);
-        public static bool operator==(SerializableLinkedListKey a, SerializableLinkedListKey b) => a.Equals(b);
+        public static bool operator==(SerializableLinkedListKey a, SerializableLinkedListKey b)
+            => a.Equals(b);
         public static bool operator!=(SerializableLinkedListKey a, SerializableLinkedListKey b) => !a.Equals(b);
         public override int GetHashCode() => HashCode.Combine(id, list);
         

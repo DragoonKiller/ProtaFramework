@@ -127,6 +127,10 @@ namespace Prota
         
         public Type baseType => type.BaseType;
         
+        public Type[] nestedTypes => type.GetNestedTypes(
+            BindingFlags.Public | BindingFlags.NonPublic
+            | BindingFlags.Instance | BindingFlags.Static
+        );
         
         public object CreateObject(params object[] args) => Activator.CreateInstance(type, args);
         

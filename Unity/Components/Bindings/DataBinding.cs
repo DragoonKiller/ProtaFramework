@@ -22,7 +22,7 @@ namespace Prota.Unity
         
         void OnValidate()
         {
-            using var _ = TempHashSet<string>.Get(out var g);
+            using var _ = TempHashSet.Get<string>(out var g);
             
             data.Clear();
             
@@ -33,7 +33,7 @@ namespace Prota.Unity
                 {
                     var s = t.name.Substring(1);
                     data.Add(s, t.gameObject);
-                    if(g.Contains(s)) Debug.LogError($"DataBinding[{ this.gameObject.name }] 有重复的名字 { s }");
+                    if(g.Contains(s)) Debug.LogError($"DataBinding[{ this.GetNamePath() }] 有重复的名字 { s }");
                     g.Add(s);
                 }
                 if(t.GetComponent<DataBinding>().PassValue(out var tt) != null && tt != this) return false;
@@ -51,16 +51,16 @@ namespace Prota.Unity
         public GameObject Get(string name)
         {
             if(!data.TryGetValue(name, out var res))
-                throw new Exception($"DataBinding[{ this.gameObject.name }] 找不到 GameObject { name }");
+                throw new Exception($"DataBinding[{ this.GetNamePath() }] 找不到 GameObject { name }");
             return res.gameObject;
         }
         
         public T Get<T>(string name)
         {
             if(!data.TryGetValue(name, out var res))
-                throw new Exception($"DataBinding[{ this.gameObject.name }] 找不到 GameObject { name }");
+                throw new Exception($"DataBinding[{ this.GetNamePath() }] 找不到 GameObject { name }");
             if(!res.TryGetComponent<T>(out var c))
-                throw new Exception($"DataBinding[{ this.gameObject.name }] 找到了GameObject { name } 但是找不到组件 { typeof(T).Name }");
+                throw new Exception($"DataBinding[{ this.GetNamePath() }] 找到了GameObject { name } 但是找不到组件 { typeof(T).Name }");
             return c;
         }
         

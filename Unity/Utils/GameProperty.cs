@@ -1,10 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using Prota;
-using Prota.Unity;
 using UnityEngine;
 
 // 用来存储游戏中单位的"属性".
@@ -13,35 +8,35 @@ using UnityEngine;
 
 namespace Prota.Unity
 {
-    public struct ModifierHandle
-    {
-        public readonly ArrayLinkedListKey key;
-
-        public ModifierHandle(ArrayLinkedListKey key) => this.key = key;
-    }
-
-    
-    public enum PropertyBehaviour
-    {
-        Float = 0,     // 标准浮点数.
-        Int,        // 限制在整数范围. 如果某些 modifier 让它变成小数, 那么下取整.
-        Bool,    // 只能填 0 或 1.
-    }
-    
-    
-    public enum ProeprtyDisplay
-    {
-        Float = 0,          // 保留两位小数的浮点数,
-        Int = 1,            // 下取整.
-        OneZero = 2,        // 0 或 1.
-        Percent = 3,        // 百分比, 保留两位小数.
-        TrueOrFalse = 4,    // true 或 false.
-    }
-    
     // GameProperty 用来存储任意单位的"属性".
     [Serializable]
     public class GameProperty
     {
+        public struct ModifierHandle
+        {
+            public readonly ArrayLinkedListKey key;
+
+            public ModifierHandle(ArrayLinkedListKey key) => this.key = key;
+        }
+
+    
+        public enum Behaviour
+        {
+            Float = 0,     // 标准浮点数.
+            Int,        // 限制在整数范围. 如果某些 modifier 让它变成小数, 那么下取整.
+            Bool,    // 只能填 0 或 1.
+        }
+        
+        
+        public enum Display
+        {
+            Float = 0,          // 保留两位小数的浮点数,
+            Int = 1,            // 下取整.
+            OneZero = 2,        // 0 或 1.
+            Percent = 3,        // 百分比, 保留两位小数.
+            TrueOrFalse = 4,    // true 或 false.
+        }
+    
         // 公式:
         // result = ((base + sum(addBase)) * (1 + sum(mulBase)) + sum(addFinal)) * mul(mulFinal)
         // sum 表示所有 modifier 相加.
@@ -79,7 +74,7 @@ namespace Prota.Unity
         }
         
         
-        [field: SerializeField] public PropertyBehaviour behaviour { get; private set; }
+        [field: SerializeField] public Behaviour behaviour { get; private set; }
         
         [field: SerializeField, Readonly] public float value { get; private set; }
         
@@ -109,10 +104,11 @@ namespace Prota.Unity
             
         }
         
-        public GameProperty(string name, float baseValue)
+        public GameProperty(string name, float baseValue, Behaviour behaviour = Behaviour.Float)
         {
             this.name = name;
             this.baseValue = baseValue;
+            this.behaviour = behaviour;
             UpdateValue();
         }
         
@@ -170,30 +166,30 @@ namespace Prota.Unity
         {
             switch(behaviour)
             {
-                case PropertyBehaviour.Float: return x;
-                case PropertyBehaviour.Int: return x.Floor();
-                case PropertyBehaviour.Bool: return x != 0 ? 1 : 0;
+                case Behaviour.Float: return x;
+                case Behaviour.Int: return x.Floor();
+                case Behaviour.Bool: return x != 0 ? 1 : 0;
                 default: throw new Exception($"Unknown behaviour [{behaviour}].");
             }
         }
         
         public override string ToString() => $"GameProperty[{ name }]:[{ value }]";
         
-        public string ToString(ProeprtyDisplay display) => ToString(display, value);
+        public string ToString(Display display) => ToString(display, value);
         
-        public static string ToString(ProeprtyDisplay display, float value)
+        public static string ToString(Display display, float value)
         {
             switch(display)
             {
-                case ProeprtyDisplay.Float:
+                case Display.Float:
                     return value.ToString("F2");
-                case ProeprtyDisplay.Int:
+                case Display.Int:
                     return value.ToString("F0");
-                case ProeprtyDisplay.OneZero:
+                case Display.OneZero:
                     return value != 0 ? "1" : "0";
-                case ProeprtyDisplay.Percent:
+                case Display.Percent:
                     return (value * 100).ToString("F2") + "%";
-                case ProeprtyDisplay.TrueOrFalse:
+                case Display.TrueOrFalse:
                     return value != 0 ? "true" : "false";
                 default: throw new Exception($"Unknown display mode [{display}].");
             }

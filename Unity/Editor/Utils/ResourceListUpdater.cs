@@ -75,17 +75,21 @@ namespace Prota.Editor
         static void UpdateProtaResource()
         {
             var r = Resources.Load<ProtaRes>("ProtaRes");
-            if(r == null) throw new Exception("a ProtaRes must put into Resources folder.");
+            if(r == null) throw new Exception("a ProtaRes must put into [Resources] folder and named [ProtaRes].");
             var lists = Resources.LoadAll<ResourceList>("/");
-            // lists.Select(x => x.name).ToStringJoined().LogError();
-            var originList = r.lists;
-            r.lists.Clear();
-            r.lists.AddRange(lists, x => x.name, x => x);
             
-            if(originList.SameContent(r.lists)) return;
+            // Debug.Log($"ProtaRes update search: {r.name}");
+            // Debug.LogError($"ProtaRes update: {lists.Select(x => x.name).ToStringJoined()}");
+            // Debug.LogError($"ProtaRes update: {r.lists.Select(x => x.Value.name).ToStringJoined()}");
+            
+            if(r.lists.Select(x => x.Value).SameContent(lists)) return;
+            
+            r.lists.Clear();
+            r.lists.AddRange(lists, x => x.name.ToLower(), x => x);
             
             EditorUtility.SetDirty(r);
             AssetDatabase.SaveAssetIfDirty(r);
+            Debug.Log($"ProtaRes update: {r.name}");
         }
         
         static ResourceList FindResourcesListObject(Node d, out Node file)
@@ -136,14 +140,16 @@ namespace Prota.Editor
                 }
             }
             
-            var originList = resList.resources;
-            originList.Clear();
+            var originList = new ResourceList._Entry();
+            foreach(var i in resList.resources) originList.Add(i.Key, i.Value);
+            resList.resources.Clear();
             FindRecursive(r.parent);
             
             if(originList.SameContent(resList.resources)) return;
             
             EditorUtility.SetDirty(resList);
             AssetDatabase.SaveAssetIfDirty(resList);
+            Debug.Log($"Asset update: {resList.name}");
         }
         
         static void CheckAndAddResource(ResourceList r, Node f)

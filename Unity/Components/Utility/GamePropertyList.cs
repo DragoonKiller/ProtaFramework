@@ -7,6 +7,7 @@ using System.Linq;
 
 namespace Prota.Unity
 {
+    [DisallowMultipleComponent]
     public class GamePropertyList : MonoBehaviour, IEnumerable<GameProperty>
     {
         [Serializable] public class _List : SerializableDictionary<string, GameProperty> { }
@@ -17,7 +18,7 @@ namespace Prota.Unity
             get
             {
                 if(TryGet(name, out var value)) return value;
-                throw new Exception($"Game Property [{name}] not found.");
+                throw new Exception($"Game Property [{name}] in [{this.gameObject.name}] not found.");
             }
         }
         
@@ -26,9 +27,18 @@ namespace Prota.Unity
             return properties.TryGetValue(name, out value);
         }
         
-        public GamePropertyList Add(string name, float value)
+        public GamePropertyList Add(string name, GameProperty property)
         {
-            if(TryGet(name, out GameProperty property)) throw new Exception($"Property [{name}] already exists.");
+            if(TryGet(name, out GameProperty value))
+                throw new Exception($"Property [{name}] in [{this.gameObject.name}] already exists.");
+            properties.Add(name, property);
+            return this;
+        }
+        
+        public GamePropertyList Add(string name, float value, GameProperty.Behaviour behaviour = GameProperty.Behaviour.Float)
+        {
+            if(TryGet(name, out GameProperty property))
+                throw new Exception($"Property [{name}] in [{this.gameObject.name}] already exists.");
             property = new GameProperty(name, value);
             properties.Add(name, property);
             return this;
@@ -36,7 +46,8 @@ namespace Prota.Unity
         
         public GamePropertyList Remove(string name)
         {
-            if(!TryGet(name, out GameProperty property)) throw new Exception($"Property [{name}] not found.");
+            if(!TryGet(name, out GameProperty property))
+                throw new Exception($"Property [{name}] in [{this.gameObject.name}] not found.");
             properties.Remove(name);
             return this;
         }
@@ -44,7 +55,7 @@ namespace Prota.Unity
         public bool Get(string name, out GameProperty value)
         {
             if(TryGet(name, out value)) return true;
-            throw new Exception($"Property [{name}] not found.");
+            throw new Exception($"Property [{name}] in [{this.gameObject.name}] not found.");
         }
         
         public void Clear()
@@ -109,12 +120,12 @@ namespace Prota.Unity
             return component.GetComponent<GamePropertyList>().TryGet(name, out value);
         }
         
-        public static IEnumerable<GameProperty> GetGamePropertyList(this GameObject gameObject)
+        public static GamePropertyList GetGamePropertyList(this GameObject gameObject)
         {
             return gameObject.GetComponent<GamePropertyList>();
         }
         
-        public static IEnumerable<GameProperty> GetGamePropertyList(this Component component)
+        public static GamePropertyList GetGamePropertyList(this Component component)
         {
             return component.GetComponent<GamePropertyList>();
         }

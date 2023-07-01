@@ -64,7 +64,9 @@ namespace Prota
             public void Clear() => throw new NotSupportedException();
             public bool Contains(TValue item)
             {
-                foreach(var v in this) if(item.Equals(v)) return true;
+                foreach(var v in this)
+                    if(EqualityComparer<TValue>.Default.Equals(item, v))
+                        return true;
                 return false;
             }
 
@@ -162,7 +164,7 @@ namespace Prota
                 // Debug.Log($"searching[{ key }] visit { i }");
                 
                 var entry = entries[i];
-                if(object.Equals(entry.key, key))
+                if(EqualityComparer<TKey>.Default.Equals(entry.key, key))
                 {
                     index = i;
                     return true;
@@ -233,7 +235,7 @@ namespace Prota
             for(var prev = SerializableLinkedListKey.none; index.valid; index = entries.GetIndex(entries[index].next))
             {
                 // 找到了想要删除的元素.
-                if(key.Equals(entries[index].key))
+                if(EqualityComparer<TKey>.Default.Equals(key, entries[index].key))
                 {
                     var next = entries[index].next;
                     if(!prev.valid)        // 想要删除的元素是表头.
@@ -272,7 +274,7 @@ namespace Prota
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
             if(!TryGetEntry(item.Key, out var index)) return false;
-            if(!entries[index].value.Equals(item.Value)) return false;
+            if(!EqualityComparer<TValue>.Default.Equals(entries[index].value, item.Value)) return false;
             return true;
         }
 

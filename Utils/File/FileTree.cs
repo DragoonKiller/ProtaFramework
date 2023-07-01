@@ -264,7 +264,7 @@ namespace Prota
                 // if is directory, go ahead.
                 if(b.isDirectory)
                 {
-                    using var _ = TempHashSet<string>.Get(out var names);
+                    using var _ = TempHashSet.Get<string>(out var names);
                     
                     foreach(var f in a.files) names.Add(f.name);
                     foreach(var f in b.files) names.Add(f.name);
