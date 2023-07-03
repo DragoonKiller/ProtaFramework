@@ -19,18 +19,6 @@ namespace Prota.Editor
         [RuntimeInitializeOnLoadMethod]
         static void Init()
         {
-            ecsComponentMap.TryAdd(typeof(SpriteRenderer), typeof(ECRenderer));
-            ecsComponentMap.TryAdd(typeof(Image), typeof(ECRenderer));
-            ecsComponentMap.TryAdd(typeof(Text), typeof(ECRenderer));
-            ecsComponentMap.TryAdd(typeof(TrailRenderer), typeof(ECRenderer));
-            ecsComponentMap.TryAdd(typeof(LineRenderer), typeof(ECRenderer));
-            ecsComponentMap.TryAdd(typeof(RawImage), typeof(ECRenderer));
-            ecsComponentMap.TryAdd(typeof(CanvasGroup), typeof(ECRenderer));
-            ecsComponentMap.TryAdd(typeof(MeshRenderer), typeof(ECRenderer));
-            ecsComponentMap.TryAdd(typeof(SkinnedMeshRenderer), typeof(ECRenderer));
-            ecsComponentMap.TryAdd(typeof(TextMeshPro), typeof(ECRenderer));
-            ecsComponentMap.TryAdd(typeof(TextMeshProUGUI), typeof(ECRenderer));
-            
         }
         
         [MenuItem("GameObject/Prota Framework/ECS/Create Components for builtins")]

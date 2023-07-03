@@ -5,6 +5,8 @@ using UnityEngine;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEditor;
+using System.Reflection;
+using UnityEngine.Assertions;
 
 namespace Prota.Unity
 {
@@ -13,10 +15,12 @@ namespace Prota.Unity
     {
         
         readonly static List<Type> systemTypes = new List<Type>();
+        readonly static List<Type> subSystemTypes = new List<Type>();
         
         static ECS()
         {
             systemTypes.AddRange(Prota.ProtaReflection.GetTypesDerivedFrom<ESystem>().Where(x => !x.IsAbstract));
+            subSystemTypes.AddRange(Prota.ProtaReflection.GetTypesDerivedFrom<ESubSystem>().Where(x => !x.IsAbstract));
         }
         
         
@@ -123,13 +127,14 @@ namespace Prota.Unity
         {
             maxFixedDeltaTime = Time.fixedDeltaTime;
             
+            if(Application.isPlaying) return;
             InitSystems();
         }
         
         protected override void Awake()
         {
             base.Awake();
-            OnValidate();
+            InitSystems();
         }
         
         void FixedUpdate()
@@ -175,43 +180,6 @@ namespace Prota.Unity
             isInUpdate = false;
         }
         
-        public void CheckSystemOrder()
-        {
-            using var _ = TempList.Get<ESystem>(out var stack);
-            stack.AddRange(systems);
-            for(int i = 0; i < stack.Count; i++)
-            {
-                var cur = stack[i].ProtaReflection().type;
-                var before = cur.GetTypeAttribute<ESystemBefore>();
-                var after = cur.GetTypeAttribute<ESystemAfter>();
-                
-                if(before != null)
-                {
-                    var rest = before.types.ToList();
-                    
-                    rest.RemoveAll(x => stack.Skip(i).Any(y => y.GetType() == x));
-                    
-                    foreach(var s in rest)
-                        Debug.LogError($"ECS: System { cur.name } 需要在 { s.Name } 之前.");
-                }
-                
-                if(after != null)
-                {
-                    var rest = after.types.ToList();
-                    
-                    rest.RemoveAll(x => stack.Take(i).Any(y => y.GetType() == x));
-                    
-                    foreach(var s in rest)
-                        Debug.LogError($"ECS: System { cur.name } 需要在 { s.Name } 之后.");
-                }
-            }
-            
-            var duplicated = stack.GroupBy(x => x.GetType()).Where(x => x.Count() > 1).Select(x => x.Key);
-            foreach(var s in duplicated)
-                if(s.ProtaReflection().GetTypeAttribute<ESystemAllowDuplicate>() == null)
-                    Debug.LogError($"ECS: System { s.Name } 重复.");
-        }
-        
         public void InitSystems()
         {
             systems.RemoveAll(x => x == null);
@@ -225,7 +193,81 @@ namespace Prota.Unity
                 systems.Add(s);
             }
             
-            CheckSystemOrder();
+            if(Application.isPlaying)
+            {
+                var _ = TempDict.Get<Type, ESystem>(out var systemTable);
+                foreach(var s in systems) systemTable[s.GetType()] = s;
+                
+                var __ = TempList.Get<ESubSystem>(out var subSystems);
+                foreach(var type in subSystemTypes) subSystems.Add(Activator.CreateInstance(type) as ESubSystem);
+                foreach(var subsystem in subSystems)
+                {
+                    var t = subsystem.systemType;
+                    if(!systemTable.ContainsKey(t)) throw new InvalidOperationException($"Cannot find system {t} for subsystem {subsystem.GetType()}.");
+                    subsystem.system = systemTable[t];
+                    subsystem.system.subSystems.Add(subsystem);
+                }
+            }
+            
+            if(Application.isPlaying) foreach(var i in systems) i.OnSystemCreate();
+            
+            ReorderSystems();
+        }
+        
+        public void ReorderSystems()
+        {
+            // 根据 ESystemDataProvider, ESystemDataAccessor, ESystemDataClearer 获取各个 System 的依赖关系.
+            // 顺序是: DataProvider -> DataAccessor -> DataClearer.
+            
+            // 分 Component 处理.
+            var _ = TempDict.Get<Type, List<(ESystem sys, int order)>>(out var d);
+            foreach(var sys in systems)
+            {
+                var sysType = sys.GetType();
+                var provider = sysType.GetCustomAttribute<ESystemDataProvider>();
+                var accessor = sysType.GetCustomAttribute<ESystemDataAccessor>();
+                var clearer = sysType.GetCustomAttribute<ESystemDataClearer>();
+                var providerTypes = provider?.types ?? Enumerable.Empty<Type>();
+                var accessorTypes = accessor?.types ?? Enumerable.Empty<Type>();
+                var clearerTypes = clearer?.types ?? Enumerable.Empty<Type>();
+                if(providerTypes.Where(x => !typeof(EComponent).IsAssignableFrom(x)).Any())
+                    throw new InvalidOperationException($"Invalid ESystemDataProvider on {sysType}.");
+                if(accessorTypes.Where(x => !typeof(EComponent).IsAssignableFrom(x)).Any())
+                    throw new InvalidOperationException($"Invalid ESystemDataAccessor on {sysType}.");
+                if(clearerTypes.Where(x => !typeof(EComponent).IsAssignableFrom(x)).Any())
+                    throw new InvalidOperationException($"Invalid ESystemDataClearer on {sysType}.");
+                foreach(var i in providerTypes) d.GetOrCreate(i).Add((sys, 0));
+                foreach(var i in accessorTypes) d.GetOrCreate(i).Add((sys, 1));
+                foreach(var i in clearerTypes) d.GetOrCreate(i).Add((sys, 2));
+            }
+            
+            // 记录每个 System 必须在谁之前, 谁之后.
+            var graph = new Graph<ESystem, Nothing.Struct>();
+            foreach(var s in systems) graph.AddNode(s);
+            foreach(var (type, list) in d)
+            {
+                list.Sort((a, b) => a.order.CompareTo(b.order));
+                var c0 = list.Where(x => x.order == 0).Select(x => x.sys).ToArray();
+                var c1 = list.Where(x => x.order == 1).Select(x => x.sys).ToArray();
+                var c2 = list.Where(x => x.order == 2).Select(x => x.sys).ToArray();
+                foreach(var i in c0) foreach(var j in c1) graph.AddEdge(i, j);
+                foreach(var i in c1) foreach(var j in c2) graph.AddEdge(i, j);
+                foreach(var i in c0) foreach(var j in c2) graph.AddEdge(i, j);
+            }
+            
+            // 拓扑排序.
+            var sort = graph.Toposort();
+            sort.Execute();
+            
+            // 获取排序结果.
+            if(sort.queue.Count != systems.Count)
+            {
+                systems.ToStringJoined().LogError();
+                sort.queue.ToStringJoined().LogError();
+                throw new Exception(sort.queue.Count.ToString() + " " + systems.Count.ToString());
+            }
+            
+            for(int i = 0; i < systems.Count; i++) systems[i] = sort.queue[i];
         }
     }
     
@@ -253,6 +295,24 @@ namespace Prota.Unity
                 currentTime = ECS.realtime;
                 return res;
             }, token);
+        }
+        
+        public static async Task Wait(this AsyncControl control, float seconds, LifeSpan life)
+        {
+            while(life.alive && seconds > 0)
+            {
+                await control;
+                seconds -= ECS.dt;
+            }
+        }
+        
+        public static async Task WaitRealtime(this AsyncControl control, float seconds, LifeSpan life)
+        {
+            while(life.alive && seconds > 0)
+            {
+                await control;
+                seconds -= ECS.realtime;
+            }
         }
     }
     

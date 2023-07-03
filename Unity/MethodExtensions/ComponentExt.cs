@@ -33,6 +33,7 @@ namespace Prota.Unity
         // 设置 Component 对应的 Game Object 是否激活.
         public static T SetActive<T>(this T a, bool activate = true) where T: Component
         {
+            if(a.gameObject.activeSelf == activate) return a;
             a.gameObject.SetActive(activate);
             return a;
         }

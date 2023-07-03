@@ -28,12 +28,6 @@ namespace Prota.Unity
         {
             OnValidate();
         }
-        
-        void OnDestroy()
-        {
-            // Renderer 可能已经被删除.
-            if(this.TryGetComponent<Renderer>(out var renderer)) Destroy(renderer);
-        }
     }
     
         // ============================================================================================================

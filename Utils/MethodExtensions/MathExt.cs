@@ -5,6 +5,17 @@ namespace Prota
 {
     public static partial class MethodExtensions
     {
+        // x: inited.
+        // 用法: if(!a.inited.NeedInit()) return;
+        public static bool NeedInit(this ref bool x)
+        {
+            if(x) return false;
+            x = true;
+            return true;
+        }
+        
+        // 如果不一样就返回 false. 否则返回 true.
+        // 最终的值会设置为 current.
         public static bool CompareAndReplace<T>(this ref T record, T current) where T: struct
         {
             var res = EqualityComparer<T>.Default.Equals(record, current);

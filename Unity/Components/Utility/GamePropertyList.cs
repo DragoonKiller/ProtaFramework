@@ -112,12 +112,14 @@ namespace Prota.Unity
         
         public static bool TryGetGameProperty(this GameObject gameObject, string name, out GameProperty value)
         {
-            return gameObject.GetComponent<GamePropertyList>().TryGet(name, out value);
+            value = null;
+            return gameObject.GetComponent<GamePropertyList>()?.TryGet(name, out value) ?? false;
         }
         
         public static bool TryGetGameProperty(this Component component, string name, out GameProperty value)
         {
-            return component.GetComponent<GamePropertyList>().TryGet(name, out value);
+            value = null;
+            return component.GetComponent<GamePropertyList>()?.TryGet(name, out value) ?? false;
         }
         
         public static GamePropertyList GetGamePropertyList(this GameObject gameObject)

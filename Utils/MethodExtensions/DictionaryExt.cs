@@ -14,6 +14,12 @@ namespace Prota
             return d;
         }
         
+        public static V GetOrCreate<K, V>(this Dictionary<K, V> d, K key) where V: new()
+        {
+            if(d.TryGetValue(key, out var val)) return val;
+            return d[key] = new V();
+        }
+        
         // 集合映射.
         // 同步目标是一个提供 IEnumerator<KeyValuePair<K, V>> 和 TryGetValue(K, out V) 的字典类结构(不必是字典).
         // 同步者是 IDictionary<K, G> target.

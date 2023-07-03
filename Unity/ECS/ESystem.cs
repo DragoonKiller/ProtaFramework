@@ -25,7 +25,8 @@ namespace Prota.Unity
         public AsyncControl beforeLateUpdate => _beforeLateUpdate ?? (_beforeLateUpdate = new AsyncControl());
         public AsyncControl afterLateUpdate => _afterLateUpdate ?? (_afterLateUpdate = new AsyncControl());
         
-        
+        [SerializeReference]
+        public List<ESubSystem> subSystems = new List<ESubSystem>();
         
         public bool disabled = false;
         
@@ -34,6 +35,7 @@ namespace Prota.Unity
             if(disabled) return;
             _beforeFixedUpdate?.Step();
             DoSystemFixedUpdate();
+            foreach(var subSystem in subSystems) subSystem.DoSystemFixedUpdate();
             _afterFixedUpdate?.Step();
         }
         
@@ -42,6 +44,7 @@ namespace Prota.Unity
             if(disabled) return;
             _beforeUpdate?.Step();
             DoSystemUpdate();
+            foreach(var subSystem in subSystems) subSystem.DoSystemUpdate();
             _afterUpdate?.Step();
         }
         
@@ -50,9 +53,18 @@ namespace Prota.Unity
             if(disabled) return;
             _beforeLateUpdate?.Step();
             DoSystemLateUpdate();
+            foreach(var subSystem in subSystems) subSystem.DoSystemLateUpdate();
             _afterLateUpdate?.Step();
         }
         
+        public void OnSystemCreate()
+        {
+            foreach(var subSystem in subSystems) subSystem.Init();
+            DoSystemInit();
+        }
+        
+        
+        protected virtual void DoSystemInit() { }
         protected virtual void DoSystemFixedUpdate() { }
         protected virtual void DoSystemUpdate() { }
         protected virtual void DoSystemLateUpdate() { }

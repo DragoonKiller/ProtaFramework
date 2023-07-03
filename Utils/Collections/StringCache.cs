@@ -18,6 +18,11 @@ namespace Prota
             this.convert = convert;
         }
         
+        public StringCache()
+        {
+            this.convert = x => x;
+        }
+        
         public string this[string x]
         {
             get

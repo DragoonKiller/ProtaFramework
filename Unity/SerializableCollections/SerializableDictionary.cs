@@ -20,6 +20,10 @@ namespace Prota
     [Serializable]
     public class SerializableDictionary<TKey, TValue> : ISerializableDictionary, IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>
     {
+        readonly static EqualityComparer<TValue> valueComparer = EqualityComparer<TValue>.Default;
+        
+        readonly static EqualityComparer<TKey> keyComparer = EqualityComparer<TKey>.Default;
+        
         public const int baseCapacity = 6;
         
         struct KeysCollection : ICollection<TKey>, IReadOnlyCollection<TKey>
@@ -65,7 +69,7 @@ namespace Prota
             public bool Contains(TValue item)
             {
                 foreach(var v in this)
-                    if(EqualityComparer<TValue>.Default.Equals(item, v))
+                    if(valueComparer.Equals(item, v))
                         return true;
                 return false;
             }
@@ -164,7 +168,7 @@ namespace Prota
                 // Debug.Log($"searching[{ key }] visit { i }");
                 
                 var entry = entries[i];
-                if(EqualityComparer<TKey>.Default.Equals(entry.key, key))
+                if(keyComparer.Equals(entry.key, key))
                 {
                     index = i;
                     return true;
@@ -235,7 +239,7 @@ namespace Prota
             for(var prev = SerializableLinkedListKey.none; index.valid; index = entries.GetIndex(entries[index].next))
             {
                 // 找到了想要删除的元素.
-                if(EqualityComparer<TKey>.Default.Equals(key, entries[index].key))
+                if(keyComparer.Equals(key, entries[index].key))
                 {
                     var next = entries[index].next;
                     if(!prev.valid)        // 想要删除的元素是表头.
@@ -274,7 +278,7 @@ namespace Prota
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
             if(!TryGetEntry(item.Key, out var index)) return false;
-            if(!EqualityComparer<TValue>.Default.Equals(entries[index].value, item.Value)) return false;
+            if(!valueComparer.Equals(entries[index].value, item.Value)) return false;
             return true;
         }
 

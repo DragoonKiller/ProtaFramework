@@ -6,6 +6,9 @@ using System.Collections;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Linq;
+using System.Diagnostics;
+using System.ComponentModel;
 
 namespace Prota
 {
@@ -19,6 +22,11 @@ namespace Prota
             public T from;
             public T to;
             public E data;
+
+            public override string ToString()
+            {
+                return $"Edge({from}, {to})";
+            }
         }
         
         public readonly HashSet<T> nodes = new HashSet<T>();
@@ -76,6 +84,17 @@ namespace Prota
             return this;
         }
         
+        public IEnumerable<EdgeData> EdgesOf(T node)
+        {
+            if(edges.TryGetValue(node, out var res)) return res;
+            return Enumerable.Empty<EdgeData>();
+        }
+        
+        public int EdgeCountOf(T node)
+        {
+            if(edges.TryGetValue(node, out var res)) return res.Count;
+            return 0;
+        }
         
         // ====================================================================================================
         // ====================================================================================================
@@ -86,7 +105,7 @@ namespace Prota
             var res = new Algorithm.DFS<T>();
             Action<List<T>> setInitialNode = list => list.Add(from);
             Action<T, List<T>> getNextNodes = (node, nextNodes) => {
-                foreach (var edge in edges[node]) nextNodes.Add(edge.to);
+                foreach (var edge in EdgesOf(node)) nextNodes.Add(edge.to);
             };
             res.Init(setInitialNode, getNextNodes);
             return res;
@@ -97,7 +116,7 @@ namespace Prota
             var res = new Algorithm.BFS<T>();
             Action<List<T>> setInitialNode = list => list.Add(from);
             Action<T, List<T>> getNextNodes = (node, nextNodes) => {
-                foreach (var edge in edges[node]) nextNodes.Add(edge.to);
+                foreach (var edge in EdgesOf(node)) nextNodes.Add(edge.to);
             };
             res.Init(setInitialNode, getNextNodes);
             return res;
@@ -105,28 +124,29 @@ namespace Prota
         
         public Algorithm.BFS<T> Toposort()
         {
-            var touched = new Dictionary<T, int>();
-            
+            var intakes = new Dictionary<T, int>();
             var res = new Algorithm.BFS<T>();
             
             Action<List<T>> setInitialNode = list => {
-                touched.Clear();
-                foreach(var node in nodes) touched[node] = 0;
+                intakes.Clear();
+                foreach(var node in nodes) intakes[node] = 0;
                 foreach(var node in nodes)
                 {
-                    var edgeCount = edges.TryGetValue(node, out var nodeEdges) ? nodeEdges.Count : 0;
-                    if(edgeCount == touched[node])
-                        list.Add(node);
+                    foreach(var edge in EdgesOf(node)) intakes[edge.to]++;
+                }
+                foreach(var node in nodes)
+                {
+                    if(intakes[node] == 0) list.Add(node);
                 }
             };
             
+            // $"edges { this.edges.SelectMany(x => x.Value).ToStringJoined() }".LogError();
+            
             Action<T, List<T>> getNextNodes = (node, nextNodes) => {
-                foreach (var edge in edges[node])
+                foreach (var edge in EdgesOf(node))
                 {
-                    touched[edge.to]++;
-                    var edgeCount = edges.TryGetValue(edge.to, out var nodeEdges) ? nodeEdges.Count : 0;
-                    if(edgeCount == touched[edge.to])
-                        nextNodes.Add(edge.to);
+                    intakes[edge.to]--;
+                    if(intakes[edge.to] == 0) nextNodes.Add(edge.to);
                 }
             };
             

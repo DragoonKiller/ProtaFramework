@@ -23,11 +23,20 @@ namespace Prota.Editor
                 foreach(var g in s.GetRootGameObjects())
                     RemoveForGameObject(g);
             }
+            
+            foreach(var g in Selection.gameObjects)
+                RemoveForGameObject(g);
 
             static void RemoveForGameObject(GameObject g)
             {
                 g.transform.ForeachTransformRecursively(t =>
                 {
+                    int n = GameObjectUtility.RemoveMonoBehavioursWithMissingScript(t.gameObject);
+                    if(n != 0)
+                    {
+                        Debug.Log($"Removed {n} missing components from {t.name}");
+                    }
+                    
                     var components = t.GetComponents<Component>();
                     
                     for (int i = 0; i < components.Length; i++)
