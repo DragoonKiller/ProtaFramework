@@ -50,7 +50,7 @@ namespace Prota.Unity
             if(!cache.TryGetValue(name, out var res))
                 throw new Exception($"ResourceBinding[{ this.gameObject.name }] 找不到  { name }");
             if(!(res is T t))
-                throw new Exception($"ResourceBinding[{ this.gameObject.name }] 名为 { name } 的资源不是类型 { nameof(T) }");
+                throw new Exception($"ResourceBinding[{ this.gameObject.name }] 名为 { name } 的资源不是类型 { typeof(T).Name }");
             return t;
         }
         

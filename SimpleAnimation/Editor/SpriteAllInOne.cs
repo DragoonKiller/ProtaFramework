@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 
 using Prota.Animation;
+using System.Net.Mime;
 
 namespace Prota.Editor
 {
@@ -52,7 +53,7 @@ namespace Prota.Editor
             var textures = files.Select(x => AssetDatabase.LoadAssetAtPath<Texture2D>(x)).ToList();
             var sameAsPrev = new List<bool>();
             for(int i = 0; i < textures.Count; i++) sameAsPrev.Add(false);
-            for(int i = textures.Count - 1; i > 0; i--)
+            for(int i = textures.Count - 1; i > 1; i--)
             {
                 var pre = textures[i - 1];
                 var cur = textures[i];

@@ -238,7 +238,7 @@ namespace Prota
         }
     }
     
-    public static partial class UnitTest
+    public static partial class UnityUnitTest
     {
         public static void UnitTestSerializableLinkedList(Action<string> log)
         {

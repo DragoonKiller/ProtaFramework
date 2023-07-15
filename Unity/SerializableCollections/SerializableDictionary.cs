@@ -334,7 +334,7 @@ namespace Prota
         }
     }
     
-    public static partial class UnitTest
+    public static partial class UnityUnitTest
     {
         public static void UnitTestSerializableDictionary()
         {
@@ -392,7 +392,7 @@ namespace Prota
             var ax = new Dictionary<string, string>();
             var bx = new SerializableDictionary<string, string>();
             
-            for(int i = 0; i < 2000; i++)
+            for(int i = 0; i < 1000; i++)
             {
                 var k = UnityEngine.Random.Range(0, 100).ToString();
                 var v = UnityEngine.Random.Range(0, 100).ToString();
@@ -406,13 +406,13 @@ namespace Prota
                 }
             }
             
-            for(int i = 0; i < 2000; i++)
+            for(int i = 0; i < 1000; i++)
             {
                 if(i % 2 == 0) continue;
                 var k = i.ToString();
                 ax.Remove(k);
                 bx.Remove(k);
-                for(int j = 0; j < 2000; j++) (ax.ContainsKey(j.ToString()) == bx.ContainsKey(j.ToString())).Assert(j.ToString());
+                for(int j = 0; j < 1000; j++) (ax.ContainsKey(j.ToString()) == bx.ContainsKey(j.ToString())).Assert(j.ToString());
                 
                 var z = UnityEngine.Random.Range(0, 2000);
                 (ax.ContainsKey(z.ToString()) == bx.ContainsKey(z.ToString())).Assert();

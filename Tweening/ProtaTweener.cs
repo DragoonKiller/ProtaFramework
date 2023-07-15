@@ -2,6 +2,7 @@ using UnityEngine;
 using Prota.Unity;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace Prota.Tween
 {
@@ -154,16 +155,31 @@ namespace Prota.Tween
         
         public void Play() => autoPlay = true;
         
-        public void Play(float startTime)
+        public void Play(float startProgress)
         {
-            SetTo(startTime);
+            SetTo(startProgress);
             Play();
         }
         
-        public void SetTo(float ratio)
+        public void PlayForward(float startProgress = 0)
         {
-            this.progress = ratio;
-            UpdateValue();
+            SetTo(startProgress);
+            playReversed = false;
+            Play();
+        }
+        
+        public void PlayBackward(float startProgress = 1)
+        {
+            SetTo(startProgress);
+            playReversed = true;
+            Play();
+        }
+        
+        // progress 在 0 到 1 之间.
+        public void SetTo(float progress)
+        {
+            this.progress = progress;
+            Update();
         }
         
         public void SetToFinish()

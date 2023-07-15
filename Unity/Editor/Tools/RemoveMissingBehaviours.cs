@@ -6,6 +6,7 @@ using System.IO;
 
 using Prota.Unity;
 using UnityEngine.SceneManagement;
+using System.Threading;
 
 namespace Prota.Editor
 {
@@ -29,6 +30,8 @@ namespace Prota.Editor
 
             static void RemoveForGameObject(GameObject g)
             {
+                Undo.RecordObject(g, "Remove Missing Behaviours");
+                
                 g.transform.ForeachTransformRecursively(t =>
                 {
                     int n = GameObjectUtility.RemoveMonoBehavioursWithMissingScript(t.gameObject);

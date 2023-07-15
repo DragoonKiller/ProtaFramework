@@ -63,15 +63,31 @@ namespace Prota.Editor
             var sizeDict = tex.ToDictionary<Texture2D, Texture2D, (int width, int height)>(x => x, x => (x.width, x.height));
             var isDataRGBDict = tex.ToDictionary(x => x, x => x.isDataSRGB);
             var newDataDict = new Dictionary<Texture2D, NativeArray<Color32>>();
+            var formatDict = tex.ToDictionary(x => x, x => x.format);
+            var isReadable = tex.ToDictionary(x => x, x => x.isReadable);
             foreach(var t in tex) newDataDict.Add(t, new NativeArray<Color32>(dataDict[t], Allocator.Persistent));
             
             Parallel.ForEach(tex, t => {
                 var path = pathDict[t];
+                
+                if(formatDict[t] != TextureFormat.RGBA32)
+                {
+                    Debug.LogError($"贴图 [{ path }] 需要设置为 RGBA32 格式才能生成, 跳过.");
+                    return;
+                }
+                
+                if(isReadable[t] == false)
+                {
+                    Debug.LogError($"贴图 [{ path }] 需要设置为可读才能生成, 跳过.");
+                    return;
+                }
+                
                 var size = sizeDict[t];
                 var oriData = dataDict[t];
                 var newData = newDataDict[t];
                 var dataView = oriData.View2D(size.width, size.height);
                 var newDataView = newData.View2D(size.width, size.height);
+                Debug.Log($"Generate outline texture: [{ path }][{ size }]");
                 Parallel.For(0, dataView.h, l => {
                     for(int c = 0; c < dataView.w; c++)
                     {
@@ -130,7 +146,7 @@ namespace Prota.Editor
             
             foreach(var d in newDataDict) d.Value.Dispose();
             
-            // AssetDatabase.Refresh();
+            AssetDatabase.Refresh();
         }
         
         [MenuItem("Assets/ProtaFramework/贴图/生成描边", false)]

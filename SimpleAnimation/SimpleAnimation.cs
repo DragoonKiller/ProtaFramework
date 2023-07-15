@@ -63,8 +63,15 @@ namespace Prota.Animation
             
             if(autoPlay)
             {
-                if(Application.isPlaying) process += ECS.dt * speedMultiply / asset.duration;
-                process = process.Repeat(1f);
+                if(Application.isPlaying) process += Time.deltaTime * speedMultiply / asset.duration;
+                if(asset != null && asset.loop)
+                {
+                    process = process.Repeat(1f);
+                }
+                else
+                {
+                    process = process.Clamp(0, 1);
+                }
             }
             
             Refresh();

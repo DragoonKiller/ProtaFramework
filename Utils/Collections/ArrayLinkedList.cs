@@ -75,11 +75,13 @@ namespace Prota
         // 数组容量.
         public int capacity => data?.Length ?? 0;
         
+        public ArrayLinkedListKey head => new ArrayLinkedListKey(headIndex, data[headIndex].version, this);
+        
         // 数据链表头下标. 没有数据则是-1.
-        public int head { get; private set; } = -1;
+        public int headIndex { get; private set; } = -1;
         
         // 没有数据的链表头下标. 数据填满了则是-1.
-        public int freeHead { get; private set; } = -1;
+        public int freeHeadIndex { get; private set; } = -1;
         
         // 还有多少个没有使用的节点.
         public int freeCount => capacity - Count;
@@ -110,7 +112,7 @@ namespace Prota
         {
             data = null;
             Count = 0;
-            head = freeHead = -1;
+            headIndex = freeHeadIndex = -1;
             return this;
         }
         
@@ -138,15 +140,15 @@ namespace Prota
                 var n = data[cur].next;
                 if(n != -1) data[n].prev = p;
                 if(p != -1) data[p].next = n;
-                if(head == cur) head = n;
+                if(headIndex == cur) headIndex = n;
                 Count -= 1;
             }
             
-            var ori = freeHead;
+            var ori = freeHeadIndex;
             data[cur].next = ori;
             if(ori != -1) data[ori].prev = cur;
             data[cur].prev = -1;
-            freeHead = cur;
+            freeHeadIndex = cur;
             
             data[cur].inuse = false;
             unchecked { data[cur].version += 1; }
@@ -154,14 +156,14 @@ namespace Prota
         
         ArrayLinkedListKey Use()
         {
-            var cur = freeHead;
-            freeHead = data[cur].next;
-            if(freeHead != -1) data[freeHead].prev = -1;
+            var cur = freeHeadIndex;
+            freeHeadIndex = data[cur].next;
+            if(freeHeadIndex != -1) data[freeHeadIndex].prev = -1;
             
-            data[cur].next = head;
+            data[cur].next = headIndex;
             data[cur].prev = -1;
-            if(head != -1) data[head].prev = cur;
-            head = cur;
+            if(headIndex != -1) data[headIndex].prev = cur;
+            headIndex = cur;
             
             data[cur].inuse = true;
             Count += 1;
@@ -181,7 +183,7 @@ namespace Prota
 
             public bool MoveNext()
             {
-                if(index == -1) index = list.head;
+                if(index == -1) index = list.headIndex;
                 else index = list.data[index].next;
                 if(index == -1) return false;
                 return true;
