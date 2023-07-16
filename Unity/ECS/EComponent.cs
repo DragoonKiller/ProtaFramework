@@ -12,24 +12,19 @@ namespace Prota.Unity
         public class TypeRecord
         {
             public Type type;
-            public bool modified;
-            public readonly List<EComponent> cache = new List<EComponent>();
-            public readonly HashSet<EComponent> component = new HashSet<EComponent>();
+            public readonly List<EComponent> components = new List<EComponent>();
         }
         
         public ERoot entity { get; private set; }
+        
+        int? indexInRecord = null;
+        
         public static readonly Dictionary<Type, TypeRecord> records = new Dictionary<Type, TypeRecord>();
         
         public static IEnumerable<T> Instances<T>() where T : EComponent
         {
             if(!records.TryGetValue(typeof(T), out var record)) return Enumerable.Empty<T>();
-            if(record.modified)
-            {
-                record.cache.Clear();
-                record.cache.AddRange(record.component);
-                record.modified = false;
-            }
-            return record.cache.Where(x => x != null).Cast<T>();
+            return record.components.Cast<T>();
         }
         
         public static T Instance<T>() where T : EComponent
@@ -107,16 +102,45 @@ namespace Prota.Unity
         
         void AddToRecord()
         {
+            if(this.indexInRecord != null)
+            {
+                records.GetOrCreate(this.GetType(), out var r);
+                if(r.components[indexInRecord.Value] == this) return;
+                throw new Exception("Already added to record, but it is broken.");
+            }
+            
             records.GetOrCreate(this.GetType(), out var record);
-            record.component.Add(this);
-            record.modified = true;
+            record.components.Add(this);
+            this.indexInRecord = record.components.Count - 1;
         }
         
         void RemoveFromRecord()
         {
+            if(this.indexInRecord == null)
+            {
+                records.GetOrCreate(this.GetType(), out var r);
+                if(!r.components.Contains(this)) return;
+                throw new Exception("Already removed from record, but it is broken.");
+            }
+            
             records.GetOrCreate(this.GetType(), out var record);
-            record.component.Remove(this);
-            record.modified = true;
+            if(record.components.Count == 1) // 只有自己.
+            {
+                record.components.RemoveLast();
+            }
+            else if(record.components.Last() == this) // 最后一个恰好是自己.
+            {
+                record.components.RemoveLast();
+            }
+            else // 和最后一个交换, 需要更改最后一个组件的下标记录.
+            {
+                var lastElement = record.components.Last();
+                record.components[indexInRecord.Value] = lastElement;
+                lastElement.indexInRecord = indexInRecord;
+                record.components.RemoveLast();
+            }
+            
+            this.indexInRecord = null;
         }
     }
 }

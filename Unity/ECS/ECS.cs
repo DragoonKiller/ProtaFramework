@@ -195,11 +195,8 @@ namespace Prota.Unity
             
             if(Application.isPlaying)
             {
-                var _ = TempDict.Get<Type, ESystem>(out var systemTable);
-                foreach(var s in systems) systemTable[s.GetType()] = s;
-                
-                var __ = TempList.Get<ESubSystem>(out var subSystems);
-                foreach(var type in subSystemTypes) subSystems.Add(Activator.CreateInstance(type) as ESubSystem);
+                using var _ = systems.ToTempDict(x => x.GetType(), x => x, out var systemTable);
+                using var __ = subSystemTypes.Select(x => Activator.CreateInstance(x) as ESubSystem).ToTempList(out var subSystems);
                 foreach(var subsystem in subSystems)
                 {
                     var t = subsystem.systemType;

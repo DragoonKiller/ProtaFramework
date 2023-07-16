@@ -52,8 +52,7 @@ namespace Prota
         
         public AsyncControl Step()
         {
-            using var _ = TempList.Get<Action>(out var callbacks);
-            callbacks.AddRange(this.callbacks);
+            using var _ = this.callbacks.ToTempList(out var callbacks);
             this.callbacks.Clear();
             foreach(var callback in callbacks) callback();
             stepId += 1;

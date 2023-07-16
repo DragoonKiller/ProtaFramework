@@ -35,4 +35,51 @@ namespace Prota
             return handle;
         }
     }
+    
+    public static partial class MethodExtensions
+    {
+        public static ConcurrentPool<Dictionary<K, V>>.Handle ToTempDict<K, V>(this IEnumerable<KeyValuePair<K, V>> dict, out Dictionary<K, V> value)
+        {
+            var res = TempDict.Get(out value);
+            foreach (var pair in dict)
+            {
+                value.Add(pair.Key, pair.Value);
+            }
+            return res;
+        }
+        
+        public static ConcurrentPool<Dictionary<K, V>>.Handle ToTempDict<A, K, V>(this IEnumerable<A> dict, Func<A, K> keySelector, Func<A, V> valSelector, out Dictionary<K, V> value)
+        {
+            var res = TempDict.Get(out value);
+            foreach (var item in dict)
+            {
+                value.Add(keySelector(item), valSelector(item));
+            }
+            return res;
+        }
+        
+        
+        
+        public static ConcurrentPool<List<T>>.Handle ToTempList<T>(this IEnumerable<T> list, out List<T> value)
+        {
+            var res = TempList.Get(out value);
+            foreach (var item in list)
+            {
+                value.Add(item);
+            }
+            return res;
+        }
+        
+        public static ConcurrentPool<HashSet<T>>.Handle ToTempHashSet<T>(this IEnumerable<T> hashSet, out HashSet<T> value)
+        {
+            var res = TempHashSet.Get(out value);
+            foreach (var item in hashSet)
+            {
+                value.Add(item);
+            }
+            return res;
+        }
+        
+        
+    }
 }
