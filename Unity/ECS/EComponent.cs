@@ -24,14 +24,18 @@ namespace Prota.Unity
         public static IEnumerable<T> Instances<T>() where T : EComponent
         {
             if(!records.TryGetValue(typeof(T), out var record)) return Enumerable.Empty<T>();
-            return record.components.Cast<T>();
+            return record.components.Select(x => (T)x);
         }
         
         public static T Instance<T>() where T : EComponent
         {
-            var res = Instances<T>();
-            if(res.Count() != 1) throw new Exception($"There are {res.Count()} instances of {typeof(T)}, { res.ToStringJoined() }");
-            return res.First();
+            if(!records.TryGetValue(typeof(T), out var record))
+                throw new Exception($"There is no instance of {typeof(T)}");
+            
+            if(record.components.Count != 1)
+                throw new Exception($"There are {record.components.Count} instances of {typeof(T)}");
+            
+            return (T)record.components[0];
         }
         
         protected virtual void Awake()

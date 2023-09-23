@@ -10,7 +10,7 @@ namespace Prota.Unity
 {
     // GameProperty 用来存储任意单位的"属性".
     [Serializable]
-    public class GameProperty
+    public class GameProperty : ICloneable<GameProperty>
     {
         public struct ModifierHandle
         {
@@ -193,6 +193,13 @@ namespace Prota.Unity
                     return value != 0 ? "true" : "false";
                 default: throw new Exception($"Unknown display mode [{display}].");
             }
+        }
+        
+        
+        public GameProperty Clone()
+        {
+            var g = new GameProperty(name, value, this.behaviour);
+            return g;
         }
     }
 }

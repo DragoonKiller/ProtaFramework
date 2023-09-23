@@ -7,6 +7,18 @@ namespace Prota
 {
     public static partial class MethodExtensions
     {
+        public static string GetLowerStr(this string s)
+        {
+            if(s.IsLower()) return s;
+            return s.ToLower();
+        }
+        
+        public static bool IsLower(this string s)
+        {
+            foreach(var c in s) if(!char.IsLower(c)) return false;
+            return true;
+        }
+        
         public static bool NullOrEmpty(this string s) => string.IsNullOrEmpty(s);
         
         public static string Log(this string x)

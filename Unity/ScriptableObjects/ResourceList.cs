@@ -39,7 +39,7 @@ namespace Prota.Unity
         
         public bool HasResource(string name)
         {
-            return resources.ContainsKey(name.ToLower());
+            return resources.ContainsKey(name.GetLowerStr());
         }
         
         public UnityEngine.Object Get(string name) => Get<UnityEngine.Object>(name);
@@ -48,14 +48,14 @@ namespace Prota.Unity
         {
             x = null;
             if(name.NullOrEmpty()) return false;
-            return resources.TryGetValue(name.ToLower(), out x);
+            return resources.TryGetValue(name.GetLowerStr(), out x);
         }
         
         public bool TryGet<T>(string name, out T x) where T: UnityEngine.Object
         {
             x = null;
             if(name.NullOrEmpty()) return false;
-            if(resources.TryGetValue(name.ToLower(), out var y))
+            if(resources.TryGetValue(name.GetLowerStr(), out var y))
             {
                 x = (T)y;
                 return true;
@@ -66,9 +66,9 @@ namespace Prota.Unity
         
         public T Get<T>(string name) where T: UnityEngine.Object
         {
-            if(name == null || !resources.TryGetValue(name.ToLower(), out var x))
+            if(name == null || !resources.TryGetValue(name.GetLowerStr(), out var x))
             {
-                Debug.Log($"ResourceList find[{ name }||{ name.ToLower() }] list[{ resources.Keys.ToStringJoined(",") }]");
+                Debug.Log($"ResourceList find[{ name }||{ name.GetLowerStr() }] list[{ resources.Keys.ToStringJoined(",") }]");
                 Debug.LogError($"Resource in [{ this.name }] with name [{name}] not found");
                 return null;
             }

@@ -54,7 +54,6 @@ namespace Prota.Editor
                         .WithBinding(property.SubBackingField("value"))
                         .SetWidth(60)
                         .SetNoInteraction()
-                        .SetVisible(false)
                     )
                     .AddChild(new TextField().PassValue(out var actualValueDisplayField)
                         .SetWidth(60)
@@ -68,6 +67,12 @@ namespace Prota.Editor
             );
             
             actualValueDisplayField.ReactOnChange(s => {
+                
+                if(!Application.isPlaying)
+                {
+                    actualValueField.value = baseValueField.value;
+                }
+                
                 var b = property.SubBackingField("behaviour");
                 var display = (Behaviour)b.enumValueIndex switch {
                     Behaviour.Float => Display.Float,
@@ -76,7 +81,7 @@ namespace Prota.Editor
                     _ => throw new ArgumentOutOfRangeException()
                 };
                 s.value = GameProperty.ToString(display, actualValueField.value);
-            }, actualValueField);
+            }, baseValueField);
             
             root.Bind(property.serializedObject);
             
