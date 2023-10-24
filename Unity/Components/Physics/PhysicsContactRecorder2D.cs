@@ -92,6 +92,15 @@ namespace Prota.Unity
         
         public readonly HashSet<Collider2D> colliders = new HashSet<Collider2D>();
         
+            
+        public event Action<Collision2D> onCollisionEnter;
+        public event Action<Collision2D> onCollisionStay;
+        public event Action<Collision2D> onCollisionExit;
+        
+        public event Action<Collider2D> onTriggerEnter;
+        public event Action<Collider2D> onTriggerStay;
+        public event Action<Collider2D> onTriggerExit;
+        
         void OnValidate()
         {
             if(this.GetComponent<Collider2D>() == null && this.GetComponent<Rigidbody2D>() == null)
@@ -106,6 +115,7 @@ namespace Prota.Unity
             // Debug.LogError($"[{Time.fixedTime}] Enter { this.gameObject } <=> { x.collider.gameObject }");
             colliders.Add(x.collider);
             events.Add(new ContactEntry2D(PhysicsEventType.Enter, x, Time.fixedTime));
+            onCollisionEnter?.Invoke(x);
         }
         
         void OnCollisionExit2D(Collision2D x)
@@ -114,12 +124,14 @@ namespace Prota.Unity
             // Debug.LogError($"[{Time.fixedTime}] Leave { this.gameObject } <=> { x.collider.gameObject }");
             colliders.Remove(x.collider);
             events.Add(new ContactEntry2D(PhysicsEventType.Exit, x, Time.fixedTime));
+            onCollisionExit?.Invoke(x);
         }
         
         void OnCollisionStay2D(Collision2D x)
         {
             if(((1 << x.collider.gameObject.layer) & layerMask.value) == 0) return;
             events.Add(new ContactEntry2D(PhysicsEventType.Stay, x, Time.fixedTime));
+            onCollisionStay?.Invoke(x);
         }
         
         void OnTriggerEnter2D(Collider2D c)
@@ -128,6 +140,7 @@ namespace Prota.Unity
             // Debug.LogError($"[{Time.fixedTime}] Enter { this.gameObject } <=> { c.gameObject }");
             colliders.Add(c);
             events.Add(new ContactEntry2D(PhysicsEventType.Enter, this.gameObject, c, Time.fixedTime));
+            onTriggerEnter?.Invoke(c);
         }
         
         void OnTriggerExit2D(Collider2D c)
@@ -136,12 +149,14 @@ namespace Prota.Unity
             // Debug.LogError($"[{Time.fixedTime}] Leave { this.gameObject } <=> { c.gameObject }");
             colliders.Remove(c);
             events.Add(new ContactEntry2D(PhysicsEventType.Exit, this.gameObject, c, Time.fixedTime));
+            onTriggerExit?.Invoke(c);
         }
         
         void OnTriggerStay2D(Collider2D c)
         {
             if(((1 << c.gameObject.layer) & layerMask.value) == 0) return;
             events.Add(new ContactEntry2D(PhysicsEventType.Stay, this.gameObject, c, Time.fixedTime));
+            onTriggerStay?.Invoke(c);
         }
         
         void Update()

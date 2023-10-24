@@ -10,7 +10,6 @@ using UnityEngine.Assertions;
 
 namespace Prota.Unity
 {
-    [RequireComponent(typeof(ESystem))]
     public sealed class ECS : Singleton<ECS>
     {
         
@@ -142,6 +141,7 @@ namespace Prota.Unity
             if(Physics2D.simulationMode == SimulationMode2D.Script) return;
             if(stopPhysicsUpdate) throw new InvalidOperationException("Physics update cannot be stopped when controlled by Unity.");
             fixedUpdateFrame++;
+            foreach(var i in systems) i.InvokeFixedUpdate();
             physicsAsyncControl.Step();
         }
         
