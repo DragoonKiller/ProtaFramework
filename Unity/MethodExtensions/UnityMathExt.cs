@@ -249,11 +249,12 @@ namespace Prota.Unity
         public static Vector2 AddLength(this Vector2 a, float addLen) => a.WithLength(a.magnitude + addLen);
         public static Vector3 AddLength(this Vector3 a, float addLen) => a.WithLength(a.magnitude + addLen);
         
-        public static Vector2 Move(this Vector2 a, Vector2 move, float? maxLength = null)
-            => (a + move.WithMinLength(maxLength ?? float.PositiveInfinity));
-        public static Vector3 Move(this Vector3 a, Vector3 move, float? maxLength = null)
-            => (a + move.WithMinLength(maxLength ?? float.PositiveInfinity));
+        public static Vector2 MoveTowards(this Vector2 a, Vector2 b, float maxDistanceDelta)
+            => Vector2.MoveTowards(a, b, maxDistanceDelta);
             
+        public static Vector3 MoveTowards(this Vector3 a, Vector3 b, float maxDistanceDelta)
+            => Vector3.MoveTowards(a, b, maxDistanceDelta);
+        
         public static float Angle(this Vector2 a, Vector2 b) => Vector2.SignedAngle(a, b);
         
         public static float Dot(this Vector2 a, Vector2 b) => Vector2.Dot(a, b);

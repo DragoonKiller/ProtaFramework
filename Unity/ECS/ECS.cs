@@ -163,12 +163,13 @@ namespace Prota.Unity
                 while(dt > Time.deltaTime) dt /= 2;
                 Time.fixedDeltaTime = dt;
                 
-                while(Time.time - physicsTimer >= Time.fixedDeltaTime)
+                // 每帧最多 1000 次 fixed update.
+                for(int i = 0; i < 1000 && Time.time - physicsTimer >= Time.fixedDeltaTime; i++)
                 {
                     physicsTimer += Time.fixedDeltaTime;
                     Physics2D.Simulate(Time.fixedDeltaTime);
                     isInFixedUpdate = true;
-                    foreach(var i in systems) i.InvokeFixedUpdate();
+                    foreach(var s in systems) s.InvokeFixedUpdate();
                     isInFixedUpdate = false;
                 }
             }
