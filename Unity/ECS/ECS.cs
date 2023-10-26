@@ -78,6 +78,10 @@ namespace Prota.Unity
             }
         }
         
+        // 物理模拟时长缩放. 一次 fixedUpdate 若耗时 dt, 告知业务系统的时间将为 dt * fixedTimeScale.
+        // ** 只在物理模拟模式为 manually 的情况下生效.
+        public static float fixedTimeScale = 1;
+        
         public static readonly AsyncControl asyncControl = new AsyncControl();
         public static readonly AsyncControl physicsAsyncControl = new AsyncControl();
         public static readonly AsyncControl lateAsyncControl = new AsyncControl();
@@ -134,6 +138,7 @@ namespace Prota.Unity
         {
             base.Awake();
             InitSystems();
+            fixedTimeScale = 1;
         }
         
         void FixedUpdate()
@@ -167,7 +172,7 @@ namespace Prota.Unity
                 for(int i = 0; i < 1000 && Time.time - physicsTimer >= Time.fixedDeltaTime; i++)
                 {
                     physicsTimer += Time.fixedDeltaTime;
-                    Physics2D.Simulate(Time.fixedDeltaTime);
+                    Physics2D.Simulate(Time.fixedDeltaTime * fixedTimeScale);
                     isInFixedUpdate = true;
                     foreach(var s in systems) s.InvokeFixedUpdate();
                     isInFixedUpdate = false;

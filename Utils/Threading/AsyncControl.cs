@@ -54,7 +54,17 @@ namespace Prota
         {
             using var _ = this.callbacks.ToTempList(out var callbacks);
             this.callbacks.Clear();
-            foreach(var callback in callbacks) callback();
+            foreach(var callback in callbacks)
+            {
+                try
+                {
+                    callback();
+                }
+                catch(Exception e)
+                {
+                    Console.Error.WriteLine(e.Message);
+                }
+            }
             stepId += 1;
             return this;
         }

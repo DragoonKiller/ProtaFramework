@@ -21,19 +21,25 @@ namespace Prota.Unity
             public readonly Collider2D collider;
             public readonly Collider2D selfCollider;
             public readonly float time;
+            public readonly Vector2 relativeVelocity;
+            public readonly Vector2 normal;
+            public readonly Vector2 contactPoint;
             
             public bool isValid => 0 < (int)type && (int)type <= 3;
             public bool isEnter => type == PhysicsEventType.Enter;
             public bool isExit => type == PhysicsEventType.Exit;
             public bool isStay => type == PhysicsEventType.Stay;
             
-            public ContactEntry2D(PhysicsEventType type, Collision2D c, float time)
+            public ContactEntry2D(PhysicsEventType type, Collision2D c, float time, Vector2 relativeVelocity, Vector2 normal, Vector2 contactPoint)
             {
                 this.type = type;
                 collider = c.collider;
                 collision = c;
                 selfCollider = c.otherCollider;
                 this.time = time;
+                this.relativeVelocity = relativeVelocity;
+                this.normal = normal;
+                this.contactPoint = contactPoint;
                 
                 #if UNITY_EDITOR
                 isValid.Assert();
@@ -49,13 +55,29 @@ namespace Prota.Unity
                 collider = c;
                 collision = null;
                 this.time = time;
+                this.relativeVelocity = Vector2.zero;
+                
+                self.AssertNotNull();
+                c.AssertNotNull();
                 
                 selfCollider = self.GetComponent<Collider2D>();
-                if(selfCollider != null) return;
-                
                 var rigid = self.GetComponent<Rigidbody2D>();
-                if(rigid == null) throw new Exception($"GameObject [{self}] has no Collider2D or Rigidbody2D.");
                 
+                var v1 = rigid != null ? rigid.velocity
+                    : selfCollider != null ? selfCollider.attachedRigidbody.velocity : Vector2.zero;
+                var v2 = c.attachedRigidbody != null ? c.attachedRigidbody.velocity : Vector2.zero;
+                this.relativeVelocity = v2 - v1;
+                
+                var myPosition = rigid == null ? selfCollider.transform.position.ToVec2() : rigid.position;
+                
+                this.normal = myPosition.To(c.attachedRigidbody.position).normalized;
+                this.contactPoint = (myPosition + c.attachedRigidbody.position) / 2;
+                
+                if(selfCollider == null && rigid == null) throw new Exception($"GameObject [{self}] has no Collider2D or Rigidbody2D.");
+                
+                if(rigid == null) return;
+                
+                // 要从 rigid 找到碰到了哪个 collider. 如果汇报的就是 collider 那么就不用找了.
                 for(int n = rigid.GetAttachedColliders(colliderBuffer), i = 0; i < n && selfCollider == null; i++)
                 {
                     var cc = ContactEntry2D.colliderBuffer[i];
@@ -72,8 +94,6 @@ namespace Prota.Unity
                     }
                 }
                 
-                self.AssertNotNull();
-                c.AssertNotNull();
                 selfCollider.AssertNotNull();
             }
             
@@ -114,7 +134,7 @@ namespace Prota.Unity
             if(((1 << x.collider.gameObject.layer) & layerMask.value) == 0) return;
             // Debug.LogError($"[{Time.fixedTime}] Enter { this.gameObject } <=> { x.collider.gameObject }");
             colliders.Add(x.collider);
-            events.Add(new ContactEntry2D(PhysicsEventType.Enter, x, Time.fixedTime));
+            events.Add(new ContactEntry2D(PhysicsEventType.Enter, x, Time.fixedTime, x.relativeVelocity, x.contacts[0].normal, x.contacts[0].point));
             onCollisionEnter?.Invoke(x);
         }
         
@@ -123,14 +143,14 @@ namespace Prota.Unity
             if(((1 << x.collider.gameObject.layer) & layerMask.value) == 0) return;
             // Debug.LogError($"[{Time.fixedTime}] Leave { this.gameObject } <=> { x.collider.gameObject }");
             colliders.Remove(x.collider);
-            events.Add(new ContactEntry2D(PhysicsEventType.Exit, x, Time.fixedTime));
+            events.Add(new ContactEntry2D(PhysicsEventType.Exit, x, Time.fixedTime, x.relativeVelocity, Vector2.zero, Vector2.zero));
             onCollisionExit?.Invoke(x);
         }
         
         void OnCollisionStay2D(Collision2D x)
         {
             if(((1 << x.collider.gameObject.layer) & layerMask.value) == 0) return;
-            events.Add(new ContactEntry2D(PhysicsEventType.Stay, x, Time.fixedTime));
+            events.Add(new ContactEntry2D(PhysicsEventType.Stay, x, Time.fixedTime, Vector2.zero, x.contacts[0].normal, x.contacts[0].point));
             onCollisionStay?.Invoke(x);
         }
         
