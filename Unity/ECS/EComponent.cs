@@ -9,6 +9,8 @@ namespace Prota.Unity
     [ExecuteAlways]
     public abstract class EComponent : MonoBehaviour
     {
+        bool awaken = false;
+        
         public class TypeRecord
         {
             public Type type;
@@ -44,6 +46,7 @@ namespace Prota.Unity
             InitAttachment();
             entity.AssertNotNull();
             AddToRecord();
+            awaken = true;
         }
         
         protected virtual void OnEnable()
@@ -64,6 +67,7 @@ namespace Prota.Unity
         
         protected virtual void Update()
         {
+            if(!awaken) Debug.LogError($"EComponent {this.GetType()} hsa not called Awake. Make sure base.Awake is invoked.");
             if(Application.isPlaying) return;
             InitAttachment();
         }
