@@ -16,6 +16,9 @@ namespace Prota.Unity
         // 如果是透视投影: 表示最小视野角度.
         public Vector2 minSize;
         
+        // 投影面到相机的距离. 只有透视投影有用.
+        public float planeDistance;
+        
         void Update()
         {
             var cam = this.GetComponent<Camera>();
@@ -43,11 +46,11 @@ namespace Prota.Unity
                 {
                     var curX = minSize.x;
                     var curY = minSize.x / curAspect;
-                    cam.fieldOfView = Mathf.Atan2(curY / 2, cam.transform.position.z) * Mathf.Rad2Deg * 2;
+                    cam.fieldOfView = Mathf.Atan2(curY / 2, planeDistance) * Mathf.Rad2Deg * 2;
                 }
                 else
                 {
-                    cam.fieldOfView = Mathf.Atan2(minSize.y / 2, cam.transform.position.z) * Mathf.Rad2Deg * 2;
+                    cam.fieldOfView = Mathf.Atan2(minSize.y / 2, planeDistance) * Mathf.Rad2Deg * 2;
                 }
             }
         }
