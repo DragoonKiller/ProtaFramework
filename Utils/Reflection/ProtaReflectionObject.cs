@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Net.Http.Headers;
+using System.Diagnostics;
 
 namespace Prota
 {
@@ -227,9 +228,9 @@ namespace Prota
         {
             object valueToSet = null;
 
-            if (value == null  || value == DBNull.Value)
+            if (value == null || value == DBNull.Value)
             {
-            valueToSet = null;
+                valueToSet = null;
             }
             else
             {
@@ -240,9 +241,14 @@ namespace Prota
                 else if (fieldType.IsValueType)
                 {
                     Type underlyingType = Nullable.GetUnderlyingType(fieldType);
+                    // Console.WriteLine("???" + underlyingType);
                     if(underlyingType != null)
                     {
                         valueToSet = underlyingType.IsEnum ? Enum.ToObject(underlyingType, value) : value;
+                    }
+                    else
+                    {
+                        valueToSet = Convert.ChangeType(value, fieldType);
                     }
                 }
                 else

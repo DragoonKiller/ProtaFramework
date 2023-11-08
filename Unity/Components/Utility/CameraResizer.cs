@@ -8,7 +8,6 @@ namespace Prota.Unity
     // 这个组件调整相机视野, 使其总是能够看到指定的最小区域.
     // 对应的 CanvasScaler 建议调整为 ScaleWithScreenSize,
     // 并且 Reference Resolution 的长宽比和最小区域的长宽比一致.
-    [RequireComponent(typeof(Camera))]
     [ExecuteAlways]
     public class CameraResizer : MonoBehaviour
     {
@@ -21,39 +20,83 @@ namespace Prota.Unity
         
         void Update()
         {
-            var cam = this.GetComponent<Camera>();
             var curAspect = (float)Screen.width / Screen.height;
+            var targetAspect = minSize.x / minSize.y;
             
-            if(cam.orthographic)
+            if(this.TryGetComponent<Camera>(out var cam))
             {
-                var targetAspect = minSize.x / minSize.y;
-                if(targetAspect > curAspect)
+                if(cam.orthographic)
                 {
-                    var curX = minSize.x;
-                    var curY = minSize.x / curAspect;
-                    print($"{curX} : {curY} : {curAspect}");
-                    cam.orthographicSize = curY / 2;
+                    cam.orthographicSize = ComputeSize(curAspect, targetAspect);
                 }
                 else
                 {
-                    cam.orthographicSize = minSize.y / 2;
+                    cam.fieldOfView = ComputeFov(curAspect, targetAspect);
                 }
             }
-            else
+            else if(this.GetComponent("CinemachineVirtualCamera").PassValue(out Component vcam))
             {
-                var targetAspect = minSize.x / minSize.y;
-                if(targetAspect > curAspect)
+                // int a = 0;
+                // void PrintLens(ProtaReflectionObject len)
+                // {
+                //     a++;
+                //     print("====" + a + "====");
+                //     print("type:" + len.target.GetType().ToString());
+                //     print("fov:" + len.Get("FieldOfView"));
+                //     print("size:" + len.Get("OrthographicSize"));
+                //     print("orth:" + len.Get("Orthographic"));
+                //     print("near:" + len.Get("NearClipPlane"));
+                //     print("far:" + len.Get("FarClipPlane"));
+                // }
+                
+                var p = vcam.ProtaReflection();
+                var lens = p.Get("m_Lens").ProtaReflection();
+                // PrintLens(lens);
+                if((bool)lens.Get("Orthographic"))
                 {
-                    var curX = minSize.x;
-                    var curY = minSize.x / curAspect;
-                    cam.fieldOfView = Mathf.Atan2(curY / 2, planeDistance) * Mathf.Rad2Deg * 2;
+                    lens.Set("OrthographicSize", ComputeSize(curAspect, targetAspect));
                 }
                 else
                 {
-                    cam.fieldOfView = Mathf.Atan2(minSize.y / 2, planeDistance) * Mathf.Rad2Deg * 2;
+                    lens.Set("FieldOfView", ComputeFov(curAspect, targetAspect));
                 }
+                // PrintLens(lens);
+                p.Set("m_Lens", lens.target);
+                // PrintLens(p.Get("m_Lens").ProtaReflection());
             }
         }
         
+        
+        
+
+        private float ComputeFov(float curAspect, float targetAspect)
+        {
+            if (targetAspect > curAspect)
+            {
+                var curX = minSize.x;
+                var curY = minSize.x / curAspect;
+                return Mathf.Atan2(curY / 2, planeDistance) * Mathf.Rad2Deg * 2;
+            }
+            else
+            {
+                return Mathf.Atan2(minSize.y / 2, planeDistance) * Mathf.Rad2Deg * 2;
+            }
+        }
+
+        private float ComputeSize(float curAspect, float targetAspect)
+        {
+            if (targetAspect > curAspect)
+            {
+                var curX = minSize.x;
+                var curY = minSize.x / curAspect;
+                // print($"{curX} : {curY} : {curAspect}");
+                return curY / 2;
+            }
+            else
+            {
+                return minSize.y / 2;
+            }
+        }
+
     }
 }
