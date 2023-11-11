@@ -53,11 +53,12 @@ namespace Prota
         public AsyncControl Step()
         {
             using var _ = this.callbacks.ToTempList(out var callbacks);
-            this.callbacks.Clear();
             foreach(var callback in callbacks)
             {
+                if(!this.callbacks.Contains(callback)) continue;
                 try
                 {
+                    this.callbacks.Remove(callback);
                     callback();
                 }
                 catch(Exception e)
