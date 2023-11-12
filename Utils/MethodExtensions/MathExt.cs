@@ -118,11 +118,31 @@ namespace Prota
         public static int RoundToInt(this float x) => (int)Math.Round(x);
         public static int RoundToInt(this double x) => (int)Math.Round(x);
         
+        public static ref double SetClamp(this ref double x, double a, double b)
+        {
+            x = (x < a ? a : x > b ? b : x);
+            return ref x;
+        }
+        public static ref float SetClamp(this ref float x, float a, float b)
+        {
+            x = (x < a ? a : x > b ? b : x);
+            return ref x;
+        }
+        public static ref long SetClamp(this ref long x, long a, long b)
+        {
+            x = (x < a ? a : x > b ? b : x);
+            return ref x;
+        }
+        public static ref int SetClamp(this ref int x, int a, int b)
+        {
+            x = (x < a ? a : x > b ? b : x);
+            return ref x;
+        }
+        
         public static double Clamp(this double x, double a, double b) => x < a ? a : x > b ? b : x;
         public static float Clamp(this float x, float a, float b) => x < a ? a : x > b ? b : x;
         public static long Clamp(this long x, long a, long b) => x < a ? a : x > b ? b : x;
         public static int Clamp(this int x, int a, int b) => x < a ? a : x > b ? b : x;
-        
         
         
         public static float XMap(this float x, float a, float b) => (x - a) / (b - a);
