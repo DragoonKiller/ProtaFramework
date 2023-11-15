@@ -10,6 +10,8 @@ namespace Prota.Unity
     {
         public static HashSet<ERoot> entities = new HashSet<ERoot>();
         
+        public static Dictionary<GameObject, ERoot> entityMap = new Dictionary<GameObject, ERoot>();
+        
         [SerializeField, Readonly] HashMapList<Type, EComponent> components = new HashMapList<Type, EComponent>();
         
         public bool TryGetEntityComponent<T>(out T c) where T : EComponent
@@ -56,11 +58,13 @@ namespace Prota.Unity
         void Awake()
         {
             entities.Add(this);
+            entityMap.Add(gameObject, this);
         }
         
         void ActiveDestroy()
         {
-            if(!gameObject.IsDestroyed()) throw new Exception("EntityRoot should be destroyed with GameObject.");
+            if(!gameObject.IsDestroyed())
+                throw new Exception("EntityRoot should be destroyed with GameObject.");
         }
         
         void Update()
@@ -71,6 +75,7 @@ namespace Prota.Unity
         
         void OnDestroy()
         {
+            entityMap.Remove(gameObject);
             entities.Remove(this);
         }
         

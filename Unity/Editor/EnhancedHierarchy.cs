@@ -98,9 +98,9 @@ namespace Prota.Editor
             
             // 这个 gameobject 下属的 gameobject.
             g.GetComponents<Component>(comps);
-            comps.Sort(Compare);
-            comps.Reverse();
             comps.RemoveAll(x => x == null || x is Transform);
+            comps.Sort(Compare);
+            // comps.Reverse();
             
             // Component 图标部分.
             int n = 0;
@@ -233,7 +233,9 @@ namespace Prota.Editor
         
         static int Compare(Component a, Component b)
         {
-            return GetWeight(a).CompareTo(GetWeight(b));
+            // reversed.
+            return GetWeight(b).CompareTo(GetWeight(a));
+            // return GetWeight(a).CompareTo(GetWeight(b));
         }
     }
 }

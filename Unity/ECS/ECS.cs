@@ -278,10 +278,20 @@ namespace Prota.Unity
     public static partial class ECSMethodExtensions
     {
         public static ERoot EntityRoot(this GameObject go)
-            => go.GetComponentInParent<ERoot>();
+        {
+            var tr = go.transform;
+            while(tr != null)
+            {
+                if(ERoot.entityMap.TryGetValue(tr.gameObject, out var res))
+                    return res;
+                tr = tr.parent;
+            }
+            
+            return go.GetComponentInParent<ERoot>();
+        }
             
         public static ERoot EntityRoot(this Component g)
-            => g.GetComponentInParent<ERoot>();
+            => g.gameObject.EntityRoot();
         
         public static Task Wait(this AsyncControl control, float seconds, TaskCanceller.Token? token = null)
         {
