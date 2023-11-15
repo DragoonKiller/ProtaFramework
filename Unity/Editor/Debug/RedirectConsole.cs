@@ -17,6 +17,7 @@ namespace Prota.Editor
                     || value.StartsWith("[MODES]")
                     || value.StartsWith("[LAYOUT]")
                     || value.StartsWith("[ScriptCompilation]")
+                    || value.EndsWith("belong to any assembly definition file.")
                 ) return;
                 
                 if(value.StartsWith("[Exception]") || value.StartsWith("[Error]") || value.Contains("exception: "))
