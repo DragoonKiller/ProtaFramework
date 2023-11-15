@@ -194,7 +194,7 @@ namespace Prota.Unity
                 switch(c)
                 {
                     case MaskableGraphic t: t.color = color; break;
-                    case Renderer t: t.material.color = color; break;
+                    case Renderer t: t.GetMaterialInstance().color = color; break;
                     default: throw new NotSupportedException($"Component type: {c.GetType()}");
                 }
             }

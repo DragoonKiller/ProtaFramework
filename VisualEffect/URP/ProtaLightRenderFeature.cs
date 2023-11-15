@@ -50,7 +50,9 @@ public class ProtaLightRenderPass : ScriptableRenderPass
     
     public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
     {
-        if(feature.material == null)
+        var mat = feature.material;
+        
+        if(mat == null)
         {
             Debug.LogWarning("ProtaFramework: LightRenderPass: material is null");
             return;
@@ -68,8 +70,8 @@ public class ProtaLightRenderPass : ScriptableRenderPass
         
         ShaderTagId shaderTagId = new ShaderTagId("ProtaLight2D");
         
-        feature.material.SetTexture("_LightAddTexture", addRt);
-        feature.material.SetTexture("_LightMultTexture", multRt);
+        mat.SetTexture("_LightAddTexture", addRt);
+        mat.SetTexture("_LightMultTexture", multRt);
         
         var cmd = new CommandBuffer();
         cmd.name = "Prota Light Render Pass";
@@ -95,11 +97,11 @@ public class ProtaLightRenderPass : ScriptableRenderPass
         cmd.ClearRenderTarget(true, true, Color.black);
         cmd.DrawRendererList(rdList);
         
-        feature.material.SetColor("_SkyColorAdd", feature.skyColorAdd);
-        feature.material.SetColor("_SkyColorMult", feature.skyColorMult);
-        feature.material.SetColor("_MaxLightAdd", feature.maxColorAdd);
-        feature.material.SetColor("_MaxLightMult", feature.maxColorMult);
-        cmd.Blit(null as Texture, BuiltinRenderTextureType.CameraTarget, feature.material);
+        mat.SetColor("_SkyColorAdd", feature.skyColorAdd);
+        mat.SetColor("_SkyColorMult", feature.skyColorMult);
+        mat.SetColor("_MaxLightAdd", feature.maxColorAdd);
+        mat.SetColor("_MaxLightMult", feature.maxColorMult);
+        cmd.Blit(null as Texture, BuiltinRenderTextureType.CameraTarget, mat);
         
         context.ExecuteCommandBuffer(cmd);
         cmd.Release();

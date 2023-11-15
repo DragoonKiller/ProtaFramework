@@ -224,7 +224,7 @@ namespace Prota.Tween
 
         void UpdateColorValue(float ratio)
         {
-            if (colorTarget is MeshRenderer mr) mr.material.color = Color.Lerp(colorFrom, colorTo, ratio);
+            if (colorTarget is MeshRenderer mr) mr.GetMaterialInstance().color = Color.Lerp(colorFrom, colorTo, ratio);
             else if (colorTarget is SpriteRenderer sr) sr.color = Color.Lerp(colorFrom, colorTo, ratio);
             else if (colorTarget is UnityEngine.UI.Image img) img.color = Color.Lerp(colorFrom, colorTo, ratio);
             else if (colorTarget is UnityEngine.UI.Text txt) txt.color = Color.Lerp(colorFrom, colorTo, ratio);
@@ -236,7 +236,7 @@ namespace Prota.Tween
         
         Color GetColorValue()
         {
-            if (colorTarget is MeshRenderer mr) return mr.material.color;
+            if (colorTarget is MeshRenderer mr) return mr.GetMaterialInstance().color;
             else if(colorTarget is SpriteRenderer sr) return sr.color;
             else if(colorTarget is UnityEngine.UI.Image img) return img.color;
             else if(colorTarget is UnityEngine.UI.Text txt) return txt.color;

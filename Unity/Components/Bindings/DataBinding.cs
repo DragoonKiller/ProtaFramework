@@ -7,11 +7,14 @@ using UnityEngine.UIElements;
 
 namespace Prota.Unity
 {
-    // 通过明明规则实现数据绑定.
+    // 通过命名规则实现数据绑定.
     // 如果gameObject名字以featureCharacter开头, 则它会被DataBinding记录.
     [ExecuteAlways]
     public class DataBinding : MonoBehaviour
     {
+        public static readonly Dictionary<GameObject, DataBinding> dataBindingCache
+            = new Dictionary<GameObject, DataBinding>();
+        
         public bool includeSelf = false;
         
         [Serializable]
@@ -20,31 +23,6 @@ namespace Prota.Unity
         
         public char featureCharacter = '$';
         
-        void OnValidate()
-        {
-            using var _ = TempHashSet.Get<string>(out var g);
-            
-            data.Clear();
-            
-            transform.ForeachTransformRecursively(t =>
-            {
-                if(t.name.StartsWith(featureCharacter)
-                    && (includeSelf || this.transform != t))
-                {
-                    var s = t.name.Substring(1);
-                    data.Add(s, t.gameObject);
-                    if(g.Contains(s)) Debug.LogError($"DataBinding[{ this.GetNamePath() }] 有重复的名字 { s }");
-                    g.Add(s);
-                }
-                if(t.GetComponent<DataBinding>().PassValue(out var tt) != null && tt != this) return false;
-                return true;
-            });
-        }
-        
-        void Update()
-        {
-            if(Application.isPlaying) return;
-        }
         
         public GameObject this[string name] => Get(name);
         
@@ -93,15 +71,59 @@ namespace Prota.Unity
                 return data.Select(kv => (kv.Key, kv.Value.gameObject));
             }
         }
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        void OnValidate()
+        {
+            using var _ = TempHashSet.Get<string>(out var g);
+            
+            data.Clear();
+            
+            transform.ForeachTransformRecursively(t =>
+            {
+                if(t.name.StartsWith(featureCharacter)
+                    && (includeSelf || this.transform != t))
+                {
+                    var s = t.name.Substring(1);
+                    data.Add(s, t.gameObject);
+                    if(g.Contains(s)) Debug.LogError($"DataBinding[{ this.GetNamePath() }] 有重复的名字 { s }");
+                    g.Add(s);
+                }
+                if(t.GetComponent<DataBinding>().PassValue(out var tt) != null && tt != this) return false;
+                return true;
+            });
+        }
+        
+        void Awake()
+        {
+            dataBindingCache.Add(gameObject, this);
+        }
+        
+        void OnDestroy()
+        {
+            dataBindingCache.Remove(gameObject);
+        }
     }
     
     public static partial class UnityMethodExtensions
     {
         public static DataBinding DataBinding(this GameObject self)
-            => self.GetComponent<DataBinding>();
+        {
+            if(Prota.Unity.DataBinding.dataBindingCache.TryGetValue(self, out var res)) return res;
+            if(self.TryGetComponent<DataBinding>(out res)) return res;
+            Debug.LogError($"GameObject[{ self.name }] 找不到 DataBinding 组件");
+            return null;
+        }
         
         public static DataBinding DataBinding(this Component self)
-            => self.GetComponent<DataBinding>();
+        {
+            if(Prota.Unity.DataBinding.dataBindingCache.TryGetValue(self.gameObject, out var res)) return res;
+            if(self.TryGetComponent<DataBinding>(out res)) return res;
+            Debug.LogError($"GameObject[{ self.name }] 找不到 DataBinding 组件");
+            return null;
+        }
         
         public static GameObject GetBinding(this GameObject self, string name)
             => self.DataBinding().Get(name);
