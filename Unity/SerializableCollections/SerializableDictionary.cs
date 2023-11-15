@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
 using System.Text;
-using System.Net.Http.Headers;
-using System.Reflection;
 
 namespace Prota
 {
@@ -16,7 +14,7 @@ namespace Prota
     }
     
     // 使用自定义链表.
-    // 必须使用 SerializedReference 才能正确序列化.
+    // 必须使用 继承 + SerializeField 才能正确序列化.
     [Serializable]
     public class SerializableDictionary<TKey, TValue> : ISerializableDictionary, IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>
     {
