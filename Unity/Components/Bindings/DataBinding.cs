@@ -50,7 +50,7 @@ namespace Prota.Unity
             return true;
         }
         
-        public bool TryGet<T>(string name, out T res)
+        public bool Get<T>(string name, out T res)
         {
             res = default;
             if(!data.TryGetValue(name, out var t)) return false;
@@ -137,7 +137,7 @@ namespace Prota.Unity
         public static T GetBinding<T>(this Component self, string name)
             => self.gameObject.GetBinding<T>(name);
         
-        public static bool TryGetBinding(this GameObject self, string name, out GameObject res)
+        public static bool GetBinding(this GameObject self, string name, out GameObject res)
         {
             res = null;
             var dataBinding = self.gameObject.DataBinding();
@@ -146,20 +146,20 @@ namespace Prota.Unity
             return false;
         }
         
-        public static bool TryGetBinding(this Component self, string name, out GameObject res)
-            => self.gameObject.TryGetBinding(name, out res);
+        public static bool GetBinding(this Component self, string name, out GameObject res)
+            => self.gameObject.GetBinding(name, out res);
         
-        public static bool TryGetBinding<T>(this GameObject self, string name, out T res)
+        public static bool GetBinding<T>(this GameObject self, string name, out T res)
         {
             res = default;
             var dataBinding = self.gameObject.DataBinding();
             if(dataBinding == null) return false;
-            if(dataBinding.TryGet(name, out res)) return true;
+            if(dataBinding.Get(name, out res)) return true;
             return false;
         }
         
-        public static bool TryGetBinding<T>(this Component self, string name, out T res)
-            => self.gameObject.TryGetBinding(name, out res);
+        public static bool GetBinding<T>(this Component self, string name, out T res)
+            => self.gameObject.GetBinding(name, out res);
     }
     
     
