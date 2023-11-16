@@ -274,9 +274,18 @@ namespace Prota.Unity
         }
     }
     
+    // ====================================================================================================
+    // ====================================================================================================
+    // ====================================================================================================
+    // ====================================================================================================
+    
     
     public static partial class ECSMethodExtensions
     {
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
         public static ERoot EntityRoot(this GameObject go)
         {
             var tr = go.transform;
@@ -292,6 +301,27 @@ namespace Prota.Unity
             
         public static ERoot EntityRoot(this Component g)
             => g.gameObject.EntityRoot();
+        
+        public static bool EntityRoot(this Component g, out ERoot root)
+        {
+            root = g.gameObject.EntityRoot();
+            return root != null;
+        }
+        
+        public static ERoot EntityRoot(this EComponent g)
+        {
+            return g.entity;
+        }
+        
+        public static bool EntityRoot(this EComponent g, out ERoot root)
+        {
+            root = g.entity;
+            return root != null;
+        }
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
         
         public static Task Wait(this AsyncControl control, float seconds, TaskCanceller.Token? token = null)
         {
