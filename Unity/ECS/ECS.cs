@@ -57,6 +57,7 @@ namespace Prota.Unity
             {
                 if(isInFixedUpdate) return Time.fixedTime;
                 if(isInUpdate) return Time.time;
+                if(isInLateUpdate) return Time.time;
                 throw new InvalidOperationException("ECS.time can only be accessed in update or fixed update of ESystem.");
             }
         }

@@ -14,6 +14,8 @@ namespace Prota.Unity
             Start,
             
             ActiveDestroy,
+            
+            Manually,
         }
         
         
@@ -37,5 +39,9 @@ namespace Prota.Unity
             }
         }
         
+        public void Trigger()
+        {
+            this.gameObject.NewTimer(delay, () => Destroy(this.gameObject));
+        }
     }
 }
