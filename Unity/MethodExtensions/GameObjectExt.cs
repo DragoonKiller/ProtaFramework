@@ -33,10 +33,10 @@ namespace Prota.Unity
             return g;
         }
         
+        // 主动销毁的时候, 发送 OnActiveDestroy 事件.
+        // 避免 gameObject 被 Unity 自动销毁的时候创建额外的对象.
         public static void ActiveDestroy(this GameObject g)
         {
-            // 主动销毁的时候, 发送 OnActiveDestroy 事件.
-            // 避免 gameObject 被 Unity 自动销毁的时候创建额外的对象.
             if(g == null) return;
             g.BroadcastMessage("OnActiveDestroy", null, SendMessageOptions.DontRequireReceiver);
             GameObject.Destroy(g);

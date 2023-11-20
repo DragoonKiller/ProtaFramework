@@ -6,15 +6,13 @@ using UnityEditor;
 
 namespace Prota.Unity
 {
+    [DisallowMultipleComponent]
     public class DestroyAfter : MonoBehaviour
     {
         [Serializable]
         public enum DestroyAfterEvent
         {
             Start,
-            
-            ActiveDestroy,
-            
             Manually,
         }
         
@@ -23,25 +21,26 @@ namespace Prota.Unity
         
         public float delay = 0;
         
+        [Readonly] public bool destroyTriggered;
+        
         void Start()
         {
             if(destroyAfterEvent == DestroyAfterEvent.Start)
             {
-                this.gameObject.NewTimer(delay, () => Destroy(this.gameObject));
-            }
-        }
-        
-        void OnActiveDestroy()
-        {
-            if(destroyAfterEvent == DestroyAfterEvent.ActiveDestroy)
-            {
-                this.gameObject.NewTimer(delay, () => Destroy(this.gameObject));
+                DoDestroy();
             }
         }
         
         public void Trigger()
         {
-            this.gameObject.NewTimer(delay, () => Destroy(this.gameObject));
+            DoDestroy();
+        }
+        
+        void DoDestroy()
+        {
+            if(destroyTriggered) return;
+            destroyTriggered = true;
+            this.gameObject.NewTimer(delay, () => this.gameObject.ActiveDestroy());
         }
     }
 }
