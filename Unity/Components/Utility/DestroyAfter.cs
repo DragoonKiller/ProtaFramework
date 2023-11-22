@@ -21,7 +21,7 @@ namespace Prota.Unity
         
         public float delay = 0;
         
-        [Readonly(hideWhenEditing = true)] public bool destroyTriggered;
+        [Readonly] public bool destroyTriggered;
         
         void Awake()
         {
