@@ -11,7 +11,7 @@ namespace Prota.Unity
 {
     public class PhysicsContactRecorder2D : MonoBehaviour
     {
-        public struct ContactEntry2D
+        public readonly struct ContactEntry2D
         {
             [ThreadStatic] public static Collider2D[] colliderBuffer = new Collider2D[16];
             [ThreadStatic] public static Collider2D[] contactBuffer = new Collider2D[16];
@@ -24,7 +24,9 @@ namespace Prota.Unity
             public readonly Vector2 relativeVelocity;
             public readonly Vector2 normal;
             public readonly Vector2 contactPoint;
+            public readonly bool isTriggerContact;
             
+            public bool isCollisionContact => !isTriggerContact;
             public bool isValid => 0 < (int)type && (int)type <= 3;
             public bool isEnter => type == PhysicsEventType.Enter;
             public bool isExit => type == PhysicsEventType.Exit;
@@ -40,6 +42,7 @@ namespace Prota.Unity
                 this.relativeVelocity = relativeVelocity;
                 this.normal = normal;
                 this.contactPoint = contactPoint;
+                this.isTriggerContact = false;
                 
                 #if UNITY_EDITOR
                 isValid.Assert();
@@ -56,6 +59,7 @@ namespace Prota.Unity
                 collision = null;
                 this.time = time;
                 this.relativeVelocity = Vector2.zero;
+                this.isTriggerContact = true;
                 
                 self.AssertNotNull();
                 c.AssertNotNull();
