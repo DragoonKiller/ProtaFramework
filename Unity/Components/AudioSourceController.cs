@@ -30,34 +30,26 @@ namespace Prota.Unity
         [Serializable]
         public class Entry
         {
-            [Readonly] public string name;
-            [Readonly] public AudioSource source;
+            [field:SerializeField, Readonly] public string name { get; private set; }
+            [field:SerializeField, Readonly] public string recordAudioName { get; private set; }
+            [field:SerializeField, Readonly] public AudioSource source { get; private set; }
             
             public bool isPlaying => source.isPlaying;
             public bool isPaused => source.isPlaying && source.time > 0f;
             
-            public Entry SetVolume(float volume)
+            public Entry(AudioSource audioSource, string name)
             {
-                source.volume = volume;
-                return this;
+                this.source = audioSource;
+                this.name = name;
             }
             
-            public Entry SetLoop(bool loop)
-            {
-                source.loop = loop;
-                return this;
-            }
+            // ====================================================================================================
+            // ====================================================================================================
             
             public Entry Play(float delay = 0f)
             {
                 if(delay <= 0f) source.Play();
                 else source.PlayDelayed(delay);
-                return this;
-            }
-            
-            public Entry SetMixer(AudioMixer mixer, string name, int i = 0)
-            {
-                source.outputAudioMixerGroup = mixer.FindMatchingGroups(name)[i];
                 return this;
             }
             
@@ -73,9 +65,42 @@ namespace Prota.Unity
                 return this;
             }
             
+            // ====================================================================================================
+            // ====================================================================================================
+            
+            
+            public Entry SetVolume(float volume)
+            {
+                source.volume = volume;
+                return this;
+            }
+            
+            public Entry SetLoop(bool loop)
+            {
+                source.loop = loop;
+                return this;
+            }
+            
+            public Entry SetMixer(AudioMixer mixer, string name, int i = 0)
+            {
+                source.outputAudioMixerGroup = mixer.FindMatchingGroups(name)[i];
+                return this;
+            }
+            
             public Entry SetPlaybackTime(float time)
             {
                 source.time = time;
+                return this;
+            }
+            
+            public Entry SetAudio(string audioName)
+            {
+                if(audioName != null && getAudioResource(audioName).PassValue(out var audioClip) != null)
+                {
+                    source.clip = audioClip;
+                }
+                else throw new Exception($"Audio clip not found: [{ audioName }]");
+                
                 return this;
             }
         }
@@ -99,21 +124,16 @@ namespace Prota.Unity
         // ====================================================================================================
         // ====================================================================================================
         
-        public Entry GetAudio(string name, string audioName)
+        public Entry GetAudioEntry(string name)
         {
             var entry = entries.Find(e => e.name == name);
             if(entry == null)
             {
-                entry = new Entry();
-                entry.name = name;
-                var src = entry.source = gameObject.AddComponent<AudioSource>();
+                var src = gameObject.AddComponent<AudioSource>();
                 src.playOnAwake = false;
-                entry.source.clip = getAudioResource(audioName);
-                if(entry.source.clip == null)
-                    throw new Exception($"Audio clip not found: [{ audioName }]");
+                entry = new Entry(src, name);
                 entries.Add(entry);
             }
-            
             return entry;
         }
         
@@ -130,24 +150,33 @@ namespace Prota.Unity
     {
         public static AudioSourceController.Entry Audio(this GameObject g, string audioName)
         {
-            return AudioSourceController.GetOrAdd(g).GetAudio(audioName, audioName);
+            return AudioSourceController.GetOrAdd(g).GetAudioEntry("main").SetAudio(audioName);
         }
         
         public static AudioSourceController.Entry Audio(this Component c, string audioName)
         {
-            return AudioSourceController.GetOrAdd(c.gameObject).GetAudio(audioName, audioName);
+            return AudioSourceController.GetOrAdd(c.gameObject).GetAudioEntry("main").SetAudio(audioName);
         }
         
         public static AudioSourceController.Entry Audio(this GameObject g, string name, string audioName)
         {
-            return AudioSourceController.GetOrAdd(g).GetAudio(name, audioName);
+            return AudioSourceController.GetOrAdd(g).GetAudioEntry(name).SetAudio(audioName);
         }
         
         public static AudioSourceController.Entry Audio(this Component c, string name, string audioName)
         {
-            return AudioSourceController.GetOrAdd(c.gameObject).GetAudio(name, audioName);
+            return AudioSourceController.GetOrAdd(c.gameObject).GetAudioEntry(name).SetAudio(audioName);
         }
         
+        public static AudioSourceController.Entry AudioByName(this GameObject g, string name)
+        {
+            return AudioSourceController.GetOrAdd(g).GetAudioEntry(name);
+        }
+        
+        public static AudioSourceController.Entry AudioByName(this Component c, string name)
+        {
+            return AudioSourceController.GetOrAdd(c.gameObject).GetAudioEntry(name);
+        }
     }
     
     
