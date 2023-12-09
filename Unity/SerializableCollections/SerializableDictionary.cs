@@ -181,6 +181,12 @@ namespace Prota
             AddInternal(key, value);
         }
         
+        public void Add(TKey key, TValue value, bool ignoreDuplicate)
+        {
+            if(ignoreDuplicate) this[key] = value;
+            else Add(key, value);
+        }
+        
         public void AddRange(IEnumerable<KeyValuePair<TKey, TValue>> collection)
         {
             foreach(var i in collection) Add(i.Key, i.Value);

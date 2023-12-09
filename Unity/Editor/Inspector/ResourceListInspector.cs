@@ -20,6 +20,23 @@ namespace Prota.Editor
             var data = list.resources;
             var d = data.ToList();
             
+            var ignoreSubAsset = new PropertyField(serializedObject.FindProperty("ignoreSubAsset"));
+            root.AddChild(ignoreSubAsset);
+            ignoreSubAsset.RegisterValueChangeCallback(e => {
+                ResourceListUpdater.UpdateResourceList(list);
+            });
+            
+            var ignoreDuplicateAsset = new PropertyField(serializedObject.FindProperty("ignoreDuplicateAsset"));
+            root.AddChild(ignoreDuplicateAsset);
+            ignoreDuplicateAsset.RegisterValueChangeCallback(e => {
+                ResourceListUpdater.UpdateResourceList(list);
+            });
+            
+            
+            root.AddChild(new Button(() => {
+                ResourceListUpdater.UpdateResourceList(list);
+            }){ text = "refresh" });
+            
             root.AddChild(new ListView(d, -1, MakeItem, BindItem).PassValue(out var ll).SetMaxHeight(500));
             
             return root;

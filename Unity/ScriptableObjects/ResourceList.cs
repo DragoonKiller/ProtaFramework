@@ -37,6 +37,10 @@ namespace Prota.Unity
         public class _Entry : SerializableDictionary<string, UnityEngine.Object> { }
         [SerializeField] public _Entry resources;
         
+        public bool ignoreSubAsset;
+        
+        public bool ignoreDuplicateAsset;
+        
         public bool HasResource(string name)
         {
             return resources.ContainsKey(name.GetLowerStr());

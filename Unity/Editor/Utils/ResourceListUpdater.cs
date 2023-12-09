@@ -64,12 +64,14 @@ namespace Prota.Editor
         
         static void UpdateAllNeedsToUpdate()
         {
-            foreach(var r in listsNeedToUpdate)
-            {
-                var n = AssetTree.instance.root.FindFullPath(AssetDatabase.GetAssetPath(r));
-                UpdateResourcesList(n);
-            }
+            foreach(var resList in listsNeedToUpdate) UpdateResourceList(resList);
             listsNeedToUpdate.Clear();
+        }
+        
+        public static void UpdateResourceList(ResourceList resList)
+        {    
+            var node = AssetTree.instance.root.FindFullPath(AssetDatabase.GetAssetPath(resList));
+            UpdateResourcesList(node);
         }
         
         static void UpdateProtaResource()
@@ -141,7 +143,10 @@ namespace Prota.Editor
             }
             
             var originList = new ResourceList._Entry();
-            foreach(var i in resList.resources) originList.Add(i.Key, i.Value);
+            foreach(var i in resList.resources)
+            {
+                originList.Add(i.Key, i.Value);
+            }
             resList.resources.Clear();
             FindRecursive(r.parent);
             
@@ -162,26 +167,31 @@ namespace Prota.Editor
             if(mainAsset == null) return;
             var allAssets = null as UnityEngine.Object[];
             
-            
-            if(assetType == typeof(SceneAsset))
-            {
-                allAssets = new UnityEngine.Object[] { mainAsset };
-            }
-            else if(assetType == typeof(GameObject))
-            {
-                allAssets = new UnityEngine.Object[] { mainAsset };
-            }
-            else if(assetType == typeof(TextAsset))
+            if(r.ignoreSubAsset)
             {
                 allAssets = new UnityEngine.Object[] { mainAsset };
             }
             else
             {
-                allAssets = AssetDatabase.LoadAllAssetsAtPath(assetPath)
-                .Where(x => x.hideFlags == HideFlags.None || x.hideFlags == HideFlags.NotEditable)
-                .ToArray();
+                if(assetType == typeof(SceneAsset))
+                {
+                    allAssets = new UnityEngine.Object[] { mainAsset };
+                }
+                else if(assetType == typeof(GameObject))
+                {
+                    allAssets = new UnityEngine.Object[] { mainAsset };
+                }
+                else if(assetType == typeof(TextAsset))
+                {
+                    allAssets = new UnityEngine.Object[] { mainAsset };
+                }
+                else
+                {
+                    allAssets = AssetDatabase.LoadAllAssetsAtPath(assetPath)
+                    .Where(x => x.hideFlags == HideFlags.None || x.hideFlags == HideFlags.NotEditable)
+                    .ToArray();
+                }
             }
-            
             
             foreach(var a in allAssets)
             {
@@ -203,7 +213,8 @@ namespace Prota.Editor
                         name = pathToAsset + ":" + a.name;
                     }
                 }
-                r.resources.Add(name.ToLower(), a);
+                
+                r.resources.Add(name.ToLower(), a, r.ignoreDuplicateAsset);
             }
         }
     }
