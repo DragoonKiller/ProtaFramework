@@ -41,6 +41,10 @@ namespace Prota.Unity
         
         public bool ignoreDuplicateAsset;
         
+        [Tooltip(@"用$main代表文件名称,用$sub代表子资源名称. 例如""$main.$sub"" 会把贴图 playerMove 里的 frame1 sprite 命名为 playerMove.frame1")]
+        public string subAssetNamingFormat = "$main.$sub";
+        
+        
         public bool HasResource(string name)
         {
             return resources.ContainsKey(name.GetLowerStr());

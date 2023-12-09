@@ -195,23 +195,16 @@ namespace Prota.Editor
             
             foreach(var a in allAssets)
             {
-                var pathToAsset = a.name;
+                var recordName = a.name;
                 var name = null as string;
                 
                 if(mainAsset == a)
                 {
-                    name = pathToAsset;
+                    name = recordName;
                 }
                 else
                 {
-                    if(a.name == pathToAsset)
-                    {
-                        name = ":" + pathToAsset;
-                    }
-                    else
-                    {
-                        name = pathToAsset + ":" + a.name;
-                    }
+                    name = r.subAssetNamingFormat.Replace("$main", f.nameNoExt).Replace("$sub", recordName);
                 }
                 
                 r.resources.Add(name.ToLower(), a, r.ignoreDuplicateAsset);

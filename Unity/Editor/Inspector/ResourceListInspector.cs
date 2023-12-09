@@ -22,15 +22,22 @@ namespace Prota.Editor
             
             var ignoreSubAsset = new PropertyField(serializedObject.FindProperty("ignoreSubAsset"));
             root.AddChild(ignoreSubAsset);
-            ignoreSubAsset.RegisterValueChangeCallback(e => {
-                ResourceListUpdater.UpdateResourceList(list);
-            });
-            
             var ignoreDuplicateAsset = new PropertyField(serializedObject.FindProperty("ignoreDuplicateAsset"));
             root.AddChild(ignoreDuplicateAsset);
+            var subFormat = new PropertyField(serializedObject.FindProperty("subAssetNamingFormat"));
+            
+            root.AddChild(subFormat);
+            ignoreSubAsset.RegisterValueChangeCallback(e => {
+                subFormat.SetVisible(!e.changedProperty.boolValue);
+                ResourceListUpdater.UpdateResourceList(list);
+            });
             ignoreDuplicateAsset.RegisterValueChangeCallback(e => {
                 ResourceListUpdater.UpdateResourceList(list);
             });
+            subFormat.RegisterValueChangeCallback(e => {
+                ResourceListUpdater.UpdateResourceList(list);
+            });
+            subFormat.SetVisible(!serializedObject.FindProperty("ignoreSubAsset").boolValue);
             
             
             root.AddChild(new Button(() => {
