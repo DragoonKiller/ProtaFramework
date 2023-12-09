@@ -7,7 +7,8 @@ namespace Prota
     {
         public static ConcurrentPool<List<T>>.Handle Get<T>(out List<T> value)
         {
-            ConcurrentPool<List<T>>.instance.onReturn = list => list.Clear();
+            if(ConcurrentPool<List<T>>.instance.onReturn == null)
+                ConcurrentPool<List<T>>.instance.onReturn = list => list.Clear();
             var handle = ConcurrentPool<List<T>>.instance.Get();
             value = handle.value;
             return handle;
@@ -18,7 +19,8 @@ namespace Prota
     {
         public static ConcurrentPool<HashSet<T>>.Handle Get<T>(out HashSet<T> value)
         {
-            ConcurrentPool<HashSet<T>>.instance.onReturn = list => list.Clear();
+            if(ConcurrentPool<List<T>>.instance.onReturn == null)
+                ConcurrentPool<HashSet<T>>.instance.onReturn = list => list.Clear();
             var handle = ConcurrentPool<HashSet<T>>.instance.Get();
             value = handle.value;
             return handle;
@@ -29,7 +31,8 @@ namespace Prota
     {
         public static ConcurrentPool<Dictionary<K, V>>.Handle Get<K, V>(out Dictionary<K, V> value)
         {
-            ConcurrentPool<Dictionary<K, V>>.instance.onReturn = list => list.Clear();
+            if(ConcurrentPool<Dictionary<K, V>>.instance.onReturn == null)
+                ConcurrentPool<Dictionary<K, V>>.instance.onReturn = list => list.Clear();
             var handle = ConcurrentPool<Dictionary<K, V>>.instance.Get();
             value = handle.value;
             return handle;
