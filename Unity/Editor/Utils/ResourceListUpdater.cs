@@ -16,7 +16,7 @@ namespace Prota.Editor
         static readonly List<ResourceList> listsNeedToUpdate = new List<ResourceList>();
         
         [MenuItem("ProtaFramework/Resources/Refresh All Resource List")]
-        static void RefreshAllResourceList()
+        public static void RefreshAllResourceList()
         {
             listsNeedToUpdate.AddRange(Resources.LoadAll<ResourceList>("/"));
             UpdateAllNeedsToUpdate();

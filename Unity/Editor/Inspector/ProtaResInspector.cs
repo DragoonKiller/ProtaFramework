@@ -20,6 +20,10 @@ namespace Prota.Editor
             
             // d.Select(x => $"{x.Key} :: {x.Value}").ToStringJoined().LogError();
             
+            root.AddChild(new Button(() => {
+                ResourceListUpdater.RefreshAllResourceList();
+            }) { text = "Update All" });
+            
             root.AddChild(new ListView(d, -1, MakeItem, BindItem).PassValue(out var ll).SetMaxHeight(500));
             
             return root;
