@@ -174,6 +174,7 @@ namespace Prota.Unity
                 {
                     physicsTimer += Time.fixedDeltaTime;
                     Physics2D.Simulate(Time.fixedDeltaTime * fixedTimeScale);
+                    fixedUpdateFrame += 1;
                     isInFixedUpdate = true;
                     foreach(var s in systems) s.InvokeFixedUpdate();
                     isInFixedUpdate = false;

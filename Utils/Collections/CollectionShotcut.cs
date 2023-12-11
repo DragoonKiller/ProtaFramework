@@ -201,5 +201,20 @@ namespace Prota
             if(s.Count == 0) this.Remove(key);
             return res;
         }
+        
+        public C GetElementOrDefault(A key, B key2)
+        {
+            if(!this.TryGetValue(key, out var s)) return default;
+            if(s.TryGetValue(key2, out var res)) return res;
+            return default;
+        }
+        
+        public bool TryGetElement(A key, B key2, out C res)
+        {
+            res = default;
+            if(!this.TryGetValue(key, out var s)) return false;
+            if(s.TryGetValue(key2, out res)) return true;
+            return false;
+        }
     }
 }

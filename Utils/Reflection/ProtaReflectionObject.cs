@@ -4,8 +4,6 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using System.Net.Http.Headers;
-using System.Diagnostics;
 
 namespace Prota
 {

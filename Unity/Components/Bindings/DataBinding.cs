@@ -19,10 +19,11 @@ namespace Prota.Unity
         
         [Serializable]
         public class _Data : SerializableDictionary<string, GameObject> {}
-        [SerializeField] _Data data = new _Data();
+        [SerializeField] _Data data = new();
         
         public char featureCharacter = '$';
         
+        public HashMapDict<string, Type, Component> componentCache = null;
         
         public GameObject this[string name] => Get(name);
         
@@ -33,12 +34,16 @@ namespace Prota.Unity
             return res.gameObject;
         }
         
-        public T Get<T>(string name)
+        public T Get<T>(string name) where T: Component
         {
-            if(!data.TryGetValue(name, out var res))
+            if(componentCache != null && componentCache.TryGetElement(name, typeof(T), out var res))
+                return (T)res;
+            if(!data.TryGetValue(name, out var g))
                 throw new Exception($"DataBinding[{ this.GetNamePath() }] 找不到 GameObject { name }");
-            if(!res.TryGetComponent<T>(out var c))
+            if(!g.TryGetComponent<T>(out var c))
                 throw new Exception($"DataBinding[{ this.GetNamePath() }] 找到了GameObject { name } 但是找不到组件 { typeof(T).Name }");
+            if(componentCache == null) componentCache = new HashMapDict<string, Type, Component>();
+            componentCache.SetElement(name, typeof(T), c);
             return c;
         }
         
@@ -131,10 +136,10 @@ namespace Prota.Unity
         public static GameObject GetBinding(this Component self, string name)
             => self.gameObject.GetBinding(name);
         
-        public static T GetBinding<T>(this GameObject self, string name)
+        public static T GetBinding<T>(this GameObject self, string name) where T: Component
             => self.DataBinding().Get<T>(name);
         
-        public static T GetBinding<T>(this Component self, string name)
+        public static T GetBinding<T>(this Component self, string name) where T: Component
             => self.gameObject.GetBinding<T>(name);
         
         public static bool GetBinding(this GameObject self, string name, out GameObject res)

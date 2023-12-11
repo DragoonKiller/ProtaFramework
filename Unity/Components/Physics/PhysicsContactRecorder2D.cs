@@ -64,43 +64,33 @@ namespace Prota.Unity
                 self.AssertNotNull();
                 c.AssertNotNull();
                 
-                selfCollider = self.GetComponent<Collider2D>();
-                var rigid = self.GetComponent<Rigidbody2D>();
+                GetColliderAndRigidbody(self, out selfCollider, out var selfHasCollider, out var selfRigid, out var selfHasRigid);
+                GetColliderAndRigidbody(c.gameObject, out var otherCollider, out var otherHasCollider, out var otherRigid, out var otherHasRigid);
                 
-                var v1 = rigid != null ? rigid.velocity
-                    : selfCollider != null ? selfCollider.attachedRigidbody.velocity : Vector2.zero;
-                var v2 = c.attachedRigidbody != null ? c.attachedRigidbody.velocity : Vector2.zero;
+                var v1 = selfHasRigid ? selfRigid.velocity : Vector2.zero;
+                var v2 = otherHasRigid ? otherRigid.velocity : Vector2.zero;
                 this.relativeVelocity = v2 - v1;
-                
-                var myPosition = rigid == null ? selfCollider.transform.position.ToVec2() : rigid.position;
-                
-                this.normal = myPosition.To(c.attachedRigidbody.position).normalized;
-                this.contactPoint = (myPosition + c.attachedRigidbody.position) / 2;
-                
-                if(selfCollider == null && rigid == null) throw new Exception($"GameObject [{self}] has no Collider2D or Rigidbody2D.");
-                
-                if(rigid == null) return;
-                
-                // 要从 rigid 找到碰到了哪个 collider. 如果汇报的就是 collider 那么就不用找了.
-                for(int n = rigid.GetAttachedColliders(colliderBuffer), i = 0; i < n && selfCollider == null; i++)
-                {
-                    var cc = ContactEntry2D.colliderBuffer[i];
-                    if(n == 1)
-                    {
-                        selfCollider = cc;
-                        break;
-                    }
-                    
-                    for(int j = cc.GetContacts(contactBuffer); j >= 0  && selfCollider == null; j--)
-                    {
-                        var cx = ContactEntry2D.contactBuffer[j];
-                        if(cx == cc) selfCollider = cc;
-                    }
-                }
-                
-                selfCollider.AssertNotNull();
+                this.normal = Vector2.zero;
+                this.contactPoint = Vector2.zero;
             }
             
+            
+            static void GetColliderAndRigidbody(GameObject self,
+                out Collider2D c, out bool hasCollider,
+                out Rigidbody2D r, out bool hasRigid)
+            {
+                hasCollider = self.TryGetComponent<Collider2D>(out c);
+                hasRigid = self.TryGetComponent<Rigidbody2D>(out r);
+                if(hasRigid) return;
+                if(hasCollider)
+                {
+                    r = c.attachedRigidbody;
+                    hasRigid = r != null;
+                    return;
+                }
+                
+                throw new Exception($"GameObject [{self}] has no Collider2D or Rigidbody2D.");
+            }
         }
         
         // 有些时候, 例如修改 rigidbody layer 的时候, 会触发假的进入/退出事件.
