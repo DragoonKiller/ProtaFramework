@@ -9,8 +9,14 @@ namespace Prota.Unity
     令 anchorPos 是物件的初始位置.
     设它和相机 camera.pos 的相对位置是 d = object.pos - camera.pos.
     这个相对位置 d 会乘以一个数字 factor, 作为物件的最终相对相机的位置.
-    越远的物体 factor 越小, 物件移动越慢. 比人物更远则 factor < 1.
-    越近的物体 factor 越大, 物件移动越快. 比人物更近则 factor > 1.
+    factor = -∞ : 物体和相机处于同一平面.
+    factor < 0 : 物体在人物和相机之间.
+    factor = 0 : 物体在人物所处平面.
+    0 < factor < 1 : 物体比人物更远.
+    factor = 1: 物体在无穷远处.
+    公式为 factor = 1 - cameraDistance / distance.
+    distance 是相机与物体的距离.
+    cameraDistance 是相机与人物的距离.
     */
     
     [ExecuteAlways]
@@ -28,7 +34,7 @@ namespace Prota.Unity
             var camPos = ParallaxCamera.instance.transform.position.ToVec2();
             var deltaPos = camPos - myPos;
             deltaPos *= factor;
-            contentRoot.transform.localPosition = -deltaPos;
+            contentRoot.transform.localPosition = deltaPos;
         }
         
     }
