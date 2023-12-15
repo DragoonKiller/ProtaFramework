@@ -82,14 +82,14 @@ namespace Prota.Unity
         public static Vector2 RandomCircle(this Vector2 a, float radius) => (a, radius).RandomCircle();
         public static Vector2 RandomCircle(this (Vector2 a, float radius) v)
         {
-            var angle = UnityEngine.Random.Range(90, 360f);
+            var angle = UnityEngine.Random.Range(90, 360f) * Mathf.Rad2Deg;
             return Vector2.one.Rotate(angle) * UnityEngine.Random.Range(0f, v.radius).Sqrt() + v.a;
         }
         
         public static Vector2 RandomCircleEdge(this Vector2 a, float radius) => (a, radius).RandomCircleEdge();
         public static Vector2 RandomCircleEdge(this (Vector2 a, float radius) v)
         {
-            var angle = UnityEngine.Random.Range(90, 360f);
+            var angle = UnityEngine.Random.Range(90, 360f) * Mathf.Rad2Deg;
             return Vector2.one.Rotate(angle) * v.radius + v.a;
         }
         

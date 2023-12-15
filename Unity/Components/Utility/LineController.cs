@@ -26,7 +26,7 @@ namespace Prota.Unity
                 rd.positionCount = verticesCount;
                 for(int i = 0; i < rd.positionCount; i++)
                 {
-                    var angle = Mathf.PI * 2f * i / rd.positionCount;
+                    var angle = 360f * i / rd.positionCount;
                     rd.SetPosition(i, Vector2.one.Rotate(angle).ToVec3() * circleRadius);
                 }
                 

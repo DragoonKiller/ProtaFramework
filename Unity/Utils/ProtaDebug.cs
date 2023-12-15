@@ -2,10 +2,22 @@
 using UnityEngine;
 using Prota.Unity;
 
-namespace Prota.Editor
+namespace Prota.Unity
 {
-    public static partial class Log
+    public static partial class ProtaDebug
     {
+        public static void DrawArrow(Vector3 from, Vector3 to, Color? _color = null, float? _duration = null, float? _size = null)
+        {
+            var color = _color ?? Color.green;
+            var duration = _duration ?? 0;
+            var size = _size ?? 0.1f;
+            Debug.DrawLine(from, to, color, duration);
+            var arrowSide = to.To(from).normalized.ToVec2() * size;
+            Debug.DrawLine(to, to + arrowSide.Rotate(30).ToVec3(), color, duration);
+            Debug.DrawLine(to, to + arrowSide.Rotate(-30).ToVec3(), color, duration);
+        }
+        
+        
         public static void DrawDirLine(Vector3 from, Vector3 to, Color? color = null, float? duration = null)
         {
             if(color == null) color = Color.green;

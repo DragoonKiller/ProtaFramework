@@ -33,7 +33,7 @@ namespace Prota.Unity
         
         Vector3 restMove = Vector3.zero;
         
-        Vector3 randomMove => Vector2.up.Rotate((0f, Mathf.PI * 2f).Random()) * amplitude * (strength.Pow(energy) - 1).Max(0);
+        Vector3 randomMove => Vector2.up.Rotate((0f, 360f).Random()) * amplitude * (strength.Pow(energy) - 1).Max(0);
         
         public void AddEnergy(float e)
         {

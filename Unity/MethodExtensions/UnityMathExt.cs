@@ -350,12 +350,12 @@ namespace Prota.Unity
         public static Vector2 Clamp(this Vector2 a, Vector2 min, Vector2 max) => new Vector2(a.x.Clamp(min.x, max.x), a.y.Clamp(min.y, max.y));
         public static Vector3 Clamp(this Vector3 a, Vector3 min, Vector3 max) => new Vector3(a.x.Clamp(min.x, max.x), a.y.Clamp(min.y, max.y), a.z.Clamp(min.z, max.z));
         
-        public static Vector2 Rotate(this Vector2 a, float angleInRadian)
+        public static Vector2 Rotate(this Vector2 a, float angleInDegree)
         {
-            return new Vector2(
-                a.x * angleInRadian.Cos() + a.y * angleInRadian.Sin(),
-                -a.x * angleInRadian.Sin() + a.y * angleInRadian.Cos()
-            );
+            var rad = angleInDegree * Mathf.Deg2Rad;
+            var cos = Mathf.Cos(rad);
+            var sin = Mathf.Sin(rad);
+            return new Vector2(a.x * cos - a.y * sin, a.x * sin + a.y * cos);
         }
         
         
