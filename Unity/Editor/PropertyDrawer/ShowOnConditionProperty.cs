@@ -28,11 +28,13 @@ namespace Prota.Editor
         {
             var attr = fieldInfo.GetCustomAttribute<ShowWhenAttribute>();
             var target = property.serializedObject.targetObject;    // 这个 object 是一个 Component.
-            bool hasValue = target.ProtaReflection().TryGet(attr.name, out object value);
-            bool shouldDraw = true;
-            if (hasValue && value is bool b) shouldDraw = b;
-            else if (hasValue && value is object o) shouldDraw = o != null;
-            return shouldDraw;
+            var refTarget = target.ProtaReflection();
+            bool hasValue = refTarget.TryGet(attr.name, out object value);
+            if(hasValue && value is bool b && b) return true;
+            if(hasValue && value is object o && o != null) return true;
+            bool hasMethod = refTarget.type.HasMethod(attr.name);
+            if(hasMethod && refTarget.Call(attr.name).PassValue(out var st) != null && st is bool k && k) return true;
+            return false;
         }
     }
 }

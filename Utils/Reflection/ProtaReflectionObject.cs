@@ -35,7 +35,7 @@ namespace Prota
         {
             if(type.HasProperty(name)) return type.GetProperty(name).GetValue(target);
             if(type.HasField(name)) return type.GetField(name).GetValue(target);
-            throw new Exception($"member {name} not found");
+            throw new ProtaReflectionFailException($"member {name} not found");
         }
         
         public bool TryGet<T>(string name, out T value)
@@ -206,6 +206,11 @@ namespace Prota
             }
             
             throw new Exception($"specific method [{ name }({ argTypes.ToStrings().Join(",") })] not found");
+        }
+        
+        public T Call<T>(string name, params object[] args)
+        {
+            return (T)Call(name, args);
         }
         
         public string AllPropertiesAndValuesToString()
