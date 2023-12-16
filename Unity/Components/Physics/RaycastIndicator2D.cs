@@ -4,6 +4,8 @@ using Prota;
 using UnityEngine;
 using System.Linq;
 using System;
+using PlasticGui.Help.Conditions;
+using UnityEditor;
 
 namespace Prota.Unity
 {
@@ -23,6 +25,8 @@ namespace Prota.Unity
         
         public RaycastIndicatorType type;
         
+        RaycastHit2D[] hitsCache;
+        
         [ShowWhen("BoxSelected")] public BoxCollider2D indicatorBox;
         public Vector2 boxSize => indicatorBox.size;
         public Vector3 boxPosition
@@ -35,12 +39,6 @@ namespace Prota.Unity
         
         }
         public float boxRotation => indicatorBox.transform.rotation.eulerAngles.z;
-        
-        
-        #if UNITY_EDITOR
-        [Header("Debug")]
-        public Collider2D colliderHit; 
-        #endif
         
         public bool Cast(out RaycastHit2D hit)
         {
@@ -59,10 +57,33 @@ namespace Prota.Unity
             }
         }
         
+        public int CastAll(out RaycastHit2D[] hits)
+        {
+            if(hitsCache == null) hitsCache = new RaycastHit2D[32];
+            return CastAllNonAlloc(hits = hitsCache);
+        }
+        
+        public int CastAllNonAlloc(RaycastHit2D[] hits)
+        {
+            switch(type)
+            {
+                case RaycastIndicatorType.Line:
+                    return Physics2D.RaycastNonAlloc(transform.position, relativePosition, hits, relativePosition.magnitude, layerMask);
+                    
+                case RaycastIndicatorType.Box:
+                    return Physics2D.BoxCastNonAlloc(boxPosition, boxSize, boxRotation, relativePosition, hits, relativePosition.magnitude, layerMask);
+                    
+                default:
+                    throw new NotImplementedException($" RaycastIndicator 2D at [{this.GetNamePath()}] :: [{ type }]");
+            }
+        }
+        
         
         #if UNITY_EDITOR
         void Update()
         {
+            if(!Selection.gameObjects.Contains(this.gameObject)) return;
+            
             if(type == RaycastIndicatorType.Line)
             {
                 var myPos = transform.position;
@@ -70,25 +91,24 @@ namespace Prota.Unity
                 if(Cast(out var hit))
                 {
                     var hitPoint = hit.point.ToVec3(myPos.z);
-                    ProtaDebug.DrawArrow(myPos, hitPoint, Color.green);
+                    ProtaDebug.DrawArrow(myPos, hitPoint, Color.green.WithA(0.5f));
                     ProtaDebug.DrawArrow(hitPoint, hitPoint + hit.normal.ToVec3() * 0.4f, Color.blue);
-                    colliderHit = hit.collider;
                 }
             }
             else if(type == RaycastIndicatorType.Box)
             {
                 ProtaDebug.DrawArrow(boxPosition, boxPosition + relativePosition.ToVec3(), Color.red);
-                ProtaDebug.DrawBox2D(boxPosition, boxSize, boxRotation, Color.yellow);
+                ProtaDebug.DrawBox2D(boxPosition, boxSize, boxRotation, Color.red.WithA(0.5f));
+                ProtaDebug.DrawBox2D(boxPosition + relativePosition.ToVec3(), boxSize, boxRotation, Color.red.WithA(0.5f));
+                
                 if(Cast(out var hit))
                 {
                     var hitPoint = hit.point.ToVec3(boxPosition.z);
-                    ProtaDebug.DrawArrow(boxPosition, hitPoint, Color.green);
-                    ProtaDebug.DrawArrow(hitPoint, hitPoint + hit.normal.ToVec3() * 0.4f, Color.blue);
+                    ProtaDebug.DrawArrow(boxPosition, hitPoint, Color.green.WithA(0.5f));
+                    ProtaDebug.DrawArrow(hitPoint, hitPoint + hit.normal.ToVec3() * 0.4f, Color.blue.WithA(0.5f));
                     
                     var hitPos = boxPosition + hit.distance * relativePosition.normalized.ToVec3();
                     ProtaDebug.DrawBox2D(hitPos, boxSize, 0, Color.blue);
-                    
-                    colliderHit = hit.collider;
                 }
             }
         }

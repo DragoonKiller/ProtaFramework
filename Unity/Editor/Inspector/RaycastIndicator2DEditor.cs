@@ -5,8 +5,21 @@ using UnityEngine;
 
 
 [CustomEditor(typeof(RaycastIndicator2D))]
+[CanEditMultipleObjects]
 public class RaycastIndicator2DInspector : Editor
 {
+    public override void OnInspectorGUI()
+    {
+        DrawDefaultInspector();
+        GUILayout.Label("Debug");
+        var raycastIndicator = (RaycastIndicator2D)target;
+        raycastIndicator.Cast(out var hit);
+        
+        GUI.enabled = false;
+        EditorGUILayout.ObjectField("hit", hit.collider, typeof(Collider2D), true);
+        GUI.enabled = true;
+    }
+    
     public void OnSceneGUI()
     {
         var raycastIndicator = (RaycastIndicator2D)target;

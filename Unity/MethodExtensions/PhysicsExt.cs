@@ -160,5 +160,28 @@ namespace Prota.Unity
         // ====================================================================================================
         // ====================================================================================================
         
+        public static Rigidbody2D SetVx(this Rigidbody2D rd, float x)
+        {
+            rd.velocity = rd.velocity.WithX(x);
+            return rd;
+        }
+        
+        public static Rigidbody2D SetVy(this Rigidbody2D rd, float y)
+        {
+            rd.velocity = rd.velocity.WithY(y);
+            return rd;
+        }
+        
+        public static Rigidbody2D GetVx(this Rigidbody2D rd, out float x)
+        {
+            x = rd.velocity.x;
+            return rd;
+        }
+        
+        public static Rigidbody2D GetVy(this Rigidbody2D rd, out float y)
+        {
+            y = rd.velocity.y;
+            return rd;
+        }
     }
 }
