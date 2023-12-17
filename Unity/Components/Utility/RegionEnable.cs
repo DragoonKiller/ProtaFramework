@@ -26,6 +26,8 @@ namespace Prota.Unity
             if(reference == null) return;
             
             var camera = RegionCamera.instance;
+            if(camera == null) return;
+            
             var cameraInRegion = reference.OverlapPoint(camera.transform.position.ToVec2());
             targets.SetActiveAll(cameraInRegion);
         }

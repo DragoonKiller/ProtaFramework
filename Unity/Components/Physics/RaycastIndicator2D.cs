@@ -4,7 +4,6 @@ using Prota;
 using UnityEngine;
 using System.Linq;
 using System;
-using PlasticGui.Help.Conditions;
 using UnityEditor;
 
 namespace Prota.Unity
@@ -28,7 +27,9 @@ namespace Prota.Unity
         RaycastHit2D[] hitsCache;
         
         [ShowWhen("BoxSelected")] public BoxCollider2D indicatorBox;
-        public Vector2 boxSize => indicatorBox.size;
+        
+        [ShowWhen("BoxSelected")] public Vector2 boxExtend = Vector2.zero;
+        public Vector2 boxSize => indicatorBox.size + boxExtend;
         public Vector3 boxPosition
         {
             get
