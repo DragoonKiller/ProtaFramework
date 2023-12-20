@@ -2,6 +2,8 @@ using System;
 using UnityEngine;
 using UnityEngine.Pool;
 using Prota.Unity;
+using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 namespace Prota.Tween
 {
     // 一个访问 ArrayLinkedList 中 TweenData 元素的外部接口.
@@ -10,6 +12,8 @@ namespace Prota.Tween
         internal readonly ArrayLinkedListKey key;
         
         internal readonly ArrayLinkedList<TweenData> data;
+        
+        public bool valid => key.valid;
         
         public UnityEngine.Object target
         {
@@ -231,9 +235,37 @@ namespace Prota.Tween
         }
         
         // ====================================================================================================
-        // 通用函数.
+        // 异步
         // ====================================================================================================
         
+        // Async-Await support.
+        public Awaiter GetAwaiter() => new Awaiter(this);
+
+
+        public struct Awaiter : INotifyCompletion
+        {
+            TweenHandle handle;
+            
+            public Awaiter(TweenHandle handle) => this.handle = handle;
+            
+            public bool IsCompleted => !handle.valid || handle.isTimeout;
+            
+            public void GetResult() { }
+            
+            public void OnCompleted(Action continuation)
+            {
+                if(!handle.valid) continuation();
+                handle.OnFinish(h => continuation());
+            }
+        }
+
+
+
+        // ====================================================================================================
+        // 通用函数.
+        // ====================================================================================================
+
+
         public float EvaluateRatio(float ratio) => data[key].EvaluateRatio(ratio);
         
         public float Evaluate(float ratio) => data[key].Evaluate(ratio);
@@ -272,4 +304,5 @@ namespace Prota.Tween
         
         public override string ToString() => $"handle[{ key.ToString() }]";
     }
+    
 }
