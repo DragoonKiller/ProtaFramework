@@ -45,7 +45,7 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 256
@@ -77,6 +77,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -89,6 +90,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -101,6 +103,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
@@ -453,22 +456,22 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      Arrows_3: -1292936288
-      Arrows_7: -1991993129
-      Arrows_4: -442236197
-      Arrows_11: -545656807
-      Arrows_8: 940571566
-      Arrows_14: 1198589003
-      Arrows_12: 1223234303
-      Arrows_5: 214586053
-      Arrows_15: -1279529362
-      Arrows_6: -2085527152
-      Arrows_1: -723356097
-      Arrows_9: 333408425
-      Arrows_2: 462671344
-      Arrows_10: -1962759154
-      Arrows_13: -1612762503
       Arrows_0: -1574908760
+      Arrows_1: -723356097
+      Arrows_10: -1962759154
+      Arrows_11: -545656807
+      Arrows_12: 1223234303
+      Arrows_13: -1612762503
+      Arrows_14: 1198589003
+      Arrows_15: -1279529362
+      Arrows_2: 462671344
+      Arrows_3: -1292936288
+      Arrows_4: -442236197
+      Arrows_5: 214586053
+      Arrows_6: -2085527152
+      Arrows_7: -1991993129
+      Arrows_8: 940571566
+      Arrows_9: 333408425
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
