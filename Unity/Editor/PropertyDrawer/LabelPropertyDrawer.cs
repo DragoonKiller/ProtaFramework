@@ -21,7 +21,7 @@ namespace Prota.Editor
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             var labelAttribute = attribute as NameAttribute;
-            base.OnGUI(position, property, new GUIContent(labelAttribute.name));
+            EditorGUI.PropertyField(position, property, new GUIContent(labelAttribute.name));
         }
     }
 }
