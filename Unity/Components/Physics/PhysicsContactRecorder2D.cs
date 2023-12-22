@@ -32,16 +32,16 @@ namespace Prota.Unity
             public bool isExit => type == PhysicsEventType.Exit;
             public bool isStay => type == PhysicsEventType.Stay;
             
-            public ContactEntry2D(PhysicsEventType type, Collision2D c, float time, Vector2 relativeVelocity, Vector2 normal, Vector2 contactPoint)
+            public ContactEntry2D(PhysicsEventType type, Collision2D c, float time)
             {
                 this.type = type;
                 collider = c.collider;
                 collision = c;
                 selfCollider = c.otherCollider;
                 this.time = time;
-                this.relativeVelocity = relativeVelocity;
-                this.normal = normal;
-                this.contactPoint = contactPoint;
+                this.relativeVelocity = c.relativeVelocity;
+                this.normal = c.contactCount == 0 ? Vector2.zero : c.contacts[0].normal;
+                this.contactPoint = c.contactCount == 0 ? Vector2.zero : c.contacts[0].point;
                 this.isTriggerContact = false;
                 
                 #if UNITY_EDITOR
@@ -128,7 +128,7 @@ namespace Prota.Unity
             if(((1 << x.collider.gameObject.layer) & layerMask.value) == 0) return;
             // Debug.LogError($"[{Time.fixedTime}] Enter { this.gameObject } <=> { x.collider.gameObject }");
             colliders.Add(x.collider);
-            events.Add(new ContactEntry2D(PhysicsEventType.Enter, x, Time.fixedTime, x.relativeVelocity, x.contacts[0].normal, x.contacts[0].point));
+            events.Add(new ContactEntry2D(PhysicsEventType.Enter, x, Time.fixedTime));
             onCollisionEnter?.Invoke(x);
         }
         
@@ -137,14 +137,14 @@ namespace Prota.Unity
             if(((1 << x.collider.gameObject.layer) & layerMask.value) == 0) return;
             // Debug.LogError($"[{Time.fixedTime}] Leave { this.gameObject } <=> { x.collider.gameObject }");
             colliders.Remove(x.collider);
-            events.Add(new ContactEntry2D(PhysicsEventType.Exit, x, Time.fixedTime, x.relativeVelocity, Vector2.zero, Vector2.zero));
+            events.Add(new ContactEntry2D(PhysicsEventType.Exit, x, Time.fixedTime));
             onCollisionExit?.Invoke(x);
         }
         
         void OnCollisionStay2D(Collision2D x)
         {
             if(((1 << x.collider.gameObject.layer) & layerMask.value) == 0) return;
-            events.Add(new ContactEntry2D(PhysicsEventType.Stay, x, Time.fixedTime, Vector2.zero, x.contacts[0].normal, x.contacts[0].point));
+            events.Add(new ContactEntry2D(PhysicsEventType.Stay, x, Time.fixedTime));
             onCollisionStay?.Invoke(x);
         }
         

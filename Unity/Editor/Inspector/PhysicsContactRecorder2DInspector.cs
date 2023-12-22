@@ -7,6 +7,7 @@ using Prota.Unity;
 using Prota.Editor;
 using UnityEditor.UIElements;
 using System.Linq;
+using UnityEngine.UI;
 
 namespace Prota.Editor
 {
@@ -35,10 +36,11 @@ namespace Prota.Editor
                 i => {
                     var e = new VisualElement()
                         .SetHorizontalLayout()
-                        .AddChild(new LayerMaskField() { name = "layer" }.PassValue(out var l)
+                        .AddChild(new LayerMaskField() { name = "layer" }
                             .SetWidth(80)
                         )
-                        .AddChild(new ObjectField() { name = "obj" }.PassValue(out var o)
+                        .AddChild(new Label() { name = "type" })
+                        .AddChild(new ObjectField() { name = "obj" }
                             .SetGrow()
                         );
                     list.AddChild(e);
@@ -47,6 +49,7 @@ namespace Prota.Editor
                 (i, e) => {
                     e.Q<LayerMaskField>("layer").value = v[i].gameObject.layer;
                     e.Q<ObjectField>("obj").value = v[i];
+                    e.Q<Label>("type").text = v[i].isTrigger ? "T" : "C";
                     e.SetVisible(true);
                 },
                 (i, e) => {
