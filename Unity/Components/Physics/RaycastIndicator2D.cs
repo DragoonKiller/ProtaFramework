@@ -24,6 +24,8 @@ namespace Prota.Unity
         
         public RaycastIndicatorType type;
         
+        public bool ignoreSelfCollision = true;
+        
         RaycastHit2D[] hitsCache;
         
         [ShowWhen("BoxSelected")] public BoxCollider2D indicatorBox;
@@ -47,11 +49,13 @@ namespace Prota.Unity
             {
                 case RaycastIndicatorType.Line:
                     hit = Physics2D.Raycast(transform.position, relativePosition, relativePosition.magnitude, layerMask);
-                    return hit.collider != null;
+                    return hit.collider != null
+                        && (ignoreSelfCollision || hit.distance > 0);
                     
                 case RaycastIndicatorType.Box:
                     hit = Physics2D.BoxCast(boxPosition, boxSize, boxRotation, relativePosition, relativePosition.magnitude, layerMask);
-                    return hit.collider != null;
+                    return hit.collider != null
+                        && (ignoreSelfCollision || hit.distance > 0);
                     
                 default:
                     throw new NotImplementedException($" RaycastIndicator 2D at [{this.GetNamePath()}] :: [{ type }]");

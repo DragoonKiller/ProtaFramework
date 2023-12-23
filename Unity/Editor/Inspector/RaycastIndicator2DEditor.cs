@@ -17,6 +17,9 @@ public class RaycastIndicator2DInspector : Editor
         
         GUI.enabled = false;
         EditorGUILayout.ObjectField("hit", hit.collider, typeof(Collider2D), true);
+        EditorGUILayout.FloatField("distance", hit.distance);
+        EditorGUILayout.Vector2Field("position", hit.point);
+        EditorGUILayout.Vector2Field("normal", hit.normal);
         GUI.enabled = true;
     }
     
