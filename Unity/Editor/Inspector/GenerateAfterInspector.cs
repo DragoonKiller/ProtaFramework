@@ -4,10 +4,6 @@ using UnityEngine.UIElements;
 using System.Collections.Generic;
 
 using Prota.Unity;
-using Prota.Editor;
-using UnityEditor.UIElements;
-using System.Linq;
-using NUnit.Framework;
 
 namespace Prota.Editor
 {
