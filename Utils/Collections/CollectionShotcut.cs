@@ -174,6 +174,14 @@ namespace Prota
             if(s.Count == 0) this.Remove(key);
             return res;
         }
+        
+        public bool TryGetElement(A key, out B val)
+        {
+            val = default;
+            if(!this.TryGetValue(key, out var s)) return false;
+            val = s.FirstElement();
+            return true;
+        }
     }
     
     // 相当于 Dictionary<A, Dictionary<B, C>>, 提供了额外的函数.

@@ -299,5 +299,13 @@ namespace Prota
             return true;
         }
         
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        public static uint ToUInt(this int x) => unchecked((uint)x);
+        public static int ToInt(this uint x) => unchecked((int)x);
+        public static ulong ToULong(this long x) => unchecked((ulong)x);
+        public static long ToLong(this ulong x) => unchecked((long)x);
+        
     }
 }

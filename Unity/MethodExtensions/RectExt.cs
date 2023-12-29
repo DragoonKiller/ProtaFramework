@@ -4,8 +4,6 @@ using UnityEngine;
 using UnityEditor;
 using System;
 
-using Unity.Burst;
-
 namespace Prota.Unity
 {
     public static partial class MethodExtensions
