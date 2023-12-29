@@ -11,6 +11,8 @@ namespace Prota.VisualEffect
     {
         public float resolutionMult = 0.5f;
         
+        public LayerMask maskForCullObjects;
+        
         public LayerMask mask;
         
         public int iteration = 1;
@@ -103,8 +105,7 @@ namespace Prota.VisualEffect
             
             // 画所有物件的遮挡贴图.
             using var cmd = new CommandBuffer() { name = "ProtaGaussianBlurRenderFeature" };
-            
-            var listDesc = camera.GetRenderListDesc(context, "Universal2D", ~feature.mask);
+            var listDesc = camera.GetRenderListDesc(context, "Universal2D", feature.maskForCullObjects);
             listDesc.overrideMaterial = drawCullArea;
             cmd.SetRenderTarget(cull);
             cmd.ClearRenderTarget(true, true, Color.black.WithA(0));
