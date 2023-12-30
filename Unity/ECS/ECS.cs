@@ -55,27 +55,46 @@ namespace Prota.Unity
         {
             get
             {
-                if(isInFixedUpdate) return Time.fixedTime;
+                if(isInFixedUpdate) return ECS.instance.physicsTimerScaled;
                 if(isInUpdate) return Time.time;
                 if(isInLateUpdate) return Time.time;
                 throw new InvalidOperationException("ECS.time can only be accessed in update or fixed update of ESystem.");
             }
         }
         
-        public static float realtime
+        public static float timeUnscaled
         {
-            get => Time.realtimeSinceStartup;
+            get
+            {
+                if(isInFixedUpdate) return ECS.instance.physicsTimer;
+                if(isInUpdate) return Time.unscaledTime;
+                if(isInLateUpdate) return Time.unscaledTime;
+                throw new InvalidOperationException("ECS.timeUnscaled can only be accessed in update or fixed update of ESystem.");
+            }
         }
+        
+        public static float realtime => Time.realtimeSinceStartup;
         
         // dt 的值会根据当前逻辑在 Update 还是 FixedUpdate 中而变化.
         public static float dt
         {
             get
             {
-                if(isInFixedUpdate) return Time.fixedDeltaTime;
+                if(isInFixedUpdate) return ECS.instance.physiscDeltaTimeScaled;
                 if(isInUpdate) return Time.deltaTime;
                 if(isInLateUpdate) return Time.deltaTime;
                 throw new InvalidOperationException("ECS.dt can only be accessed in update process of ESystem.");
+            }
+        }
+        
+        public static float dtUnsacled
+        {
+            get
+            {
+                if(isInFixedUpdate) return ECS.instance.physicsDeltaTime;
+                if(isInUpdate) return Time.unscaledDeltaTime;
+                if(isInLateUpdate) return Time.unscaledDeltaTime;
+                throw new InvalidOperationException("ECS.dtUnsacle can only be accessed in update process of ESystem.");
             }
         }
         
@@ -123,6 +142,9 @@ namespace Prota.Unity
         // ====================================================================================================
         
         [SerializeField, Readonly] float physicsTimer = 0f;
+        [SerializeField, Readonly] float physicsDeltaTime = 0f;
+        [SerializeField, Readonly] float physicsTimerScaled = 0f;
+        [SerializeField, Readonly] float physiscDeltaTimeScaled = 0f;
         [SerializeField, Readonly] float maxFixedDeltaTime = 0f;
         
         [SerializeReference, ReferenceEditor(flat = true)] List<ESystem> systems = new List<ESystem>();
@@ -167,14 +189,20 @@ namespace Prota.Unity
                 // 保证每次 Update 至少会执行一次 FixedUpdate.
                 var dt = maxFixedDeltaTime;
                 while(dt > Time.deltaTime) dt /= 2;
-                Time.fixedDeltaTime = dt;
+                physicsDeltaTime = dt;
+                physiscDeltaTimeScaled = physicsDeltaTime * fixedTimeScale;
+                
+                (dt != 0).Assert();
+                
+                Time.fixedDeltaTime = physiscDeltaTimeScaled;
                 
                 // 每帧最多 1000 次 fixed update.
-                for(int i = 0; i < 1000 && Time.time - physicsTimer >= Time.fixedDeltaTime; i++)
+                for(int i = 0; i < 1000 && Time.time - physicsTimer >= physicsDeltaTime; i++)
                 {
-                    physicsTimer += Time.fixedDeltaTime;
+                    physicsTimer += physicsDeltaTime;
+                    physicsTimerScaled += physiscDeltaTimeScaled;
                     isInFixedUpdate = true;
-                    Physics2D.Simulate(Time.fixedDeltaTime * fixedTimeScale);
+                    Physics2D.Simulate(physiscDeltaTimeScaled);
                     fixedUpdateFrame += 1;
                     physicsAsyncControl.Step();
                     foreach(var s in systems) s.InvokeFixedUpdate();
