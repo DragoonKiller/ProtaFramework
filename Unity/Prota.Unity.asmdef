@@ -4,7 +4,10 @@
     "references": [
         "Prota.Utils",
         "Unity.Mathematics",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "Unity.Burst",
+        "Unity.Jobs",
+        "Unity.Collections"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

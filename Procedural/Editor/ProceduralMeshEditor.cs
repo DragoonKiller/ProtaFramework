@@ -3,6 +3,9 @@ using UnityEditor;
 
 
 using Prota.Procedural;
+using System;
+using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 
 namespace Prota.Editor
 {
@@ -10,55 +13,12 @@ namespace Prota.Editor
     [CustomEditor(typeof(ProceduralMesh))]
     public class ProceduralMeshEditor : UnityEditor.Editor
     {
-        ProceduralMesh t => target as ProceduralMesh;
-        
-        public void OnSceneGUI()
+        public override void OnInspectorGUI()
         {
-            Undo.RecordObject(t, "SetMesh");
+            var target = this.target as ProceduralMesh;
+            target.RegenMesh();
             
-            var g = t.meshGenerator;
-            
-            if(g is QuadGenerator quadGenerator) QuadGenerator(quadGenerator);
-            
-        }
-        
-        void QuadGenerator(QuadGenerator g)
-        {
-            HandleUtility.AddControl(0, 1000);
-            
-            var modified = false;
-            
-            var a = g.bottomLeft;
-            
-            Vector3 Transform(Vector3 v)
-            {
-                return t.transform.InverseTransformPoint(Handles.PositionHandle(t.transform.TransformPoint(v), Quaternion.identity));
-            }
-            
-            modified |= g.bottomLeft.SetAndCompare(Transform(g.bottomLeft));
-            modified |= g.bottonRight.SetAndCompare(Transform(g.bottonRight));
-            modified |= g.topLeft.SetAndCompare(Transform(g.topLeft));
-            modified |= g.topRight.SetAndCompare(Transform(g.topRight));
-            
-            // g.bottomLeft = Transform(g.bottomLeft);
-            // if(a != g.bottomLeft) modified = true;
-            // 
-            // a = g.bottonRight;
-            // g.bottonRight = Transform(g.bottonRight);
-            // if(a != g.bottonRight) modified = true;
-            // 
-            // a = g.topLeft;
-            // g.topLeft = Transform(g.topLeft);
-            // if(a != g.topLeft) modified = true;
-            // 
-            // a = g.topRight;
-            // g.topRight = Transform(g.topRight);
-            // if(a != g.topRight) modified = true;
-            
-            if(modified)
-            {
-                g.UpdateMesh();
-            }
+            base.OnInspectorGUI();
         }
     }
 }

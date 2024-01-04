@@ -239,5 +239,11 @@ namespace Prota
             var t = list.ProtaReflection();
             return t.Get<T[]>("_items");
         }
+        
+        public static T ElementAtRepeated<T>(this IReadOnlyList<T> list, int i)
+        {
+            return list[i.Repeat(list.Count)];
+        }
+        
     }
 }

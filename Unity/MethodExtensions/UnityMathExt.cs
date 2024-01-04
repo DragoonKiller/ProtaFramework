@@ -155,7 +155,14 @@ namespace Prota.Unity
         }
         
         
-        
+        public static bool PointInTriangle(this Vector2 x, Vector2 a, Vector2 b, Vector2 c)
+        {
+            var areaABC = Mathf.Abs((a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y)) / 2f);
+            var areaPBC = Mathf.Abs((x.x * (b.y - c.y) + b.x * (c.y - x.y) + c.x * (x.y - b.y)) / 2f);
+            var areaPCA = Mathf.Abs((a.x * (x.y - c.y) + x.x * (c.y - a.y) + c.x * (a.y - x.y)) / 2f);
+            var areaPAB = Mathf.Abs((a.x * (b.y - x.y) + b.x * (x.y - a.y) + x.x * (a.y - b.y)) / 2f);
+            return Mathf.Approximately(areaABC, areaPBC + areaPCA + areaPAB);
+        }
         
         public static Vector2Int StepLeft(this Vector2Int a) => new Vector2Int(a.x - 1, a.y);
         public static Vector2Int StepRight(this Vector2Int a) => new Vector2Int(a.x + 1, a.y);
