@@ -13,23 +13,16 @@ namespace Prota.Unity
             List<Vector2> polygon,
             List<int> triangles)
         {
-            void GetIndex(int i, int n, out int prev, out int cur, out int next)
-            {
-                prev = (i - 1).Repeat(n);
-                cur = i.Repeat(n);
-                next = (i + 1).Repeat(n);
-            }
-            
             // Helper function to check if a vertex is an ear
-            bool IsEar(List<Vector2> polygon, List<int> vertices, int prev, int cur, int next)
+            bool IsEar(List<Vector2> polygon,
+                LinkedList<int> vertices,
+                LinkedListNode<int> prev,
+                LinkedListNode<int> cur,
+                LinkedListNode<int> next)
             {
-                var prevIndex = vertices[prev];
-                var curIndex = vertices[cur];
-                var nextIndex = vertices[next];
-                
-                var prevPos = polygon[prevIndex];
-                var curPos = polygon[curIndex];
-                var nextPos = polygon[nextIndex];
+                var prevPos = polygon[prev.Value];
+                var curPos = polygon[cur.Value];
+                var nextPos = polygon[next.Value];
                 
                 // 判断这个三角是不是顺时针.
                 // 是的话这个三角型是凹的, 肯定不是耳朵.
@@ -39,12 +32,12 @@ namespace Prota.Unity
                 
                 
                 // 检查其它点是不是都在这个三角形的外面.
-                for (int i = 0; i < vertices.Count; i++)
+                foreach(var i in vertices)
                 {
-                    if (i == cur || i == prev || i == next)
+                    if (i == prev.Value || i == cur.Value || i == next.Value)
                         continue;
                     
-                    var pos = polygon[vertices[i]];
+                    var pos = polygon[i];
                     if (pos.PointInTriangle(curPos, nextPos, prevPos))
                         return false;
                 }
@@ -62,27 +55,27 @@ namespace Prota.Unity
                 return;
             }
 
-            using var _ = TempList.Get<int>(out var vertexIndex);
-            for(int i = 0; i < vertexCount; i++) vertexIndex.Add(i);
-        
-            for (int i = 0; i < 2 * vertexIndex.Count && vertexIndex.Count >= 3; i++)
+            var vertexIndex = new LinkedList<int>();
+            for(int i = 0; i < vertexCount; i++) vertexIndex.AddLast(i);
+            
+            var curNode = vertexIndex.First;
+            for(int i = 0; i < 99999; i++)
             {
-                GetIndex(i, vertexIndex.Count, out var prevIndex, out var curIndex, out var nextIndex);
+                if (vertexIndex.Count < 3) break;
                 
-                if (IsEar(polygon, vertexIndex, prevIndex, curIndex, nextIndex))
+                var prevNode = curNode == vertexIndex.First ? vertexIndex.Last : curNode.Previous;
+                var nextNode = curNode == vertexIndex.Last ? vertexIndex.First : curNode.Next;
+                
+                if (IsEar(polygon, vertexIndex, prevNode, curNode, nextNode))
                 {
-                    // Debug.LogError($"test ear success: [{vertexIndex[curIndex]}]");
-                    
-                    triangles.Add(vertexIndex[prevIndex]);
-                    triangles.Add(vertexIndex[curIndex]);
-                    triangles.Add(vertexIndex[nextIndex]);
+                    triangles.Add(prevNode.Value);
+                    triangles.Add(curNode.Value);
+                    triangles.Add(nextNode.Value);
 
-                    vertexIndex.RemoveAt(curIndex);
-                    i--;
-                    vertexCount--;
-                    
-                    // vertices[i] = vertices.ElementAtRepeated(i - 1);
+                    vertexIndex.Remove(curNode);
                 }
+                
+                curNode = nextNode;
             }
         }
 

@@ -15,8 +15,11 @@ namespace Prota.Editor
     {
         public override void OnInspectorGUI()
         {
-            var target = this.target as ProceduralMesh;
-            target.RegenMesh();
+            if(Event.current.type == EventType.Layout)
+            {
+                var target = this.target as ProceduralMesh;
+                target.RegenMesh();
+            }
             
             base.OnInspectorGUI();
         }

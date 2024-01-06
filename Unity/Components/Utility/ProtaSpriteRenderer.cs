@@ -1,6 +1,8 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEditor;
 
 namespace Prota.Unity
 {
@@ -11,85 +13,135 @@ namespace Prota.Unity
     public class ProtaSpriteRenderer : MonoBehaviour
     {
         public static Material _cachedMaterial;
-        public static Material cachedMaterial => _cachedMaterial ??= new Material(Shader.Find("Prota/Sprite"));
+        public static Material cachedMaterial
+            => _cachedMaterial == null ? _cachedMaterial = new Material(Shader.Find("Prota/Sprite")) : _cachedMaterial;
         
         MeshRenderer _meshRenderer;
-        public MeshRenderer meshRenderer => _meshRenderer ??= GetComponent<MeshRenderer>();
+        public MeshRenderer meshRenderer
+            => _meshRenderer == null ? _meshRenderer = GetComponent<MeshRenderer>() : _meshRenderer;
         
         MeshFilter _meshFilter;
-        public MeshFilter meshFilter => _meshFilter ??= GetComponent<MeshFilter>();
+        public MeshFilter meshFilter
+            => _meshFilter == null ? _meshFilter = GetComponent<MeshFilter>() : _meshFilter;
         
         RectTransform _rectTransform;
-        public RectTransform rectTransform => _rectTransform ??= GetComponent<RectTransform>();
+        public RectTransform rectTransform
+            => _rectTransform == null ? _rectTransform = GetComponent<RectTransform>() : _rectTransform;
         
         public Rect localRect => rectTransform.rect;
         
         // ====================================================================================================
         // ====================================================================================================
         
-        [Header("Universal")]
+        [Header("Sprite")]
         public Sprite sprite;
-        public Sprite sprite2;
-        public Sprite sprite3;
-        public Sprite sprite4;
         
         
         [Header("Color")]
         [ColorUsage(true, true)] public Color color = Color.white;
+        [ColorUsage(true, true)] public Color addColor = new Color(0, 0, 0, 0);
         [Range(-1, 1)] public float hueOffset = 0;
         [Range(-1, 1)] public float brightnessOffset = 0;
         [Range(-1, 1)] public float saturationOffset = 0;
         [Range(-1, 1)] public float contrastOffset = 0;
         
         
+        [Header("UV")]
+        public bool flipX = false;
+        public bool flipY = false;
+        public Vector2 uvOffset = Vector2.zero;
+        public bool uvOffsetByTime = false;
+        public bool uvOffsetByRealtime = false;
+        
+        [Header("Material")]
+        
+        public UnityEngine.Rendering.BlendMode srcBlendMode = UnityEngine.Rendering.BlendMode.SrcAlpha;
+        public UnityEngine.Rendering.BlendMode dstBlendMode = UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
+        public UnityEngine.Rendering.CompareFunction depthTest = UnityEngine.Rendering.CompareFunction.Always;
+        public OnOffEnum depthWrite = OnOffEnum.On;
+        [Range(0, 1)] public float alphaClip = 0;
+        
         [Header("Render")]
         public int renderQueueOverride = -1;
         public int sortingLayer = 0;
         public int orderInLayer = 0;
-        public uint renderLayerMask = 0;
-        public bool flipX = false;
-        public bool flipY = false;
-        
-        
-        [Header("UVOffset")]
-        public Vector2 uvOffsetByTime = Vector2.zero;
-        public bool uvOffsetByRealtime = false;
+        public int renderLayerMask = -1;
         
         // ====================================================================================================
         // ====================================================================================================
         
-        bool UseSprite2() => sprite != null;
-        bool UseSprite3() => sprite != null && sprite2 != null;
-        bool UseSprite4() => sprite != null && sprite2 != null && sprite3 != null;
+        [field: Header("Record"), SerializeField, Readonly]
+        public Rect recordTransformRect { get; private set; }
+        [field: SerializeField, Readonly] public Vector2[] spriteUVCache { get; private set; }
+        [field: SerializeField, Readonly] public Sprite recordSprite { get; private set; }
+        [field: SerializeField, Readonly] public Vector2 recordFlip { get; private set; }
+        [field: SerializeField, Readonly] public Vector2 recordUVOffset { get; private set; }
+        [field: SerializeField, Readonly] public bool recordUVOffsetByTime { get; private set; }
+        [field: SerializeField, Readonly] public bool recordUVOffsetByRealtime { get; private set; }
         
-        bool needUpdateMesh = false;
         
-        bool needUpdateMaterial = false;
         
         // ====================================================================================================
         // ====================================================================================================
         
         [field: SerializeField, Readonly] public Mesh mesh { get; private set; }
+        [field: SerializeField, Readonly] public Material material { get; private set; }
         
         // ====================================================================================================
         // ====================================================================================================
         
         void OnValidate()
         {
-            needUpdateMesh = true;
-            needUpdateMaterial = true;
+            meshRenderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+            meshRenderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            meshRenderer.receiveShadows = false;
+            meshRenderer.allowOcclusionWhenDynamic = false;
+            meshRenderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
         }
         
         void Update()
         {
             UpdateMesh();
+            UpdateRendererProperties();
             UpdateMaterial();
+            UpdateUV();
+        }
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        
+        bool NeedUpdateRendererProperties()
+        {
+            return meshRenderer.sortingOrder != orderInLayer
+                   || meshRenderer.sortingLayerID != sortingLayer
+                   || meshRenderer.renderingLayerMask != renderLayerMask;
+        }
+        
+        void UpdateRendererProperties()
+        {
+            if(!NeedUpdateRendererProperties()) return;
+            meshRenderer.sortingOrder = orderInLayer;
+            meshRenderer.sortingLayerID = sortingLayer;
+            meshRenderer.renderingLayerMask = unchecked((uint)renderLayerMask);
+        }
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        
+        bool NeedUpdateMesh()
+        {
+            if(recordTransformRect != localRect) return true;
+            if(mesh == null) return true;
+            if(recordSprite != sprite) return true;
+            return false;
         }
         
         void UpdateMesh()
         {
-            if(!needUpdateMesh) return;
-            needUpdateMesh = false;
+            if(!NeedUpdateMesh()) return;
             
             if(mesh != null)
             {
@@ -108,6 +160,7 @@ namespace Prota.Unity
 
             var rect = localRect;
             
+            // 顺序: 左上, 右上, 左下, 右下
             vertices.Add(new Vector3(rect.xMin, rect.yMax, 0));
             vertices.Add(new Vector3(rect.xMax, rect.yMax, 0));
             vertices.Add(new Vector3(rect.xMin, rect.yMin, 0));
@@ -121,84 +174,190 @@ namespace Prota.Unity
             triangles.Add(3);
             
             mesh.SetVertices(vertices);
-            mesh.SetTriangles(triangles, 0);
+            mesh.SetIndices(triangles, MeshTopology.Triangles, 0);
             
-            using var ____ = TempList.Get<Sprite>(out var spriteList);
-            GetSpritesAsList(spriteList);
-            for(int i = 0; i < spriteList.Count; i++)
+            if(sprite == null)
             {
-                var uv = spriteList[i].uv;
-                
-                if(uv.Length != 4)
+                mesh.SetUVs(0, defaultUVs);
+            }
+            else
+            {
+                if(sprite.uv.Length != 4)
                 {
                     Debug.LogError($"Sprite [{sprite.name}] needs to be [FullRect]. Packing mode[{sprite.packingMode}]");
-                    continue;
                 }
-                mesh.SetUVs(i, uv);
+                mesh.SetUVs(0, sprite.uv);
             }
             
             mesh.RecalculateBounds();
             
             meshFilter.sharedMesh = mesh;
-            meshRenderer.sortingOrder = orderInLayer;
-            meshRenderer.sortingLayerID = sortingLayer;
-            meshRenderer.renderingLayerMask = renderLayerMask;
+            
+            recordTransformRect = localRect;
+            recordSprite = sprite;
+            spriteUVCache = sprite == null ? defaultUVs : sprite.uv;
         }
         
+        // ====================================================================================================
+        // ====================================================================================================
         
+        bool NeedUpdateUV()
+        {
+            if(uvOffsetByTime) return true;
+            if(recordFlip.x != (flipX ? -1 : 1)) return true;
+            if(recordFlip.y != (flipY ? -1 : 1)) return true;
+            if(recordUVOffset != uvOffset) return true;
+            return false;
+        }
         
-        static string[] textureNames = {
-            "_MainTex",
-            "_MainTex2",
-            "_MainTex3",
-            "_MainTex4",
-        };
+        [ThreadStatic] static Vector2[] tempUVs = new Vector2[4];
+        void UpdateUV()
+        {
+            if(!NeedUpdateUV()) return;
+            
+            SetWithSprite();
+            
+            recordFlip = new Vector2(flipX ? -1 : 1, flipY ? -1 : 1);
+            recordUVOffset = uvOffset;
+            recordUVOffsetByTime = uvOffsetByTime;
+            recordUVOffsetByRealtime = uvOffsetByRealtime;
+        }
+    
+        void SetWithSprite()
+        {
+            if(spriteUVCache.Length != 4)
+            {
+                Debug.LogError($"Sprite [{sprite.name}] needs to be [FullRect]. Packing mode[{sprite.packingMode}]");
+                return;
+            }
+            
+            var topLeftIndex = 0;
+            var topRightIndex = 1;
+            var bottomLeftIndex = 2;
+            var bottomRightIndex = 3;
+            if(flipX)
+            {
+                (topLeftIndex, topRightIndex) = (topRightIndex, topLeftIndex);
+                (bottomLeftIndex, bottomRightIndex) = (bottomRightIndex, bottomLeftIndex);
+            }
+            if(flipY)
+            {
+                (topLeftIndex, bottomLeftIndex) = (bottomLeftIndex, topLeftIndex);
+                (topRightIndex, bottomRightIndex) = (bottomRightIndex, topRightIndex);
+            }
+            
+            tempUVs[0] = spriteUVCache[topLeftIndex];
+            tempUVs[1] = spriteUVCache[topRightIndex];
+            tempUVs[2] = spriteUVCache[bottomLeftIndex];
+            tempUVs[3] = spriteUVCache[bottomRightIndex];
+            
+            if(uvOffsetByTime)
+            {
+                var t = Time.time;
+                for(var i = 0; i < tempUVs.Length; i++) tempUVs[i] += uvOffset * t;
+            }
+            else
+            {
+                for(var i = 0; i < tempUVs.Length; i++) tempUVs[i] += uvOffset;
+            }
+            
+            mesh.SetUVs(0, tempUVs);
+        }
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        private static class Hashes
+        {
+            public static int _MainTex;
+            public static int _Color;
+            public static int _HueOffset;
+            public static int _BrightnessOffset;
+            public static int _SaturationOffset;
+            public static int _ContrastOffset;
+            public static int _BlendSrc;
+            public static int _BlendDst;
+            public static int _ZTest;
+            public static int _ZWrite;
+            public static int _AlphaClip;
+            
+            
+            [InitializeOnLoadMethod]
+            [RuntimeInitializeOnLoadMethod]
+            static void Init()
+            {
+                _MainTex = Shader.PropertyToID("_MainTex");
+                _Color = Shader.PropertyToID("_Color");
+                _HueOffset = Shader.PropertyToID("_HueOffset");
+                _BrightnessOffset = Shader.PropertyToID("_BrightnessOffset");
+                _SaturationOffset = Shader.PropertyToID("_SaturationOffset");
+                _ContrastOffset = Shader.PropertyToID("_ContrastOffset");
+                _BlendSrc = Shader.PropertyToID("_BlendSrc");
+                _BlendDst = Shader.PropertyToID("_BlendDst");
+                _ZTest = Shader.PropertyToID("_ZTest");
+                _ZWrite = Shader.PropertyToID("_ZWrite");
+                _AlphaClip = Shader.PropertyToID("_AlphaClip");
+            }
+        }
         
         void UpdateMaterial()
         {
-            if(!needUpdateMaterial) return;
-            needUpdateMaterial = false;
-            
-            if(meshRenderer.sharedMaterial == null)
+            if(material == null)
             {
-                meshRenderer.sharedMaterial = new Material(cachedMaterial);
+                material = new Material(cachedMaterial) {
+                    name = $"GeneratedMaterial",
+                };
             }
             
-            var mat = meshRenderer.sharedMaterial;
+            material.renderQueue = renderQueueOverride >= 0 ? material.renderQueue : renderQueueOverride;
             
-            mat.renderQueue = renderQueueOverride >= 0 ? mat.renderQueue : renderQueueOverride;
+            if(sprite != null) material.SetTexture(Hashes._MainTex, sprite.texture);
             
-            mat.SetTexture("_MainTex", sprite.texture);
+            material.SetColor(Hashes._Color, color);
             
-            mat.SetColor("_Color", color);
+            material.SetFloat(Hashes._HueOffset, hueOffset);
+            material.SetFloat(Hashes._BrightnessOffset, brightnessOffset);
+            material.SetFloat(Hashes._SaturationOffset, saturationOffset);
+            material.SetFloat(Hashes._ContrastOffset, contrastOffset);
             
-            mat.SetFloat("_HueOffset", hueOffset);
-            mat.SetFloat("_BrightnessOffset", brightnessOffset);
-            mat.SetFloat("_SaturationOffset", saturationOffset);
-            mat.SetFloat("_ContrastOffset", contrastOffset);
+            material.SetFloat(Hashes._BlendSrc, (int)srcBlendMode);
+            material.SetFloat(Hashes._BlendDst, (int)dstBlendMode);
             
-            mat.SetVector("_Flip", new Vector2(flipX ? 1 : 0, flipX ? 1 : 0));
+            material.SetFloat(Hashes._ZTest, (int)depthTest);
+            material.SetFloat(Hashes._ZWrite, (int)depthWrite);
             
-            var t = uvOffsetByRealtime ? Time.realtimeSinceStartup : Time.time;
-            mat.SetVector("_UVOffset", uvOffsetByTime * t);
+            material.SetFloat(Hashes._AlphaClip, alphaClip);
             
-            using var _ = TempList.Get<Sprite>(out var spriteList);
-            GetSpritesAsList(spriteList);
-            
-            for(int i = 0; i < spriteList.Count; i++)
+            meshRenderer.sharedMaterial = material;
+        }
+        
+        
+        
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        void OnDestroy()
+        {
+            if(mesh != null)
             {
-                mat.SetTexture(textureNames[i], spriteList[i].texture);
+                DestroyImmediate(mesh);
+                mesh = null;
+            }
+            
+            if(material != null)
+            {
+                DestroyImmediate(material);
+                material = null;
             }
         }
         
-        void GetSpritesAsList(List<Sprite> spriteList)
-        {
-            spriteList.Clear();
-            if(sprite != null) spriteList.Add(sprite);
-            if(UseSprite2() && sprite2 != null) spriteList.Add(sprite2);
-            if(UseSprite3() && sprite3 != null) spriteList.Add(sprite3);
-            if(UseSprite4() && sprite4 != null) spriteList.Add(sprite4);
-            
-        }
+        
+        static Vector2[] defaultUVs = new Vector2[] {
+            new Vector2(0, 1),
+            new Vector2(1, 1),
+            new Vector2(0, 0),
+            new Vector2(1, 0),
+        };
     }
 }
