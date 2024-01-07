@@ -41,13 +41,13 @@ namespace Prota.Unity
         public Sprite normal;
         public Vector2 uvOffset = Vector2.zero;
         public bool uvOffsetByTime = false;
-        public bool uvOffsetByRealtime = false;
+        [ShowWhen("usOffsetByTime")] public bool uvOffsetByRealtime = false;
         
         [Header("Mask")]
         public Sprite mask;
         public Vector2 maskUVOffset = Vector2.zero;
         public bool maskUVOffsetByTime = false;
-        public bool maskUVOffsetByRealtime = false;
+        [ShowWhen("maskUVOffsetByTime")] public bool maskUVOffsetByRealtime = false;
         public Vector4 maskUsage = new Vector4(1, 1, 1, 1);
         
         [Header("Image")]
@@ -86,16 +86,34 @@ namespace Prota.Unity
         
         void Update()
         {
+            SyncSpriteInfoToRectTransform();
             UpdateMeshVertices();
             UpdateSpriteUV();
             UpdatMaskUV();
             UpdateRendererProperties();
             UpdateMaterial();
         }
-        
+
+        [EditorButton] public bool syncSpriteToRect; 
+        void SyncSpriteInfoToRectTransform()
+        {
+            if(!syncSpriteToRect) return;
+            syncSpriteToRect = false;
+            
+            if(sprite == null) return;
+            
+            var vertices = sprite.vertices;
+            var rect = new Rect(
+                (vertices[0] + vertices[3]) / 2,
+                (vertices[3] - vertices[0]).Abs()
+            );
+            rectTransform.sizeDelta = rect.size;
+            rectTransform.pivot = Vector2.one - rect.center / rect.size;
+        }
+
         // ====================================================================================================
         // ====================================================================================================
-        
+
         Rect submittedRect;
         
         public bool NeedUpdateVertices()

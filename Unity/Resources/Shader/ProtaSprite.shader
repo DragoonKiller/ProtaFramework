@@ -21,9 +21,10 @@ Shader "Prota/Sprite"
         _AlphaClip ("Alpha Clip", float) = 0.5
         
         _HueOffset ("Hue Offset", float) = 0.0
-        _SaturationOffset ("Saturation Offset", float) = 1.0
-        _BrightnessOffset ("Brightness Offset", float) = 1.0
-        _ContrastOffset ("Contrast Offset", float) = 1.0
+        _SaturationOffset ("Saturation Offset", float) = 0.0
+        _BrightnessOffset ("Brightness Offset", float) = 0.0
+        _ContrastOffset ("Contrast Offset", float) = 0.0
+        _HueConcentrate ("Hue Concentration", float) = 0.0
     }
 
     SubShader

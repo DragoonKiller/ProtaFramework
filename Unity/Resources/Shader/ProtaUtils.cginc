@@ -178,3 +178,45 @@ float4 ContrastOffset(float4 color, float contrastOffset)
     return color;
 }
 
+float4 HueConcentrate(float4 color, float hue, float hueConcentrate)
+{
+    float3 hsl;
+    RGBtoHSL(color.rgb, hsl.x, hsl.y, hsl.z);
+    
+    float hc = hue;
+    float hl = hue - 1;
+    float hr = hue + 1;
+    
+    if(hl <= hsl.x && hsl.x <= hc)
+    {
+        float d1 = hsl.x - hl;
+        float d2 = hc - hsl.x;
+        if(d1 < d2)
+        {
+            hsl.x = hl + d1 * (1.0 - hueConcentrate);
+        }
+        else
+        {
+            hsl.x = hc - d2 * (1.0 - hueConcentrate);
+        }
+    }
+    else
+    {
+        float d1 = hsl.x - hc;
+        float d2 = hr - hsl.x;
+        if(d1 < d2)
+        {
+            hsl.x = hc + d1 * (1.0 - hueConcentrate);
+        }
+        else
+        {
+            hsl.x = hr - d2 * (1.0 - hueConcentrate);
+        }
+    }
+    
+    hsl.x = fmod(hsl.x, 1.0);
+    
+    HSLToRGB(hsl.x, hsl.y, hsl.z, color.rgb);
+    return color;
+}
+

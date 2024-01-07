@@ -10,12 +10,19 @@ namespace Prota.Tween
     public enum ProtaDynamicFXType
     {
         None = 0,
+        
         Appear = 1,         // 出现, 变大到正常值一点再缩小到正常值.
         Disappear = 2,      // 消失, 变大一点然后缩小到不见.
-        Charge = 3,         // 蓄力, 主动的压缩动作.
-        Release = 4,        // 释放, 主动的拉长动作.
-        Launch = 5,         // 蓄力+释放连续进行.
+        
+        Compress = 3,         // 蓄力, 主动的压缩动作.
+        Strech = 4,        // 释放, 主动的拉长动作.
+        CompressAndStrech = 5,         // 蓄力+释放连续进行.
+        
         Breathe = 6,        // 呼吸, 缓慢地变大变小.
+        
+        HeartBeat = 7,      // 心跳, 快速地变大, 再缩小.
+        
+        Emphasize = 8,      // 强调, 从正常值变大一点, 再缩小到正常值.
         
     }
     
@@ -45,6 +52,14 @@ namespace Prota.Tween
         [Header("Breathe")]
         public AnimationCurve breatheX;
         public AnimationCurve breatheY;
+        
+        [Header("Heart Beat")]
+        public AnimationCurve heartBeatX;
+        public AnimationCurve heartBeatY;
+        
+        [Header("Emphasize")]
+        public AnimationCurve emphasizeX;
+        public AnimationCurve emphasizeY;
     }
     
     
@@ -143,17 +158,23 @@ namespace Prota.Tween
                 case ProtaDynamicFXType.Disappear:
                     SetLocalScale(t, asset.disappearX, asset.disappearY);
                     break;
-                case ProtaDynamicFXType.Charge:
+                case ProtaDynamicFXType.Compress:
                     SetLocalScale(t, asset.chargeX, asset.chargeY);
                     break;
-                case ProtaDynamicFXType.Release:
+                case ProtaDynamicFXType.Strech:
                     SetLocalScale(t, asset.releaseX, asset.releaseY);
                     break;
-                case ProtaDynamicFXType.Launch:
+                case ProtaDynamicFXType.CompressAndStrech:
                     SetLocalScale(t, asset.launchX, asset.launchY);
                     break;
                 case ProtaDynamicFXType.Breathe:
                     SetLocalScale(t, asset.breatheX, asset.breatheY);
+                    break;
+                case ProtaDynamicFXType.HeartBeat:
+                    SetLocalScale(t, asset.heartBeatX, asset.heartBeatY);
+                    break;
+                case ProtaDynamicFXType.Emphasize:
+                    SetLocalScale(t, asset.emphasizeX, asset.emphasizeY);
                     break;
                 default:
                     throw new InvalidEnumArgumentException();
