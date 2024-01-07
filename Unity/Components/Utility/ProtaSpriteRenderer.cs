@@ -6,6 +6,15 @@ using UnityEditor;
 
 namespace Prota.Unity
 {
+    /*
+    Mesh 由三个部分组成
+    1. 顶点, 由 RectTransform 定义
+    2. texture uv, 由 sprite 和 flip 和 uvOffset 定义
+    3. mask uv, 由 maskSprite 和 flip 和 uvOffset 定义
+    */
+    
+    
+    // 自定义 SpriteRenderer.
     [ExecuteAlways]
     [RequireComponent(typeof(MeshRenderer))]
     [RequireComponent(typeof(MeshFilter))]
@@ -16,17 +25,11 @@ namespace Prota.Unity
         public static Material cachedMaterial
             => _cachedMaterial == null ? _cachedMaterial = new Material(Shader.Find("Prota/Sprite")) : _cachedMaterial;
         
-        MeshRenderer _meshRenderer;
-        public MeshRenderer meshRenderer
-            => _meshRenderer == null ? _meshRenderer = GetComponent<MeshRenderer>() : _meshRenderer;
-        
-        MeshFilter _meshFilter;
-        public MeshFilter meshFilter
-            => _meshFilter == null ? _meshFilter = GetComponent<MeshFilter>() : _meshFilter;
-        
-        RectTransform _rectTransform;
-        public RectTransform rectTransform
-            => _rectTransform == null ? _rectTransform = GetComponent<RectTransform>() : _rectTransform;
+        public MeshRenderer meshRenderer { get; private set; }
+        public MeshFilter meshFilter { get; private set; }
+        public RectTransform rectTransform { get; private set; }
+        public Mesh mesh { get; private set; }
+        public Material material { get; private set; }
         
         public Rect localRect => rectTransform.rect;
         
@@ -35,23 +38,33 @@ namespace Prota.Unity
         
         [Header("Sprite")]
         public Sprite sprite;
+        public Sprite normal;
+        public Vector2 uvOffset = Vector2.zero;
+        public bool uvOffsetByTime = false;
+        public bool uvOffsetByRealtime = false;
         
+        [Header("Mask")]
+        public Sprite mask;
+        public Vector2 maskUVOffset = Vector2.zero;
+        public bool maskUVOffsetByTime = false;
+        public bool maskUVOffsetByRealtime = false;
+        public Vector4 maskUsage = new Vector4(1, 1, 1, 1);
         
+        [Header("Image")]
+        public bool flipX = false;
+        public bool flipY = false;
+        public Vector2 flipVector => new Vector2(flipX ? -1 : 1, flipY ? -1 : 1);
+        
+
         [Header("Color")]
         [ColorUsage(true, true)] public Color color = Color.white;
         [ColorUsage(true, true)] public Color addColor = new Color(0, 0, 0, 0);
+        [ColorUsage(true, true)] public Color overlapColor = new Color(0, 0, 0, 0);
         [Range(-1, 1)] public float hueOffset = 0;
         [Range(-1, 1)] public float brightnessOffset = 0;
         [Range(-1, 1)] public float saturationOffset = 0;
         [Range(-1, 1)] public float contrastOffset = 0;
         
-        
-        [Header("UV")]
-        public bool flipX = false;
-        public bool flipY = false;
-        public Vector2 uvOffset = Vector2.zero;
-        public bool uvOffsetByTime = false;
-        public bool uvOffsetByRealtime = false;
         
         [Header("Material")]
         
@@ -60,6 +73,7 @@ namespace Prota.Unity
         public UnityEngine.Rendering.CompareFunction depthTest = UnityEngine.Rendering.CompareFunction.Always;
         public OnOffEnum depthWrite = OnOffEnum.On;
         [Range(0, 1)] public float alphaClip = 0;
+        
         
         [Header("Render")]
         public int renderQueueOverride = -1;
@@ -70,42 +84,94 @@ namespace Prota.Unity
         // ====================================================================================================
         // ====================================================================================================
         
-        [field: Header("Record"), SerializeField, Readonly]
-        public Rect recordTransformRect { get; private set; }
-        [field: SerializeField, Readonly] public Vector2[] spriteUVCache { get; private set; }
-        [field: SerializeField, Readonly] public Sprite recordSprite { get; private set; }
-        [field: SerializeField, Readonly] public Vector2 recordFlip { get; private set; }
-        [field: SerializeField, Readonly] public Vector2 recordUVOffset { get; private set; }
-        [field: SerializeField, Readonly] public bool recordUVOffsetByTime { get; private set; }
-        [field: SerializeField, Readonly] public bool recordUVOffsetByRealtime { get; private set; }
-        
-        
-        
-        // ====================================================================================================
-        // ====================================================================================================
-        
-        [field: SerializeField, Readonly] public Mesh mesh { get; private set; }
-        [field: SerializeField, Readonly] public Material material { get; private set; }
-        
-        // ====================================================================================================
-        // ====================================================================================================
-        
-        void OnValidate()
-        {
-            meshRenderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
-            meshRenderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
-            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            meshRenderer.receiveShadows = false;
-            meshRenderer.allowOcclusionWhenDynamic = false;
-            meshRenderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
-        }
-        
         void Update()
         {
-            UpdateMesh();
+            UpdateMeshVertices();
+            UpdateSpriteUV();
+            UpdatMaskUV();
             UpdateRendererProperties();
             UpdateMaterial();
-            UpdateUV();
+        }
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        Rect submittedRect;
+        
+        public bool NeedUpdateVertices()
+        {
+            if(submittedRect != localRect) return true;
+            return false;
+        }
+        
+        [ThreadStatic] static Vector3[] tempVertices;
+        [ThreadStatic] static int[] tempTriangles;
+        public void UpdateMeshVertices()
+        {
+            if(!NeedUpdateVertices()) return;
+            
+            var rect = localRect;
+            
+            if(tempVertices == null) tempVertices = new Vector3[4];
+            if(tempTriangles == null) tempTriangles = new int[6];
+            
+            // 顺序: 左上, 右上, 左下, 右下
+            tempVertices[0] = new Vector3(rect.xMin, rect.yMax, 0);
+            tempVertices[1] = new Vector3(rect.xMax, rect.yMax, 0);
+            tempVertices[2] = new Vector3(rect.xMin, rect.yMin, 0);
+            tempVertices[3] = new Vector3(rect.xMax, rect.yMin, 0);
+            mesh.SetVertices(tempVertices);
+            
+            tempTriangles[0] = 0;
+            tempTriangles[1] = 1;
+            tempTriangles[2] = 2;
+            tempTriangles[3] = 2;
+            tempTriangles[4] = 1;
+            tempTriangles[5] = 3;
+            mesh.SetIndices(tempTriangles, MeshTopology.Triangles, 0);
+            
+            mesh.RecalculateBounds();
+            
+            submittedRect = rect;
+        }
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        Sprite submittedSprite;
+        Vector2 submittedSpriteFlip;
+        Vector2 submittedSpriteUVOffset;
+        bool submittedSpriteUVOffsetByTime;
+        bool submittedSpriteUVOffsetByRealtime;
+        Vector2[] submittedSpriteUV;
+        
+        public void UpdateSpriteUV()
+        {
+            SetUV(mesh,
+                sprite, ref submittedSprite, ref submittedSpriteUV,
+                0,
+                flipVector, ref submittedSpriteFlip,
+                uvOffset, ref submittedSpriteUVOffset,
+                uvOffsetByTime, ref submittedSpriteUVOffsetByTime,
+                uvOffsetByRealtime, ref submittedSpriteUVOffsetByRealtime
+            );
+        }
+        Sprite submittedMask;
+        Vector2 submittedMaskFlip;
+        Vector2 submittedMaskUVOffset;
+        bool submittedMaskUVOffsetByTime;
+        bool submittedMaskUVOffsetByRealtime;
+        Vector2[] submittedMaskUV;
+        
+        public void UpdatMaskUV()
+        {
+            SetUV(mesh,
+                mask, ref submittedMask, ref submittedMaskUV,
+                3,
+                flipVector, ref submittedMaskFlip,
+                maskUVOffset, ref submittedMaskUVOffset,
+                maskUVOffsetByTime, ref submittedMaskUVOffsetByTime,
+                maskUVOffsetByRealtime, ref submittedMaskUVOffsetByRealtime
+            );
         }
         
         // ====================================================================================================
@@ -130,147 +196,15 @@ namespace Prota.Unity
         // ====================================================================================================
         // ====================================================================================================
         
-        
-        bool NeedUpdateMesh()
-        {
-            if(recordTransformRect != localRect) return true;
-            if(mesh == null) return true;
-            if(recordSprite != sprite) return true;
-            return false;
-        }
-        
-        void UpdateMesh()
-        {
-            if(!NeedUpdateMesh()) return;
-            
-            if(mesh != null)
-            {
-                DestroyImmediate(mesh);
-                mesh = null;
-            }
-            
-            meshRenderer.sharedMaterial = null;
-            (mesh == null).Assert();
-            
-            mesh = new Mesh();
-            mesh.name = $"GeneratedMesh";
-            
-            using var _ = TempList.Get<Vector3>(out var vertices);
-            using var __ = TempList.Get<int>(out var triangles);
-
-            var rect = localRect;
-            
-            // 顺序: 左上, 右上, 左下, 右下
-            vertices.Add(new Vector3(rect.xMin, rect.yMax, 0));
-            vertices.Add(new Vector3(rect.xMax, rect.yMax, 0));
-            vertices.Add(new Vector3(rect.xMin, rect.yMin, 0));
-            vertices.Add(new Vector3(rect.xMax, rect.yMin, 0));
-            
-            triangles.Add(0);
-            triangles.Add(1);
-            triangles.Add(2);
-            triangles.Add(2);
-            triangles.Add(1);
-            triangles.Add(3);
-            
-            mesh.SetVertices(vertices);
-            mesh.SetIndices(triangles, MeshTopology.Triangles, 0);
-            
-            if(sprite == null)
-            {
-                mesh.SetUVs(0, defaultUVs);
-            }
-            else
-            {
-                if(sprite.uv.Length != 4)
-                {
-                    Debug.LogError($"Sprite [{sprite.name}] needs to be [FullRect]. Packing mode[{sprite.packingMode}]");
-                }
-                mesh.SetUVs(0, sprite.uv);
-            }
-            
-            mesh.RecalculateBounds();
-            
-            meshFilter.sharedMesh = mesh;
-            
-            recordTransformRect = localRect;
-            recordSprite = sprite;
-            spriteUVCache = sprite == null ? defaultUVs : sprite.uv;
-        }
-        
-        // ====================================================================================================
-        // ====================================================================================================
-        
-        bool NeedUpdateUV()
-        {
-            if(uvOffsetByTime) return true;
-            if(recordFlip.x != (flipX ? -1 : 1)) return true;
-            if(recordFlip.y != (flipY ? -1 : 1)) return true;
-            if(recordUVOffset != uvOffset) return true;
-            return false;
-        }
-        
-        [ThreadStatic] static Vector2[] tempUVs = new Vector2[4];
-        void UpdateUV()
-        {
-            if(!NeedUpdateUV()) return;
-            
-            SetWithSprite();
-            
-            recordFlip = new Vector2(flipX ? -1 : 1, flipY ? -1 : 1);
-            recordUVOffset = uvOffset;
-            recordUVOffsetByTime = uvOffsetByTime;
-            recordUVOffsetByRealtime = uvOffsetByRealtime;
-        }
-    
-        void SetWithSprite()
-        {
-            if(spriteUVCache.Length != 4)
-            {
-                Debug.LogError($"Sprite [{sprite.name}] needs to be [FullRect]. Packing mode[{sprite.packingMode}]");
-                return;
-            }
-            
-            var topLeftIndex = 0;
-            var topRightIndex = 1;
-            var bottomLeftIndex = 2;
-            var bottomRightIndex = 3;
-            if(flipX)
-            {
-                (topLeftIndex, topRightIndex) = (topRightIndex, topLeftIndex);
-                (bottomLeftIndex, bottomRightIndex) = (bottomRightIndex, bottomLeftIndex);
-            }
-            if(flipY)
-            {
-                (topLeftIndex, bottomLeftIndex) = (bottomLeftIndex, topLeftIndex);
-                (topRightIndex, bottomRightIndex) = (bottomRightIndex, topRightIndex);
-            }
-            
-            tempUVs[0] = spriteUVCache[topLeftIndex];
-            tempUVs[1] = spriteUVCache[topRightIndex];
-            tempUVs[2] = spriteUVCache[bottomLeftIndex];
-            tempUVs[3] = spriteUVCache[bottomRightIndex];
-            
-            if(uvOffsetByTime)
-            {
-                var t = Time.time;
-                for(var i = 0; i < tempUVs.Length; i++) tempUVs[i] += uvOffset * t;
-            }
-            else
-            {
-                for(var i = 0; i < tempUVs.Length; i++) tempUVs[i] += uvOffset;
-            }
-            
-            mesh.SetUVs(0, tempUVs);
-        }
-        
-        // ====================================================================================================
-        // ====================================================================================================
-        
         private static class Hashes
         {
             public static int _MainTex;
+            public static int _MaskTex;
+            public static int _NormalTex;
             public static int _Color;
+            public static int _AddColor;
+            public static int _OverlapColor;
+            public static int _MaskUsage;
             public static int _HueOffset;
             public static int _BrightnessOffset;
             public static int _SaturationOffset;
@@ -287,7 +221,12 @@ namespace Prota.Unity
             static void Init()
             {
                 _MainTex = Shader.PropertyToID("_MainTex");
+                _MaskTex = Shader.PropertyToID("_MaskTex");
+                _NormalTex = Shader.PropertyToID("_NormalTex");
                 _Color = Shader.PropertyToID("_Color");
+                _AddColor = Shader.PropertyToID("_AddColor");
+                _OverlapColor = Shader.PropertyToID("_OverlapColor");
+                _MaskUsage = Shader.PropertyToID("_MaskUsage");
                 _HueOffset = Shader.PropertyToID("_HueOffset");
                 _BrightnessOffset = Shader.PropertyToID("_BrightnessOffset");
                 _SaturationOffset = Shader.PropertyToID("_SaturationOffset");
@@ -302,18 +241,25 @@ namespace Prota.Unity
         
         void UpdateMaterial()
         {
-            if(material == null)
+            static void SetTexture(Material mat, int hash, Sprite sprite)
             {
-                material = new Material(cachedMaterial) {
-                    name = $"GeneratedMaterial",
-                };
+                var texture = sprite == null ? null : sprite.texture;
+                if(texture == null) mat.SetTexture(hash, null);
+                else mat.SetTexture(hash, texture);
             }
             
             material.renderQueue = renderQueueOverride >= 0 ? material.renderQueue : renderQueueOverride;
             
-            if(sprite != null) material.SetTexture(Hashes._MainTex, sprite.texture);
+            
+            SetTexture(material, Hashes._MainTex, sprite);
+            SetTexture(material, Hashes._NormalTex, normal);
+            SetTexture(material, Hashes._MaskTex, mask);
             
             material.SetColor(Hashes._Color, color);
+            material.SetColor(Hashes._AddColor, addColor);
+            material.SetColor(Hashes._OverlapColor, overlapColor);
+            
+            material.SetVector(Hashes._MaskUsage, maskUsage);
             
             material.SetFloat(Hashes._HueOffset, hueOffset);
             material.SetFloat(Hashes._BrightnessOffset, brightnessOffset);
@@ -337,18 +283,97 @@ namespace Prota.Unity
         // ====================================================================================================
         // ====================================================================================================
         
-        void OnDestroy()
+        [ThreadStatic] static Vector2[] tempUVs;
+        static void SetUV(Mesh mesh, Sprite sprite, ref Sprite recordSprite,
+            ref Vector2[] uvCache,
+            int uvlayer,
+            Vector2 flipVector, ref Vector2 recordFlipVector,
+            Vector2 uvOffset, ref Vector2 recordUVOffset,
+            bool uvOffsetByTime, ref bool recordUVOffsetByTime,
+            bool uvOffsetByRealtime, ref bool recordUVOffsetByRealtime)
+        {
+            if(mesh == null || sprite == null) return;
+            
+            bool shouldUpdateUV = false;
+            if(!shouldUpdateUV && sprite != recordSprite) shouldUpdateUV = true;
+            if(!shouldUpdateUV && flipVector != recordFlipVector) shouldUpdateUV = true;
+            if(!shouldUpdateUV && uvOffset != recordUVOffset) shouldUpdateUV = true;
+            if(!shouldUpdateUV && uvOffsetByTime) shouldUpdateUV = true;
+            if(!shouldUpdateUV) return;
+            
+            if(tempUVs == null) tempUVs = new Vector2[4];
+            if(recordSprite != sprite) uvCache = sprite.uv;
+            recordSprite = sprite;
+            recordFlipVector = flipVector;
+            recordUVOffset = uvOffset;
+            recordUVOffsetByTime = uvOffsetByTime;
+            recordUVOffsetByRealtime = uvOffsetByRealtime;
+            
+            var topLeftIndex = 0;
+            var topRightIndex = 1;
+            var bottomLeftIndex = 2;
+            var bottomRightIndex = 3;
+            if(flipVector.x < 0)
+            {
+                (topLeftIndex, topRightIndex) = (topRightIndex, topLeftIndex);
+                (bottomLeftIndex, bottomRightIndex) = (bottomRightIndex, bottomLeftIndex);
+            }
+            if(flipVector.y < 0)
+            {
+                (topLeftIndex, bottomLeftIndex) = (bottomLeftIndex, topLeftIndex);
+                (topRightIndex, bottomRightIndex) = (bottomRightIndex, topRightIndex);
+            }
+            
+            tempUVs[0] = uvCache[topLeftIndex];
+            tempUVs[1] = uvCache[topRightIndex];
+            tempUVs[2] = uvCache[bottomLeftIndex];
+            tempUVs[3] = uvCache[bottomRightIndex];
+            
+            if(uvOffsetByTime)
+            {
+                var t = uvOffsetByRealtime ? Time.realtimeSinceStartup : Time.time;
+                for(var i = 0; i < tempUVs.Length; i++) tempUVs[i] += uvOffset * t;
+            }
+            else
+            {
+                for(var i = 0; i < tempUVs.Length; i++) tempUVs[i] += uvOffset;
+            }
+            
+            mesh.SetUVs(uvlayer, tempUVs);
+        }
+        
+        void OnEnable()
+        {
+            meshRenderer = GetComponent<MeshRenderer>();
+            meshFilter = GetComponent<MeshFilter>();
+            rectTransform = GetComponent<RectTransform>();
+            meshFilter.mesh = mesh = new Mesh() { name = "ProtaSpriteRenderer" };
+            meshRenderer.material = material = new Material(cachedMaterial) { name = "ProtaSpriteRenderer" };
+            
+            meshRenderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+            meshRenderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            meshRenderer.receiveShadows = false;
+            meshRenderer.allowOcclusionWhenDynamic = false;
+            meshRenderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+            
+            submittedRect = Rect.zero;
+            submittedSprite = null;
+            submittedMask = null;
+        }
+        
+        void OnDisable()
         {
             if(mesh != null)
             {
                 DestroyImmediate(mesh);
-                mesh = null;
+                meshFilter.mesh = null;
             }
             
             if(material != null)
             {
                 DestroyImmediate(material);
-                material = null;
+                meshRenderer.material = null;
             }
         }
         
