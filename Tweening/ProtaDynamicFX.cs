@@ -192,4 +192,17 @@ namespace Prota.Tween
     }
     
     
+    public static partial class UnityMethodExtensions
+    {
+        public static ProtaDynamicFX Play(this GameObject g, ProtaDynamicFXType type, float duration = 1f, bool loop = false)
+        {
+            var fx = g.GetOrCreate<ProtaDynamicFX>();
+            fx.SetType(type);
+            fx.SetLoop(loop);
+            fx.Execute(duration);
+            return fx;
+        }
+    }
+    
+    
 }
