@@ -11,7 +11,7 @@ namespace Prota.VisualEffect
     {
         public ProtaSkyboxRenderPass pass;
         
-        public Gradient colorGradient;
+        [GradientUsage(true)] public Gradient colorGradient;
         
         public Material material;
         

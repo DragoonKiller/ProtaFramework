@@ -3,10 +3,10 @@ Shader "Prota/Sprite"
     Properties
     {
         [Enum(UnityEngine.Rendering.CompareFunction)] _ZTest ("ZTest", Float) = 0.0
-        [Enum(Prota.Unity.OnOffEnum)] _ZWrite ("ZWrite", float) = 0.0
+        [Enum(Off, 0, On, 1)] _ZWrite ("ZWrite", Float) = 0.0
         
-        [Enum(UnityEngine.Rendering.BlendMode)] _BlendSrc ("Blend Src", Float) = 1.0
-        [Enum(UnityEngine.Rendering.BlendMode)] _BlendDst ("Blend Dst", Float) = 0.0
+        [Enum(UnityEngine.Rendering.BlendMode)] _BlendSrc ("Blend Src", Integer) = 1
+        [Enum(UnityEngine.Rendering.BlendMode)] _BlendDst ("Blend Dst", Integer) = 0
         
         _MainTex ("Texture", 2D) = "white" { }
         _MaskTex("Mask", 2D) = "white" { }
@@ -25,6 +25,12 @@ Shader "Prota/Sprite"
         _BrightnessOffset ("Brightness Offset", float) = 0.0
         _ContrastOffset ("Contrast Offset", float) = 0.0
         _HueConcentrate ("Hue Concentration", float) = 0.0
+        
+        [Range(0, 255)] _StencilRef ("Stencil Ref", Integer) = 0
+        [Range(0, 255)] _StencilReadMask ("Stencil Read Mask", Integer) = 0
+        [Range(0, 255)] _StencilWriteMask ("Stencil Write Mask", Integer) = 0
+        [Enum(UnityEngine.Rendering.CompareFunction)] _StencilCompare ("Stencil Compare", Integer) = 0
+        [Enum(UnityEngine.Rendering.StencilOp)] _StencilOp ("Stencil Operation", Integer) = 0
     }
 
     SubShader
@@ -41,10 +47,20 @@ Shader "Prota/Sprite"
         ZTest [_ZTest]
         Blend [_BlendSrc] [_BlendDst]
         
+        
 
         Pass
         {
             Tags { "LightMode" = "Universal2D" }
+            
+            Stencil
+            {
+                Ref [_StencilRef]
+                ReadMask [_StencilReadMask]
+                WriteMask [_StencilWriteMask]
+                Comp [_StencilCompare]
+                Pass [_StencilOp]
+            }
 
             HLSLPROGRAM
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
@@ -79,7 +95,7 @@ Shader "Prota/Sprite"
                 float2 maskUV      : TEXCOORD3;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
-
+            
             #include "Packages/com.unity.render-pipelines.universal/Shaders/2D/Include/LightingUtility.hlsl"
             
             #include "./ProtaUtils.cginc"

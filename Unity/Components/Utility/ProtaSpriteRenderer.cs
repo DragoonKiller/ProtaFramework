@@ -65,6 +65,12 @@ namespace Prota.Unity
         [Range(-1, 1)] public float saturationOffset = 0;
         [Range(-1, 1)] public float contrastOffset = 0;
         
+        [Header("Stencil")]
+        public PowerOfTwoEnumByte stencilRef = 0;
+        public PowerOfTwoEnumByte stencilReadMask = PowerOfTwoEnumByte.All;
+        public PowerOfTwoEnumByte stencilWriteMask = PowerOfTwoEnumByte.All;
+        public UnityEngine.Rendering.CompareFunction stencilCompare = UnityEngine.Rendering.CompareFunction.Always;
+        public UnityEngine.Rendering.StencilOp stencilPass = UnityEngine.Rendering.StencilOp.Keep;
         
         [Header("Material")]
         
@@ -225,6 +231,11 @@ namespace Prota.Unity
             public static int _ZTest;
             public static int _ZWrite;
             public static int _AlphaClip;
+            public static int _StencilRef;
+            public static int _StencilReadMask;
+            public static int _StencilWriteMask;
+            public static int _StencilCompare;
+            public static int _StencilOp;
             
             
             [InitializeOnLoadMethod]
@@ -250,6 +261,11 @@ namespace Prota.Unity
                 _ZTest = Shader.PropertyToID("_ZTest");
                 _ZWrite = Shader.PropertyToID("_ZWrite");
                 _AlphaClip = Shader.PropertyToID("_AlphaClip");
+                _StencilRef = Shader.PropertyToID("_StencilRef");
+                _StencilReadMask = Shader.PropertyToID("_StencilReadMask");
+                _StencilWriteMask = Shader.PropertyToID("_StencilWriteMask");
+                _StencilCompare = Shader.PropertyToID("_StencilCompare");
+                _StencilOp = Shader.PropertyToID("_StencilOp");
             }
         }
         
@@ -295,13 +311,19 @@ namespace Prota.Unity
             material.SetFloat(Hashes._SaturationOffset, saturationOffset);
             material.SetFloat(Hashes._ContrastOffset, contrastOffset);
             
-            material.SetFloat(Hashes._BlendSrc, (int)srcBlendMode);
-            material.SetFloat(Hashes._BlendDst, (int)dstBlendMode);
+            material.SetInteger(Hashes._BlendSrc, (int)srcBlendMode);
+            material.SetInteger(Hashes._BlendDst, (int)dstBlendMode);
             
             material.SetFloat(Hashes._ZTest, (int)depthTest);
             material.SetFloat(Hashes._ZWrite, (int)depthWrite);
             
             material.SetFloat(Hashes._AlphaClip, alphaClip);
+            
+            material.SetInteger(Hashes._StencilRef, unchecked((int)stencilRef));
+            material.SetInteger(Hashes._StencilReadMask, unchecked((int)stencilReadMask));
+            material.SetInteger(Hashes._StencilWriteMask, unchecked((int)stencilWriteMask));
+            material.SetInteger(Hashes._StencilCompare, unchecked((int)stencilCompare));
+            material.SetInteger(Hashes._StencilOp, unchecked((int)stencilPass));
             
             meshRenderer.sharedMaterial = material;
         }
