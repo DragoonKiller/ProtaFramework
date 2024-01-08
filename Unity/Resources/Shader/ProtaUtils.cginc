@@ -79,8 +79,17 @@ void RGBtoHSL(float3 color, out float H, out float S, out float L)
     H = fmod(H, 1.0);
 }
 
-void HSLToRGB(float H, float S, float L, out float3 color)
+void RGBtoHSL(float3 color, out float3 hsl)
 {
+    RGBtoHSL(color, hsl.x, hsl.y, hsl.z);
+}
+
+void HSLtoRGB(float H, float S, float L, out float3 color)
+{
+    H = fmod(H, 1.0);
+    S = clamp(S, 0.0, 1.0);
+    L = clamp(L, 0.0, 1.0);
+    
     float C = (1.0 - abs(2.0 * L - 1.0)) * S;
     float X = C * (1.0 - abs(fmod(H * 6.0, 2.0) - 1.0));
     float m = L - C/2.0;
@@ -110,21 +119,24 @@ void HSLToRGB(float H, float S, float L, out float3 color)
     }
 }
 
-
-float4 HueOffset(float4 color, float hueOffset)
+void HSLtoRGB(float3 hsl, out float3 color)
 {
-    float3 hsl;
-    RGBtoHSL(color.rgb, hsl.x, hsl.y, hsl.z);
-    hsl.x += hueOffset;
-    hsl.x = fmod(hsl.x, 1.0);
-    HSLToRGB(hsl.x, hsl.y, hsl.z, color.rgb);
-    return color;
+    HSLtoRGB(hsl.x, hsl.y, hsl.z, color);
 }
 
-float4 SaturationOffset(float4 color, float saturationOffset)
+void HueOffset(inout float4 color, float hueOffset)
 {
     float3 hsl;
-    RGBtoHSL(color.rgb, hsl.x, hsl.y, hsl.z);
+    RGBtoHSL(color.rgb, hsl);
+    hsl.x += hueOffset;
+    hsl.x = fmod(hsl.x, 1.0);
+    HSLtoRGB(hsl, color.rgb);
+}
+
+void SaturationOffset(inout float4 color, float saturationOffset)
+{
+    float3 hsl;
+    RGBtoHSL(color.rgb, hsl);
     if(saturationOffset < 0)
     {
         // 更接近0.
@@ -136,14 +148,14 @@ float4 SaturationOffset(float4 color, float saturationOffset)
         hsl.y = hsl.y + (1.0 - hsl.y) * saturationOffset;
     }
     hsl.y = clamp(hsl.y, 0.0, 1.0);
-    HSLToRGB(hsl.x, hsl.y, hsl.z, color.rgb);
-    return color;
+    HSLtoRGB(hsl, color.rgb);
 }
 
-float4 BrightnessOffset(float4 color, float brightnessOffset)
+void BrightnessOffset(inout float4 color, float brightnessOffset)
 {
     float3 hsl;
-    RGBtoHSL(color.rgb, hsl.x, hsl.y, hsl.z);
+    RGBtoHSL(color.rgb, hsl);
+    
     if(brightnessOffset < 0)
     {
         // 更接近0.
@@ -154,15 +166,13 @@ float4 BrightnessOffset(float4 color, float brightnessOffset)
         // 更接近1.
         hsl.z = hsl.z + (1.0 - hsl.z) * brightnessOffset;
     }
-    hsl.z = clamp(hsl.z, 0.0, 1.0);
-    HSLToRGB(hsl.x, hsl.y, hsl.z, color.rgb);
-    return color;
+    HSLtoRGB(hsl, color.rgb);
 }
 
-float4 ContrastOffset(float4 color, float contrastOffset)
+void ContrastOffset(inout float4 color, float contrastOffset)
 {
     float3 hsl;
-    RGBtoHSL(color.rgb, hsl.x, hsl.y, hsl.z);
+    RGBtoHSL(color.rgb, hsl);
     if(contrastOffset < 0)
     {
         // 更接近0.5.
@@ -174,14 +184,13 @@ float4 ContrastOffset(float4 color, float contrastOffset)
         hsl.y = hsl.y + (1.0 - hsl.y) * contrastOffset;
         hsl.y = clamp(hsl.y, 0.0, 1.0);
     }
-    HSLToRGB(hsl.x, hsl.y, hsl.z, color.rgb);
-    return color;
+    HSLtoRGB(hsl, color.rgb);
 }
 
-float4 HueConcentrate(float4 color, float hue, float hueConcentrate)
+void HueConcentrate(inout float4 color, float hue, float hueConcentrate)
 {
     float3 hsl;
-    RGBtoHSL(color.rgb, hsl.x, hsl.y, hsl.z);
+    RGBtoHSL(color.rgb, hsl);
     
     float hc = hue;
     float hl = hue - 1;
@@ -216,7 +225,6 @@ float4 HueConcentrate(float4 color, float hue, float hueConcentrate)
     
     hsl.x = fmod(hsl.x, 1.0);
     
-    HSLToRGB(hsl.x, hsl.y, hsl.z, color.rgb);
-    return color;
+    HSLtoRGB(hsl, color.rgb);
 }
 

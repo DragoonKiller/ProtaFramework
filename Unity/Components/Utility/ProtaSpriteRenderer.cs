@@ -48,7 +48,7 @@ namespace Prota.Unity
         public Vector2 maskUVOffset = Vector2.zero;
         public bool maskUVOffsetByTime = false;
         [ShowWhen("maskUVOffsetByTime")] public bool maskUVOffsetByRealtime = false;
-        public Vector4 maskUsage = new Vector4(1, 1, 1, 1);
+        [ColorUsage(true, true)] public Color maskUsage = new Color(1, 1, 1, 1);
         
         [Header("Image")]
         public bool flipX = false;
@@ -88,8 +88,6 @@ namespace Prota.Unity
         {
             SyncSpriteInfoToRectTransform();
             UpdateMeshVertices();
-            UpdateSpriteUV();
-            UpdatMaskUV();
             UpdateRendererProperties();
             UpdateMaterial();
         }
@@ -115,15 +113,22 @@ namespace Prota.Unity
         // ====================================================================================================
 
         Rect submittedRect;
+        Sprite submittedSprite;
+        Sprite submittedNormal;
+        Sprite submittedMask;
+        Vector2 submittedFlipVector;
         
         public bool NeedUpdateVertices()
         {
             if(submittedRect != localRect) return true;
+            if(submittedSprite != sprite) return true;
+            if(submittedNormal != normal) return true;
+            if(submittedMask != mask) return true;
+            if(submittedFlipVector != flipVector) return true;
             return false;
         }
         
         [ThreadStatic] static Vector3[] tempVertices;
-        [ThreadStatic] static int[] tempTriangles;
         public void UpdateMeshVertices()
         {
             if(!NeedUpdateVertices()) return;
@@ -131,70 +136,55 @@ namespace Prota.Unity
             var rect = localRect;
             
             if(tempVertices == null) tempVertices = new Vector3[4];
-            if(tempTriangles == null) tempTriangles = new int[6];
             
             // 顺序: 左上, 右上, 左下, 右下
             tempVertices[0] = new Vector3(rect.xMin, rect.yMax, 0);
             tempVertices[1] = new Vector3(rect.xMax, rect.yMax, 0);
             tempVertices[2] = new Vector3(rect.xMin, rect.yMin, 0);
             tempVertices[3] = new Vector3(rect.xMax, rect.yMin, 0);
+            
+            if(flipX) // 交换左右.
+            {
+                tempVertices[0].x = rect.xMax;
+                tempVertices[1].x = rect.xMin;
+                tempVertices[2].x = rect.xMax;
+                tempVertices[3].x = rect.xMin;
+            }
+            
+            if(flipY) // 交换上下.
+            {
+                tempVertices[0].y = rect.yMin;
+                tempVertices[1].y = rect.yMin;
+                tempVertices[2].y = rect.yMax;
+                tempVertices[3].y = rect.yMax;
+            }
+            
             mesh.SetVertices(tempVertices);
             
-            tempTriangles[0] = 0;
-            tempTriangles[1] = 1;
-            tempTriangles[2] = 2;
-            tempTriangles[3] = 2;
-            tempTriangles[4] = 1;
-            tempTriangles[5] = 3;
-            mesh.SetIndices(tempTriangles, MeshTopology.Triangles, 0);
+            mesh.SetIndices(defaultTriangles, MeshTopology.Triangles, 0);
+            
+            static void SetUV(Mesh mesh, int layer, Sprite sprite)
+            {
+                if(sprite == null) mesh.SetUVs(layer, defaultUVs);
+                else mesh.SetUVs(layer, sprite.uv);
+            }
+            
+            SetUV(mesh, 0, sprite);
+            // 1 = lighting uv.
+            SetUV(mesh, 2, normal);
+            SetUV(mesh, 3, mask);
             
             mesh.RecalculateBounds();
             
             submittedRect = rect;
+            submittedSprite = sprite;
+            submittedNormal = normal;
+            submittedMask = mask;
+            submittedFlipVector = flipVector;
         }
         
         // ====================================================================================================
         // ====================================================================================================
-        Sprite submittedSprite;
-        Vector2 submittedSpriteFlip;
-        Vector2 submittedSpriteUVOffset;
-        bool submittedSpriteUVOffsetByTime;
-        bool submittedSpriteUVOffsetByRealtime;
-        Vector2[] submittedSpriteUV;
-        
-        public void UpdateSpriteUV()
-        {
-            SetUV(mesh,
-                sprite, ref submittedSprite, ref submittedSpriteUV,
-                0,
-                flipVector, ref submittedSpriteFlip,
-                uvOffset, ref submittedSpriteUVOffset,
-                uvOffsetByTime, ref submittedSpriteUVOffsetByTime,
-                uvOffsetByRealtime, ref submittedSpriteUVOffsetByRealtime
-            );
-        }
-        Sprite submittedMask;
-        Vector2 submittedMaskFlip;
-        Vector2 submittedMaskUVOffset;
-        bool submittedMaskUVOffsetByTime;
-        bool submittedMaskUVOffsetByRealtime;
-        Vector2[] submittedMaskUV;
-        
-        public void UpdatMaskUV()
-        {
-            SetUV(mesh,
-                mask, ref submittedMask, ref submittedMaskUV,
-                3,
-                flipVector, ref submittedMaskFlip,
-                maskUVOffset, ref submittedMaskUVOffset,
-                maskUVOffsetByTime, ref submittedMaskUVOffsetByTime,
-                maskUVOffsetByRealtime, ref submittedMaskUVOffsetByRealtime
-            );
-        }
-        
-        // ====================================================================================================
-        // ====================================================================================================
-        
         
         bool NeedUpdateRendererProperties()
         {
@@ -217,8 +207,11 @@ namespace Prota.Unity
         private static class Hashes
         {
             public static int _MainTex;
+            public static int _MainTex_ST;
             public static int _MaskTex;
+            public static int _MaskTex_ST;
             public static int _NormalTex;
+            public static int _NormalTex_ST;
             public static int _Color;
             public static int _AddColor;
             public static int _OverlapColor;
@@ -239,8 +232,11 @@ namespace Prota.Unity
             static void Init()
             {
                 _MainTex = Shader.PropertyToID("_MainTex");
+                _MainTex_ST = Shader.PropertyToID("_MainTex_ST");
                 _MaskTex = Shader.PropertyToID("_MaskTex");
+                _MaskTex_ST = Shader.PropertyToID("_MaskTex_ST");
                 _NormalTex = Shader.PropertyToID("_NormalTex");
+                _NormalTex_ST = Shader.PropertyToID("_NormalTex_ST");
                 _Color = Shader.PropertyToID("_Color");
                 _AddColor = Shader.PropertyToID("_AddColor");
                 _OverlapColor = Shader.PropertyToID("_OverlapColor");
@@ -259,25 +255,40 @@ namespace Prota.Unity
         
         void UpdateMaterial()
         {
-            static void SetTexture(Material mat, int hash, Sprite sprite)
+            static void SetTexture(Material mat, int hash, int sthash, Sprite sprite,
+                Vector2 uvOffset, bool uvOffsetByTime, bool uvOffsetByRealtime)
             {
+                static float UVOffsetMult(bool uvOffsetByTime, bool uvOffsetByRealtime)
+                {
+                    if(!uvOffsetByTime) return 1;
+                    if(uvOffsetByRealtime) return Time.realtimeSinceStartup;
+                    return Time.time;
+                }
+                
                 var texture = sprite == null ? null : sprite.texture;
-                if(texture == null) mat.SetTexture(hash, null);
-                else mat.SetTexture(hash, texture);
+                if(texture == null)
+                {
+                    mat.SetTexture(hash, null);
+                }
+                else
+                {
+                    mat.SetTexture(hash, texture);
+                    uvOffset *= UVOffsetMult(uvOffsetByTime, uvOffsetByRealtime);
+                    mat.SetVector(sthash, new Vector4(1, 1, uvOffset.x, uvOffset.y));
+                }
             }
             
-            material.renderQueue = renderQueueOverride >= 0 ? material.renderQueue : renderQueueOverride;
+            material.renderQueue = renderQueueOverride >= 0 ? renderQueueOverride : material.renderQueue;
             
-            
-            SetTexture(material, Hashes._MainTex, sprite);
-            SetTexture(material, Hashes._NormalTex, normal);
-            SetTexture(material, Hashes._MaskTex, mask);
+            SetTexture(material, Hashes._MainTex, Hashes._MainTex_ST, sprite, uvOffset, uvOffsetByTime, uvOffsetByRealtime);
+            SetTexture(material, Hashes._NormalTex, Hashes._NormalTex_ST, normal, uvOffset, uvOffsetByTime, uvOffsetByRealtime);
+            SetTexture(material, Hashes._MaskTex, Hashes._MaskTex_ST, mask, maskUVOffset, maskUVOffsetByTime, maskUVOffsetByRealtime);
             
             material.SetColor(Hashes._Color, color);
             material.SetColor(Hashes._AddColor, addColor);
             material.SetColor(Hashes._OverlapColor, overlapColor);
             
-            material.SetVector(Hashes._MaskUsage, maskUsage);
+            material.SetColor(Hashes._MaskUsage, maskUsage);
             
             material.SetFloat(Hashes._HueOffset, hueOffset);
             material.SetFloat(Hashes._BrightnessOffset, brightnessOffset);
@@ -301,65 +312,6 @@ namespace Prota.Unity
         // ====================================================================================================
         // ====================================================================================================
         
-        [ThreadStatic] static Vector2[] tempUVs;
-        static void SetUV(Mesh mesh, Sprite sprite, ref Sprite recordSprite,
-            ref Vector2[] uvCache,
-            int uvlayer,
-            Vector2 flipVector, ref Vector2 recordFlipVector,
-            Vector2 uvOffset, ref Vector2 recordUVOffset,
-            bool uvOffsetByTime, ref bool recordUVOffsetByTime,
-            bool uvOffsetByRealtime, ref bool recordUVOffsetByRealtime)
-        {
-            if(mesh == null || sprite == null) return;
-            
-            bool shouldUpdateUV = false;
-            if(!shouldUpdateUV && sprite != recordSprite) shouldUpdateUV = true;
-            if(!shouldUpdateUV && flipVector != recordFlipVector) shouldUpdateUV = true;
-            if(!shouldUpdateUV && uvOffset != recordUVOffset) shouldUpdateUV = true;
-            if(!shouldUpdateUV && uvOffsetByTime) shouldUpdateUV = true;
-            if(!shouldUpdateUV) return;
-            
-            if(tempUVs == null) tempUVs = new Vector2[4];
-            if(recordSprite != sprite) uvCache = sprite.uv;
-            recordSprite = sprite;
-            recordFlipVector = flipVector;
-            recordUVOffset = uvOffset;
-            recordUVOffsetByTime = uvOffsetByTime;
-            recordUVOffsetByRealtime = uvOffsetByRealtime;
-            
-            var topLeftIndex = 0;
-            var topRightIndex = 1;
-            var bottomLeftIndex = 2;
-            var bottomRightIndex = 3;
-            if(flipVector.x < 0)
-            {
-                (topLeftIndex, topRightIndex) = (topRightIndex, topLeftIndex);
-                (bottomLeftIndex, bottomRightIndex) = (bottomRightIndex, bottomLeftIndex);
-            }
-            if(flipVector.y < 0)
-            {
-                (topLeftIndex, bottomLeftIndex) = (bottomLeftIndex, topLeftIndex);
-                (topRightIndex, bottomRightIndex) = (bottomRightIndex, topRightIndex);
-            }
-            
-            tempUVs[0] = uvCache[topLeftIndex];
-            tempUVs[1] = uvCache[topRightIndex];
-            tempUVs[2] = uvCache[bottomLeftIndex];
-            tempUVs[3] = uvCache[bottomRightIndex];
-            
-            if(uvOffsetByTime)
-            {
-                var t = uvOffsetByRealtime ? Time.realtimeSinceStartup : Time.time;
-                for(var i = 0; i < tempUVs.Length; i++) tempUVs[i] += uvOffset * t;
-            }
-            else
-            {
-                for(var i = 0; i < tempUVs.Length; i++) tempUVs[i] += uvOffset;
-            }
-            
-            mesh.SetUVs(uvlayer, tempUVs);
-        }
-        
         void OnEnable()
         {
             meshRenderer = GetComponent<MeshRenderer>();
@@ -376,8 +328,6 @@ namespace Prota.Unity
             meshRenderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
             
             submittedRect = Rect.zero;
-            submittedSprite = null;
-            submittedMask = null;
         }
         
         void OnDisable()
@@ -396,11 +346,16 @@ namespace Prota.Unity
         }
         
         
-        static Vector2[] defaultUVs = new Vector2[] {
+        static readonly Vector2[] defaultUVs = new Vector2[] {
             new Vector2(0, 1),
             new Vector2(1, 1),
             new Vector2(0, 0),
             new Vector2(1, 0),
+        };
+        
+        static readonly int[] defaultTriangles = new int[] {
+            0, 1, 2,
+            2, 1, 3,
         };
     }
 }

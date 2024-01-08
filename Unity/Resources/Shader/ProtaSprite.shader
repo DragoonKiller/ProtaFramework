@@ -12,11 +12,11 @@ Shader "Prota/Sprite"
         _MaskTex("Mask", 2D) = "white" { }
         _Normal("Normal", 2D) = "bump" { }
         
-        _MaskUsage("Mask Weight", Vector) = (0, 0, 0, 1)
+        [HDR] _MaskUsage("Mask Weight", Color) = (0, 0, 0, 1)
         
-        _Color ("Color", Color) = (1,1,1,1)
-        _AddColor ("Add Color", Color) = (0,0,0,0)
-        _OverlapColor ("Overlap Color", Color) = (0,0,0,0)
+        [HDR] _Color ("Color", Color) = (1,1,1,1)
+        [HDR] _AddColor ("Add Color", Color) = (0,0,0,0)
+        [HDR] _OverlapColor ("Overlap Color", Color) = (0,0,0,0)
         
         _AlphaClip ("Alpha Clip", float) = 0.5
         
@@ -148,23 +148,23 @@ Shader "Prota/Sprite"
             {
                 float4 main = i.color * SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
                 
-                const float4 mask = _MaskUsage * SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.uv);
+                const float4 mask = _MaskUsage * SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.maskUV);
                 
-                main *= mask;
+                if(main.a * mask.a <= _AlphaClip) discard;
                 
-                if(main.a <= _AlphaClip) discard;
+                HueOffset(main, _HueOffset);
+                ContrastOffset(main, _ContrastOffset);
+                SaturationOffset(main, _SaturationOffset);
+                BrightnessOffset(main, _BrightnessOffset);
                 
                 main.rgb += _AddColor.rgb;
                 main.rgb = _OverlapColor.a * _OverlapColor.rgb + (1 - _OverlapColor.a) * main.rgb;
                 
-                main = HueOffset(main, _HueOffset);
-                main = ContrastOffset(main, _ContrastOffset);
-                main = SaturationOffset(main, _SaturationOffset);
-                main = BrightnessOffset(main, _BrightnessOffset);
+                main *= mask;
                 
                 SurfaceData2D surfaceData;
                 InputData2D inputData;
-                InitializeSurfaceData(main.rgb, main.a, mask, surfaceData);
+                InitializeSurfaceData(main.rgb, main.a, float4(1, 1, 1, 1), surfaceData);
                 InitializeInputData(i.uv, i.lightingUV, inputData);
 
                 return CombinedShapeLightShared(surfaceData, inputData);

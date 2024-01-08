@@ -32,7 +32,8 @@ namespace Prota.VisualEffect
         public override void Create()
         {
             pass = new ProtaSkyboxRenderPass(this);
-            material = new Material(Shader.Find("Hidden/Prota/Skybox")) { name = "ProtaSkybox" };
+            var shader = Shader.Find("Hidden/Prota/Skybox");
+            material = new Material(shader) { name = "ProtaSkybox" };
             generatedTexture = new Texture2D(1, 256, TextureFormat.RGBA32, false, true) {
                 name = "ProtaSkyboxGradientTexture"
             };
