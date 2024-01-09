@@ -67,7 +67,8 @@ Shader "Prota/Sprite"
 
             #pragma vertex CombinedShapeLightVertex
             #pragma fragment CombinedShapeLightFragment
-
+            
+            #pragma multi_compile USE_LIGHT __
             #pragma multi_compile USE_SHAPE_LIGHT_TYPE_0 __
             #pragma multi_compile USE_SHAPE_LIGHT_TYPE_1 __
             #pragma multi_compile USE_SHAPE_LIGHT_TYPE_2 __
@@ -182,8 +183,12 @@ Shader "Prota/Sprite"
                 InputData2D inputData;
                 InitializeSurfaceData(main.rgb, main.a, float4(1, 1, 1, 1), surfaceData);
                 InitializeInputData(i.uv, i.lightingUV, inputData);
-
+                
+                #if USE_LIGHT
                 return CombinedShapeLightShared(surfaceData, inputData);
+                #else
+                return main;
+                #endif
             }
             ENDHLSL
         }

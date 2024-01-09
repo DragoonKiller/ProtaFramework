@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEngine.Rendering;
 
 namespace Prota.Unity
 {
@@ -21,10 +22,20 @@ namespace Prota.Unity
     [RequireComponent(typeof(RectTransform))]
     public class ProtaSpriteRenderer : MonoBehaviour
     {
+        static LocalKeyword keywordUseLight;
         public static Material _cachedMaterial;
         public static Material cachedMaterial
-            => _cachedMaterial == null ? _cachedMaterial = new Material(Shader.Find("Prota/Sprite")) : _cachedMaterial;
-        
+        {
+            get
+            {
+                if(_cachedMaterial != null) return _cachedMaterial;
+                var shader = Shader.Find("Prota/Sprite");
+                if(shader == null) throw new Exception("Shader not found: Prota/Sprite");
+                keywordUseLight = new LocalKeyword(shader, "USE_LIGHT");
+                _cachedMaterial = new Material(shader) { name = "ProtaSprite" };
+                return _cachedMaterial;
+            }
+        }
         public MeshRenderer meshRenderer { get; private set; }
         public MeshFilter meshFilter { get; private set; }
         public RectTransform rectTransform { get; private set; }
@@ -73,7 +84,7 @@ namespace Prota.Unity
         public UnityEngine.Rendering.StencilOp stencilPass = UnityEngine.Rendering.StencilOp.Keep;
         
         [Header("Material")]
-        
+        public bool useLight = true;
         public UnityEngine.Rendering.BlendMode srcBlendMode = UnityEngine.Rendering.BlendMode.SrcAlpha;
         public UnityEngine.Rendering.BlendMode dstBlendMode = UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
         public UnityEngine.Rendering.CompareFunction depthTest = UnityEngine.Rendering.CompareFunction.Always;
@@ -299,6 +310,8 @@ namespace Prota.Unity
             SetTexture(material, Hashes._MainTex, Hashes._MainTex_ST, sprite, uvOffset, uvOffsetByTime, uvOffsetByRealtime);
             SetTexture(material, Hashes._NormalTex, Hashes._NormalTex_ST, normal, uvOffset, uvOffsetByTime, uvOffsetByRealtime);
             SetTexture(material, Hashes._MaskTex, Hashes._MaskTex_ST, mask, maskUVOffset, maskUVOffsetByTime, maskUVOffsetByRealtime);
+            
+            material.SetKeyword(keywordUseLight, useLight);
             
             material.SetColor(Hashes._Color, color);
             material.SetColor(Hashes._AddColor, addColor);
