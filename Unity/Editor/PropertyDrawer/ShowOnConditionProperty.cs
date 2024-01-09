@@ -5,6 +5,8 @@ using UnityEditor.UIElements;
 using System.Reflection;
 
 using Prota.Unity;
+using UnityEditor.Rendering;
+using UnityEditor.ShaderGraph.Internal;
 
 namespace Prota.Editor
 {
@@ -13,7 +15,6 @@ namespace Prota.Editor
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            var attr = fieldInfo.GetCustomAttribute<Readonly>();
             if(ShouldDraw(property)) return EditorGUI.GetPropertyHeight(property, label, true);
             return 0;
         }
@@ -27,13 +28,19 @@ namespace Prota.Editor
         bool ShouldDraw(SerializedProperty property)
         {
             var attr = fieldInfo.GetCustomAttribute<ShowWhenAttribute>();
-            var target = property.serializedObject.targetObject;    // 这个 object 是一个 Component.
-            var refTarget = target.ProtaReflection();
-            bool hasValue = refTarget.TryGet(attr.name, out object value);
-            if(hasValue && value is bool b && b) return true;
-            if(hasValue && value is object o && o != null) return true;
-            bool hasMethod = refTarget.type.HasMethod(attr.name);
-            if(hasMethod && refTarget.Call(attr.name).PassValue(out var st) != null && st is bool k && k) return true;
+            return CheckShow(attr.name, property.serializedObject);
+        }
+        
+        bool CheckShow(string name, SerializedObject obj)
+        {
+            var prop = obj.FindProperty(name);
+            if(prop != null && prop.propertyType == SerializedPropertyType.Boolean) return prop.boolValue;
+            if(prop != null && prop.propertyType == SerializedPropertyType.ObjectReference) return prop.objectReferenceValue != null;
+            
+            var pref = obj.targetObject.ProtaReflection();
+            bool hasMethod = pref.type.HasMethod(name);
+            if(hasMethod && pref.Call(name).PassValue(out var st) != null && st is bool k && k) return true;
+            
             return false;
         }
     }

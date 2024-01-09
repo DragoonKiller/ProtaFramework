@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine.Rendering;
+using Mono.Cecil;
 
 namespace Prota.Unity
 {
@@ -31,11 +32,12 @@ namespace Prota.Unity
                 if(_cachedMaterial != null) return _cachedMaterial;
                 var shader = Shader.Find("Prota/Sprite");
                 if(shader == null) throw new Exception("Shader not found: Prota/Sprite");
-                keywordUseLight = new LocalKeyword(shader, "USE_LIGHT");
+                keywordUseLight = new LocalKeyword(shader, "_USE_LIGHT");
                 _cachedMaterial = new Material(shader) { name = "ProtaSprite" };
                 return _cachedMaterial;
             }
         }
+        
         public MeshRenderer meshRenderer { get; private set; }
         public MeshFilter meshFilter { get; private set; }
         public RectTransform rectTransform { get; private set; }
@@ -52,7 +54,9 @@ namespace Prota.Unity
         public Sprite normal;
         public Vector2 uvOffset = Vector2.zero;
         public bool uvOffsetByTime = false;
-        [ShowWhen("usOffsetByTime")] public bool uvOffsetByRealtime = false;
+        [ShowWhen("uvOffsetByTime")] public bool uvOffsetByRealtime = false;
+        
+        public Vector4 extend;  // (xmin-, ymin-, xmax+, ymax+)
         
         [Header("Mask")]
         public Sprite mask;
@@ -80,14 +84,14 @@ namespace Prota.Unity
         public PowerOfTwoEnumByte stencilRef = 0;
         public PowerOfTwoEnumByte stencilReadMask = PowerOfTwoEnumByte.All;
         public PowerOfTwoEnumByte stencilWriteMask = PowerOfTwoEnumByte.All;
-        public UnityEngine.Rendering.CompareFunction stencilCompare = UnityEngine.Rendering.CompareFunction.Always;
-        public UnityEngine.Rendering.StencilOp stencilPass = UnityEngine.Rendering.StencilOp.Keep;
+        public CompareFunction stencilCompare = CompareFunction.Always;
+        public StencilOp stencilPass = StencilOp.Keep;
         
         [Header("Material")]
         public bool useLight = true;
-        public UnityEngine.Rendering.BlendMode srcBlendMode = UnityEngine.Rendering.BlendMode.SrcAlpha;
-        public UnityEngine.Rendering.BlendMode dstBlendMode = UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
-        public UnityEngine.Rendering.CompareFunction depthTest = UnityEngine.Rendering.CompareFunction.Always;
+        public BlendMode srcBlendMode = BlendMode.SrcAlpha;
+        public BlendMode dstBlendMode = BlendMode.OneMinusSrcAlpha;
+        public CompareFunction depthTest = CompareFunction.Always;
         public OnOffEnum depthWrite = OnOffEnum.On;
         [Range(0, 1)] public float alphaClip = 0;
         
@@ -98,10 +102,11 @@ namespace Prota.Unity
         public int orderInLayer = 0;
         public int renderLayerMask = -1;
         
+        
         // ====================================================================================================
         // ====================================================================================================
         
-        void Update()
+        void LateUpdate()
         {
             SyncSpriteInfoToRectTransform();
             UpdateMeshVertices();
@@ -128,8 +133,9 @@ namespace Prota.Unity
 
         // ====================================================================================================
         // ====================================================================================================
-
+        
         Rect submittedRect;
+        Vector4 submittedExtend;
         Sprite submittedSprite;
         Sprite submittedNormal;
         Sprite submittedMask;
@@ -142,19 +148,35 @@ namespace Prota.Unity
             if(submittedNormal != normal) return true;
             if(submittedMask != mask) return true;
             if(submittedFlipVector != flipVector) return true;
+            if(submittedExtend != extend) return true;
             return false;
         }
         
-        [ThreadStatic] static Vector3[] tempVertices;
         public void UpdateMeshVertices()
         {
             if(!NeedUpdateVertices()) return;
             
+            var localRect = this.localRect;
+            
+            // 计算扩展后的矩形.
             var rect = localRect;
+            rect.xMin -= extend.x;
+            rect.yMin -= extend.y;
+            rect.xMax += extend.z;
+            rect.yMax += extend.w;
             
-            if(tempVertices == null) tempVertices = new Vector3[4];
+            // 计算扩展后的 uv.
+            var spriteUV = sprite ? sprite.uv : null;
+            var normalUV = normal ? normal.uv : null;
+            var maskUV = mask ? mask.uv : null;
+            var localSize = localRect.size;
+            if(sprite) TransformUVExtend(localSize, extend, spriteUV);
+            if(normal) TransformUVExtend(localSize, extend, normalUV);
+            if(mask) TransformUVExtend(localSize, extend, maskUV);
             
-            // 顺序: 左上, 右上, 左下, 右下
+            var tempVertices = new Vector3[4];
+            
+            // 顺序: 左上, 右上, 左下, 右下. uv 同.
             tempVertices[0] = new Vector3(rect.xMin, rect.yMax, 0);
             tempVertices[1] = new Vector3(rect.xMax, rect.yMax, 0);
             tempVertices[2] = new Vector3(rect.xMin, rect.yMin, 0);
@@ -162,42 +184,42 @@ namespace Prota.Unity
             
             if(flipX) // 交换左右.
             {
-                tempVertices[0].x = rect.xMax;
-                tempVertices[1].x = rect.xMin;
-                tempVertices[2].x = rect.xMax;
-                tempVertices[3].x = rect.xMin;
+                Swap(ref spriteUV[0], ref spriteUV[1]);
+                Swap(ref spriteUV[2], ref spriteUV[3]);
+                Swap(ref maskUV[0], ref maskUV[1]);
+                Swap(ref maskUV[2], ref maskUV[3]);
             }
             
             if(flipY) // 交换上下.
             {
-                tempVertices[0].y = rect.yMin;
-                tempVertices[1].y = rect.yMin;
-                tempVertices[2].y = rect.yMax;
-                tempVertices[3].y = rect.yMax;
+                Swap(ref spriteUV[0], ref spriteUV[2]);
+                Swap(ref spriteUV[1], ref spriteUV[3]);
+                Swap(ref maskUV[0], ref maskUV[2]);
+                Swap(ref maskUV[1], ref maskUV[3]);
             }
             
             mesh.SetVertices(tempVertices);
-            
             mesh.SetIndices(defaultTriangles, MeshTopology.Triangles, 0);
             
-            static void SetUV(Mesh mesh, int layer, Sprite sprite)
-            {
-                if(sprite == null) mesh.SetUVs(layer, defaultUVs);
-                else mesh.SetUVs(layer, sprite.uv);
-            }
-            
-            SetUV(mesh, 0, sprite);
-            // 1 = lighting uv.
-            SetUV(mesh, 2, normal);
-            SetUV(mesh, 3, mask);
+            mesh.SetUVs(0, sprite ? spriteUV : defaultUVs);
+            mesh.SetUVs(1, normal ? normalUV : defaultUVs);
+            mesh.SetUVs(2, mask ? maskUV : defaultUVs);
             
             mesh.RecalculateBounds();
             
             submittedRect = rect;
+            submittedExtend = extend;
             submittedSprite = sprite;
             submittedNormal = normal;
             submittedMask = mask;
             submittedFlipVector = flipVector;
+        }
+        
+        void GetUVWithExtend(Vector2[] uvs, Rect extend)
+        {
+            // 假设原来的矩形为 (xmin, ymin, xmax, ymax)
+            // 原来的uv值为 (uv.x, uv.y)
+            // 扩展后的矩形为 (xmin)
         }
         
         // ====================================================================================================
@@ -337,8 +359,6 @@ namespace Prota.Unity
             material.SetInteger(Hashes._StencilWriteMask, unchecked((int)stencilWriteMask));
             material.SetInteger(Hashes._StencilCompare, unchecked((int)stencilCompare));
             material.SetInteger(Hashes._StencilOp, unchecked((int)stencilPass));
-            
-            meshRenderer.sharedMaterial = material;
         }
         
         
@@ -353,11 +373,11 @@ namespace Prota.Unity
             meshFilter = GetComponent<MeshFilter>();
             rectTransform = GetComponent<RectTransform>();
             meshFilter.mesh = mesh = new Mesh() { name = "ProtaSpriteRenderer" };
-            meshRenderer.material = material = new Material(cachedMaterial) { name = "ProtaSpriteRenderer" };
+            meshRenderer.sharedMaterial = material = new Material(cachedMaterial) { name = "ProtaSpriteRenderer" };
             
-            meshRenderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
-            meshRenderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
-            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            meshRenderer.lightProbeUsage = LightProbeUsage.Off;
+            meshRenderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
+            meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
             meshRenderer.receiveShadows = false;
             meshRenderer.allowOcclusionWhenDynamic = false;
             meshRenderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
@@ -371,12 +391,14 @@ namespace Prota.Unity
             {
                 DestroyImmediate(mesh);
                 meshFilter.mesh = null;
+                mesh = null;
             }
             
             if(material != null)
             {
                 DestroyImmediate(material);
                 meshRenderer.material = null;
+                material = null;
             }
         }
         
@@ -392,5 +414,36 @@ namespace Prota.Unity
             0, 1, 2,
             2, 1, 3,
         };
+        
+        
+        static void Swap<T>(ref T a, ref T b)
+        {
+            var t = a;
+            a = b;
+            b = t;
+        }
+        
+        
+        static void TransformUVExtend(Vector2 size, Vector4 extend, Vector2[] points)
+        {
+            // 顺序: 左上, 右上, 左下, 右下.
+            var xmin = points[0].x;
+            var xmax = points[1].x;
+            var ymin = points[2].y;
+            var ymax = points[0].y;
+            
+            var uvsize = new Vector2(xmax - xmin, ymax - ymin);
+            
+            var exmin = xmin - extend.x / size.x * uvsize.x;
+            var exmax = xmax + extend.z / size.x * uvsize.x;
+            var eymin = ymin - extend.y / size.y * uvsize.y;
+            var eymax = ymax + extend.w / size.y * uvsize.y;
+            
+            points[0] = new Vector2(exmin, eymax);
+            points[1] = new Vector2(exmax, eymax);
+            points[2] = new Vector2(exmin, eymin);
+            points[3] = new Vector2(exmax, eymin);
+        }
+            
     }
 }
