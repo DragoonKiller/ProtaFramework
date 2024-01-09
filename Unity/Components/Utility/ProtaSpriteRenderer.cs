@@ -49,6 +49,9 @@ namespace Prota.Unity
         // ====================================================================================================
         // ====================================================================================================
         
+        [Header("Mesh")]
+        public Vector4 extend;  // (xmin-, ymin-, xmax+, ymax+)
+        
         [Header("Sprite")]
         public Sprite sprite;
         public Sprite normal;
@@ -56,19 +59,19 @@ namespace Prota.Unity
         public bool uvOffsetByTime = false;
         [ShowWhen("uvOffsetByTime")] public bool uvOffsetByRealtime = false;
         
-        public Vector4 extend;  // (xmin-, ymin-, xmax+, ymax+)
+        public bool flipSpriteX;
+        public bool flipSpriteY;
+        public Vector2 spriteFlipVector => new Vector2(flipSpriteX ? -1 : 1, flipSpriteY ? -1 : 1);
         
         [Header("Mask")]
         public Sprite mask;
         public Vector2 maskUVOffset = Vector2.zero;
         public bool maskUVOffsetByTime = false;
         [ShowWhen("maskUVOffsetByTime")] public bool maskUVOffsetByRealtime = false;
+        public bool flipMaskX = false;
+        public bool flipMaskY = false;
+        public Vector2 maskFlipVector => new Vector2(flipMaskX ? -1 : 1, flipMaskY ? -1 : 1);
         [ColorUsage(true, true)] public Color maskUsage = new Color(1, 1, 1, 1);
-        
-        [Header("Image")]
-        public bool flipX = false;
-        public bool flipY = false;
-        public Vector2 flipVector => new Vector2(flipX ? -1 : 1, flipY ? -1 : 1);
         
 
         [Header("Color")]
@@ -139,7 +142,8 @@ namespace Prota.Unity
         Sprite submittedSprite;
         Sprite submittedNormal;
         Sprite submittedMask;
-        Vector2 submittedFlipVector;
+        Vector2 submittedFlipSpriteVector;
+        Vector2 submittedFlipMaskVector;
         
         public bool NeedUpdateVertices()
         {
@@ -147,7 +151,8 @@ namespace Prota.Unity
             if(submittedSprite != sprite) return true;
             if(submittedNormal != normal) return true;
             if(submittedMask != mask) return true;
-            if(submittedFlipVector != flipVector) return true;
+            if(submittedFlipSpriteVector != spriteFlipVector) return true;
+            if(submittedFlipMaskVector != maskFlipVector) return true;
             if(submittedExtend != extend) return true;
             return false;
         }
@@ -182,21 +187,9 @@ namespace Prota.Unity
             tempVertices[2] = new Vector3(rect.xMin, rect.yMin, 0);
             tempVertices[3] = new Vector3(rect.xMax, rect.yMin, 0);
             
-            if(flipX) // 交换左右.
-            {
-                Swap(ref spriteUV[0], ref spriteUV[1]);
-                Swap(ref spriteUV[2], ref spriteUV[3]);
-                Swap(ref maskUV[0], ref maskUV[1]);
-                Swap(ref maskUV[2], ref maskUV[3]);
-            }
-            
-            if(flipY) // 交换上下.
-            {
-                Swap(ref spriteUV[0], ref spriteUV[2]);
-                Swap(ref spriteUV[1], ref spriteUV[3]);
-                Swap(ref maskUV[0], ref maskUV[2]);
-                Swap(ref maskUV[1], ref maskUV[3]);
-            }
+            if(sprite) FlipSpriteUV(spriteUV, flipSpriteX, flipSpriteY);
+            if(normal) FlipSpriteUV(normalUV, flipSpriteX, flipSpriteY);
+            if(mask) FlipSpriteUV(maskUV, flipMaskX, flipMaskY);
             
             mesh.SetVertices(tempVertices);
             mesh.SetIndices(defaultTriangles, MeshTopology.Triangles, 0);
@@ -212,14 +205,23 @@ namespace Prota.Unity
             submittedSprite = sprite;
             submittedNormal = normal;
             submittedMask = mask;
-            submittedFlipVector = flipVector;
+            submittedFlipSpriteVector = spriteFlipVector;
+            submittedFlipMaskVector = maskFlipVector;
         }
         
-        void GetUVWithExtend(Vector2[] uvs, Rect extend)
+        static void FlipSpriteUV(Vector2[] uv, bool flipX, bool flipY)
         {
-            // 假设原来的矩形为 (xmin, ymin, xmax, ymax)
-            // 原来的uv值为 (uv.x, uv.y)
-            // 扩展后的矩形为 (xmin)
+            if(flipX)
+            {
+                Swap(ref uv[0], ref uv[1]);
+                Swap(ref uv[2], ref uv[3]);
+            }
+            
+            if(flipY)
+            {
+                Swap(ref uv[0], ref uv[2]);
+                Swap(ref uv[1], ref uv[3]);
+            }
         }
         
         // ====================================================================================================
