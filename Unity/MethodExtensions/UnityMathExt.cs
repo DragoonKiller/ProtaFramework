@@ -421,7 +421,6 @@ namespace Prota.Unity
         
         public static float SmoothStep(this float x) => x * x * (3 - 2 * x);
         
-        
     }
     
 }

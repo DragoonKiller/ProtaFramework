@@ -25,7 +25,22 @@ namespace Prota.Unity
         void LateUpdate()
         {
             if(ParallaxCamera.instance == null) return;
-            if(contentRoot == null) contentRoot = this.GetBinding("ContentRoot");
+            if(contentRoot == null)
+            {
+                if(!this.TryGetDataBinding(out var binding))
+                {
+                    binding = this.gameObject.AddComponent<DataBinding>();
+                }
+                
+                binding.TryGet("ContentRoot", out contentRoot);
+                if(contentRoot == null)
+                {
+                    contentRoot = new GameObject("$ContentRoot");
+                    contentRoot.transform.SetParent(this.transform);
+                    contentRoot.transform.localPosition = Vector3.zero;
+                }
+            }
+            
             
             var myPos = this.transform.position;
             var camPos = ParallaxCamera.instance.transform.position;

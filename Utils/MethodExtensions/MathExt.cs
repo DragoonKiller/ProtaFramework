@@ -31,6 +31,16 @@ namespace Prota
         
         public static bool ApproximatelyEqual(this float x, float y) => Math.Abs(x - y) < 1e-6f;
         
+        public static int ToInt(this float x) => (int)x;
+        public static int ToInt(this double x) => (int)x;
+        
+        public static float ToFloat(this int x) => (float)x;
+        public static float ToFloat(this double x) => (float)x;
+        
+        public static double ToDouble(this int x) => (double)x;
+        public static double ToDouble(this float x) => (double)x;
+        
+        
         public static float Sqr(this float x) => x * x;
         public static int Sqr(this int x) => x * x;
         public static double Sqr(this double x) => x * x;

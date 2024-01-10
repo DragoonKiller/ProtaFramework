@@ -130,6 +130,29 @@ namespace Prota.Unity
             return null;
         }
         
+        public static bool TryGetDataBinding(this GameObject self, out DataBinding res)
+        {
+            res = null;
+            if(Prota.Unity.DataBinding.dataBindingCache.TryGetValue(self, out res)) return true;
+            if(self.TryGetComponent<DataBinding>(out res)) return true;
+            return false;
+        }
+        
+        public static bool TryGetDataBinding(this Component self, out DataBinding res)
+            => self.gameObject.TryGetDataBinding(out res);
+        
+        public static bool TryGetBinding(this GameObject self, string name, out GameObject res)
+        {
+            res = null;
+            var dataBinding = self.gameObject.DataBinding();
+            if(dataBinding == null) return false;
+            if(dataBinding.TryGet(name, out res)) return true;
+            return false;
+        }
+        
+        public static bool TryGetBinding(this Component self, string name, out GameObject res)
+            => self.gameObject.TryGetBinding(name, out res);
+        
         public static GameObject GetBinding(this GameObject self, string name)
             => self.DataBinding().Get(name);
         

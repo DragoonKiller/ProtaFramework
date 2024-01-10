@@ -60,7 +60,7 @@ namespace Prota.Editor
         {
             var p = curHandle * b.size + localOffset;
             
-            using var handleContext = HandleContext.Get();
+            using HandleColorScope _ = new();
             Handles.color = new Color(.2f, 1f, .2f, 1);
             var size = HandleUtility.GetHandleSize(p) * 0.05f;
             var snap = Vector3.one * 0.5f;
