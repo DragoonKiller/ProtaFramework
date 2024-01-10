@@ -3,7 +3,6 @@ using Prota.Unity;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using Codice.CM.Common.Tree.Partial;
 
 namespace Prota.Tween
 {
@@ -68,7 +67,7 @@ namespace Prota.Tween
     {
         static ProtaDynamicFXAsset _asset;
         public static ProtaDynamicFXAsset asset
-            => _asset ??= Resources.Load<ProtaDynamicFXAsset>("Config/Prota Dynamic FX Asset");
+            => _asset ? _asset : (_asset = Resources.Load<ProtaDynamicFXAsset>("Config/Prota Dynamic FX Asset"));
         
         public ProtaDynamicFXType type;
         
@@ -194,7 +193,7 @@ namespace Prota.Tween
     
     public static partial class UnityMethodExtensions
     {
-        public static ProtaDynamicFX Play(this GameObject g, ProtaDynamicFXType type, float duration = 1f, bool loop = false)
+        public static ProtaDynamicFX PlayDynamicFX(this GameObject g, ProtaDynamicFXType type, float duration = 1f, bool loop = false)
         {
             var fx = g.GetOrCreate<ProtaDynamicFX>();
             fx.SetType(type);

@@ -19,6 +19,8 @@ namespace Prota.Editor
             window.Show();
         }
         
+        GameObject selectedGameObject;
+        
         string selectAnimationName;
         
         Vector2 scrollPos;
@@ -30,9 +32,19 @@ namespace Prota.Editor
             public EditorCurveBinding originalBinding;
             public string newPath;
             public string newName;
+            public Type type;
         }
         
         Dictionary<string, Modification> modifications = new Dictionary<string, Modification>();
+        
+        void Update()
+        {
+            if(Selection.activeGameObject != null && Selection.activeGameObject != selectedGameObject)
+            {
+                selectedGameObject = Selection.activeGameObject;
+                Repaint();
+            }
+        }
         
         void OnGUI()
         {
@@ -41,81 +53,86 @@ namespace Prota.Editor
             if(!GetAnimatorController(animator, out var controller)) return;
             if(!GetAnimation(ref selectAnimationName, controller, out var animationClip, out var floatBindings, out var objectBindings)) return;
             
-            if(modified != null && animationClip != modified)
-            {
-                modifications.Clear();
-                modified = null;
-            }
+            if(modified != null && animationClip != modified) RevertModification();
             
+            scrollPos = EditorGUILayout.BeginScrollView(scrollPos, GUILayout.ExpandHeight(true));
+            foreach(var binding in floatBindings.Concat(objectBindings))
+            {
+                var path = binding.path;
+                var name = binding.propertyName;
+                var type = binding.type;
+                if(modifications.TryGetValue(binding.path, out var mod))
+                {
+                    path = mod.newPath;
+                    name = mod.newName;
+                    type = mod.type;
+                }
+                
+                if(DrawBindingEditor(animator.gameObject, ref type, ref path, ref name))
+                {
+                    modifications[binding.path] = new Modification
+                    {
+                        originalBinding = binding,
+                        newPath = path,
+                        newName = name,
+                        type = type
+                    };
+                    
+                    modified = animationClip;
+                }
+            }
+            EditorGUILayout.EndScrollView();
+            
+            if(modified && GUILayout.Button("Apply")) ApplyModification(animationClip);
+            if(modified && GUILayout.Button("Revert")) RevertModification();
+        }
+        
+        void RevertModification()
+        {
+            modifications.Clear();
+            modified = null;
+        }
+        
+        void ApplyModification(AnimationClip clip)
+        {
             AssetDatabase.StartAssetEditing();
             try
             {
-                Undo.RecordObject(animationClip, "Animation Rebind");
+                Undo.RecordObject(clip, "Animation Rebind");
                 
-                scrollPos = EditorGUILayout.BeginScrollView(scrollPos, GUILayout.ExpandHeight(true));
-                foreach(var binding in floatBindings.Concat(objectBindings))
+                List<Action> actions = new();
+                
+                foreach(var mod in modifications.Values)
                 {
-                    var path = binding.path;
-                    var name = binding.propertyName;
-                    if(modifications.TryGetValue(binding.path, out var mod))
-                    {
-                        path = mod.newPath;
-                        name = mod.newName;
-                    }
+                    var newBinding = mod.originalBinding;
+                    newBinding.path = mod.newPath;
+                    newBinding.propertyName = mod.newName;
                     
-                    if(DrawBindingEditor(g, ref path, ref name))
+                    var curve = AnimationUtility.GetEditorCurve(clip, mod.originalBinding);
+                    var isFloatCurve = curve != null;
+                    var objCurve = AnimationUtility.GetObjectReferenceCurve(clip, mod.originalBinding);
+                    
+                    if (isFloatCurve)
                     {
-                        modifications[binding.path] = new Modification
-                        {
-                            originalBinding = binding,
-                            newPath = path,
-                            newName = name,
-                        };
-                        
-                        modified = animationClip;
+                        AnimationUtility.SetEditorCurve(clip, mod.originalBinding, null);
+                        actions.Add(() => AnimationUtility.SetEditorCurve(clip, newBinding, curve));
+                    }
+                    else
+                    {
+                        AnimationUtility.SetObjectReferenceCurve(clip, mod.originalBinding, null);
+                        actions.Add(() => AnimationUtility.SetObjectReferenceCurve(clip, newBinding, objCurve));
                     }
                 }
-                EditorGUILayout.EndScrollView();
+                
+                foreach(var action in actions) action();
+                
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+                modified = null;
             }
             finally
             {
                 AssetDatabase.StopAssetEditing();
-            }
-            
-            if(modified)
-            {
-                if(GUILayout.Button("Apply"))
-                {
-                    List<Action> actions = new();
-                    
-                    foreach(var mod in modifications.Values)
-                    {
-                        var newBinding = mod.originalBinding;
-                        newBinding.path = mod.newPath;
-                        newBinding.propertyName = mod.newName;
-                        
-                        var curve = AnimationUtility.GetEditorCurve(animationClip, mod.originalBinding);
-                        var isFloatCurve = curve != null;
-                        var objCurve = AnimationUtility.GetObjectReferenceCurve(animationClip, mod.originalBinding);
-                        
-                        if (isFloatCurve)
-                        {
-                            AnimationUtility.SetEditorCurve(animationClip, mod.originalBinding, null);
-                            actions.Add(() => AnimationUtility.SetEditorCurve(animationClip, newBinding, curve));
-                        }
-                        else
-                        {
-                            AnimationUtility.SetObjectReferenceCurve(animationClip, mod.originalBinding, null);
-                            actions.Add(() => AnimationUtility.SetObjectReferenceCurve(animationClip, newBinding, objCurve));
-                        }
-                    }
-                    
-                    foreach(var action in actions) action();
-                    
-                    AssetDatabase.SaveAssets();
-                    AssetDatabase.Refresh();
-                    modified = null;
-                }
             }
         }
         
@@ -128,27 +145,26 @@ namespace Prota.Editor
                 return false;
             }
             
-            using(new EditorGUI.DisabledScope(true))
-            {
-                EditorGUILayout.ObjectField("GameObject", g, typeof(GameObject), true);
-            }
+            using EditorGUI.DisabledScope __ = new(true);
+            EditorGUILayout.ObjectField("GameObject", g, typeof(GameObject), true);
             
             return true;
         }
         
+        Animator cachedAnimator;
         bool GetAnimator(GameObject g, out Animator animator)
         {
-            animator = g.GetComponent<Animator>();
-            if(animator == null)
+            g.TryGetComponent<Animator>(out animator);
+            if(animator == null && cachedAnimator == null)
             {
                 EditorGUILayout.HelpBox("Please select a GameObject with Animator component.", MessageType.Warning);
                 return false;
             }
+            if(animator == null) animator = cachedAnimator;
+            cachedAnimator = animator;
             
-            using(new EditorGUI.DisabledScope(true))
-            {
-                EditorGUILayout.ObjectField("Animator", animator, typeof(Animator), true);
-            }
+            using var _ = new EditorGUI.DisabledScope(true);
+            EditorGUILayout.ObjectField("Animator", animator, typeof(Animator), true);
             return true;
         }
         
@@ -161,10 +177,8 @@ namespace Prota.Editor
                 return false;
             }
             
-            using(new EditorGUI.DisabledScope(true))
-            {
-                EditorGUILayout.ObjectField("Animator Controller", controller, typeof(AnimatorController), true);
-            }
+            using var _ = new EditorGUI.DisabledScope(true);
+            EditorGUILayout.ObjectField("Animator Controller", controller, typeof(AnimatorController), true);
             return true;
         }
         
@@ -174,7 +188,14 @@ namespace Prota.Editor
             out EditorCurveBinding[] objBindings)
         {
             var animationNames = controller.animationClips.Select(c => c.name).ToArray();
-            var index = EditorGUILayout.Popup("Animation", Array.IndexOf(animationNames, selectAnimationName), animationNames);
+            
+            using var _ = new EditorGUILayout.HorizontalScope();
+            
+            var index = EditorGUILayout.Popup("Animation",
+                Array.IndexOf(animationNames, selectAnimationName),
+                animationNames,
+                GUILayout.ExpandWidth(true)
+            );
             if(index < 0)
             {
                 EditorGUILayout.HelpBox("Please Select an animation.", MessageType.Info);
@@ -187,33 +208,44 @@ namespace Prota.Editor
             selectAnimationName = animationNames[index];
             animationClip = controller.animationClips[index];
             
-            using(new EditorGUI.DisabledScope(true))
-            {
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.ObjectField("Animation Clip", animationClip, typeof(AnimationClip), true);
-                floatBindings = AnimationUtility.GetCurveBindings(animationClip);
-                objBindings = AnimationUtility.GetObjectReferenceCurveBindings(animationClip);
-                EditorGUILayout.IntField("", floatBindings.Length, GUILayout.Width(40));
-                EditorGUILayout.IntField("", objBindings.Length, GUILayout.Width(40));
-                EditorGUILayout.EndHorizontal();
-            }
+            using var __ = new EditorGUI.DisabledScope(true);
+            EditorGUILayout.ObjectField("", animationClip, typeof(AnimationClip), true, GUILayout.Width(160));
+            floatBindings = AnimationUtility.GetCurveBindings(animationClip);
+            objBindings = AnimationUtility.GetObjectReferenceCurveBindings(animationClip);
+            EditorGUILayout.IntField("", floatBindings.Length, GUILayout.Width(40));
+            EditorGUILayout.IntField("", objBindings.Length, GUILayout.Width(40));
             
             return true;
         }
         
-        bool DrawBindingEditor(GameObject g, ref string path, ref string name)
+        bool DrawBindingEditor(GameObject g, ref Type type, ref string path, ref string name)
         {
-            EditorGUILayout.BeginHorizontal();
-            var newPath = EditorGUILayout.TextField(path, GUILayout.MinWidth(400), GUILayout.ExpandWidth(true));
+            using var _ = new EditorGUILayout.HorizontalScope();
+            
+            var newPath = EditorGUILayout.TextField(path, GUILayout.MinWidth(200), GUILayout.ExpandWidth(true));
             var curTransform = g.transform.Find(path);
-            var curObject = curTransform ? curTransform.gameObject : null;
-            var newObject = (GameObject)EditorGUILayout.ObjectField("", curObject, typeof(GameObject), true, GUILayout.Width(100));
-            var newName = EditorGUILayout.TextField(name, GUILayout.MinWidth(200));
-            if(newObject != curObject) newPath = newObject ? newObject.transform.RelativePath(g.transform) : "";
-            EditorGUILayout.EndHorizontal();
-            var ret = newPath != path || newName != name;
+            var newTransform = EditorGUILayout.ObjectField("", curTransform, typeof(Transform), true, GUILayout.Width(200)) as Transform;
+            
+            if(curTransform != newTransform)
+            {
+                newPath = newTransform ? newTransform.RelativePath(g.transform) : "";
+            }
+            
+            var curTarget = curTransform ? curTransform.GetComponent(type) : null;
+            var newTarget = (Component)EditorGUILayout.ObjectField("", curTarget, typeof(Component), true, GUILayout.Width(200));
+            var newType = type;
+            if(newTarget != curTarget)
+            {
+                newPath = newTarget ? newTarget.transform.RelativePath(g.transform) : "";
+                newType = newTarget ? newTarget.GetType() : null;
+            }
+            
+            var newName = EditorGUILayout.TextField(name, GUILayout.Width(200));
+            
+            var ret = newPath != path || newName != name && newType != type;
             path = newPath;
             name = newName;
+            type = newType;
             return ret;
         }
     }
