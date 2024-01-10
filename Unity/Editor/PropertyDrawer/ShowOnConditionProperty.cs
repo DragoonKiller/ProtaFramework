@@ -28,10 +28,10 @@ namespace Prota.Editor
         bool ShouldDraw(SerializedProperty property)
         {
             var attr = fieldInfo.GetCustomAttribute<ShowWhenAttribute>();
-            return CheckShow(attr.name, property.serializedObject);
+            return CheckShow(attr.names, property.serializedObject);
         }
         
-        bool CheckShow(string name, SerializedObject obj)
+        bool CheckShowSingle(string name, SerializedObject obj)
         {
             var prop = obj.FindProperty(name);
             if(prop != null && prop.propertyType == SerializedPropertyType.Boolean) return prop.boolValue;
@@ -42,6 +42,16 @@ namespace Prota.Editor
             if(hasMethod && pref.Call(name).PassValue(out var st) != null && st is bool k && k) return true;
             
             return false;
+        }
+        
+        bool CheckShow(string[] names, SerializedObject obj)
+        {
+            foreach (var name in names)
+            {
+                if(!CheckShowSingle(name, obj)) return false;
+            }
+            
+            return true;
         }
     }
 }

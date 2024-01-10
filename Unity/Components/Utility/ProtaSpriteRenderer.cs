@@ -54,7 +54,6 @@ namespace Prota.Unity
         // ====================================================================================================
         // ====================================================================================================
         
-        [Header("Mesh")]
         public Vector4 extend;  // (xmin-, ymin-, xmax+, ymax+)
         
         [Header("Sprite")]
@@ -70,13 +69,13 @@ namespace Prota.Unity
         
         [Header("Mask")]
         public Sprite mask;
-        public Vector2 maskUVOffset = Vector2.zero;
-        public bool maskUVOffsetByTime = false;
-        [ShowWhen("maskUVOffsetByTime")] public bool maskUVOffsetByRealtime = false;
-        public bool flipMaskX = false;
-        public bool flipMaskY = false;
+        [ShowWhen("mask")] public Vector2 maskUVOffset = Vector2.zero;
+        [ShowWhen("mask")] public bool maskUVOffsetByTime = false;
+        [ShowWhen("mask", "maskUVOffsetByTime")] public bool maskUVOffsetByRealtime = false;
+        [ShowWhen("mask")] public bool flipMaskX = false;
+        [ShowWhen("mask")] public bool flipMaskY = false;
         public Vector2 maskFlipVector => new Vector2(flipMaskX ? -1 : 1, flipMaskY ? -1 : 1);
-        [ColorUsage(true, true)] public Color maskUsage = new Color(1, 1, 1, 1);
+        [ShowWhen("mask"), ColorUsage(true, true)] public Color maskUsage = new Color(1, 1, 1, 1);
         
 
         [Header("Color")]
@@ -89,11 +88,13 @@ namespace Prota.Unity
         [Range(-1, 1)] public float contrastOffset = 0;
         
         [Header("Stencil")]
-        public PowerOfTwoEnumByte stencilRef = 0;
-        public PowerOfTwoEnumByte stencilReadMask = PowerOfTwoEnumByte.All;
-        public PowerOfTwoEnumByte stencilWriteMask = PowerOfTwoEnumByte.All;
-        public CompareFunction stencilCompare = CompareFunction.Always;
-        public StencilOp stencilPass = StencilOp.Keep;
+        public bool useStencil = false;
+        [ShowWhen("useStencil")] public PowerOfTwoEnumByte stencilRef = 0;
+        [ShowWhen("useStencil")] public PowerOfTwoEnumByte stencilReadMask = PowerOfTwoEnumByte.All;
+        [ShowWhen("useStencil")] public PowerOfTwoEnumByte stencilWriteMask = PowerOfTwoEnumByte.All;
+        [ShowWhen("useStencil")] public CompareFunction stencilCompare = CompareFunction.Always;
+        [ShowWhen("useStencil")] public StencilOp stencilPass = StencilOp.Keep;
+        
         
         [Header("Material")]
         public bool useLight = true;
@@ -361,11 +362,22 @@ namespace Prota.Unity
             
             material.SetFloat(Hashes._AlphaClip, alphaClip);
             
-            material.SetInteger(Hashes._StencilRef, unchecked((int)stencilRef));
-            material.SetInteger(Hashes._StencilReadMask, unchecked((int)stencilReadMask));
-            material.SetInteger(Hashes._StencilWriteMask, unchecked((int)stencilWriteMask));
-            material.SetFloat(Hashes._StencilCompare, unchecked((int)stencilCompare));
-            material.SetFloat(Hashes._StencilOp, unchecked((int)stencilPass));
+            if(useStencil)
+            {
+                material.SetInteger(Hashes._StencilRef, unchecked((int)stencilRef));
+                material.SetInteger(Hashes._StencilReadMask, unchecked((int)stencilReadMask));
+                material.SetInteger(Hashes._StencilWriteMask, unchecked((int)stencilWriteMask));
+                material.SetFloat(Hashes._StencilCompare, unchecked((int)stencilCompare));
+                material.SetFloat(Hashes._StencilOp, unchecked((int)stencilPass));
+            }
+            else
+            {
+                material.SetInteger(Hashes._StencilRef, 0);
+                material.SetInteger(Hashes._StencilReadMask, 255);
+                material.SetInteger(Hashes._StencilWriteMask, 255);
+                material.SetFloat(Hashes._StencilCompare, (int)CompareFunction.Always);
+                material.SetFloat(Hashes._StencilOp, (int)StencilOp.Keep);
+            }
         }
         
         

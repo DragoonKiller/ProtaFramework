@@ -10,7 +10,8 @@
     "overrideReferences": true,
     "precompiledReferences": [
         "System.Runtime.CompilerServices.Unsafe.dll",
-        "Microsoft.NET.StringTools.dll"
+        "Microsoft.NET.StringTools.dll",
+        "Antlr4.Runtime.Standard.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],
