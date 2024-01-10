@@ -124,19 +124,22 @@ void HSLtoRGB(float3 hsl, out float3 color)
     HSLtoRGB(hsl.x, hsl.y, hsl.z, color);
 }
 
+void HueOffsetHSL(inout float3 hsl, float hueOffset)
+{
+    hsl.x += hueOffset;
+    hsl.x = fmod(hsl.x, 1.0);
+}
+
 void HueOffset(inout float4 color, float hueOffset)
 {
     float3 hsl;
     RGBtoHSL(color.rgb, hsl);
-    hsl.x += hueOffset;
-    hsl.x = fmod(hsl.x, 1.0);
+    HueOffsetHSL(hsl, hueOffset);
     HSLtoRGB(hsl, color.rgb);
 }
 
-void SaturationOffset(inout float4 color, float saturationOffset)
+void SaturationOffsetHSL(inout float3 hsl, float saturationOffset)
 {
-    float3 hsl;
-    RGBtoHSL(color.rgb, hsl);
     if(saturationOffset < 0)
     {
         // 更接近0.
@@ -148,31 +151,41 @@ void SaturationOffset(inout float4 color, float saturationOffset)
         hsl.y = hsl.y + (1.0 - hsl.y) * saturationOffset;
     }
     hsl.y = clamp(hsl.y, 0.0, 1.0);
+}
+
+void SaturationOffset(inout float4 color, float saturationOffset)
+{
+    float3 hsl;
+    RGBtoHSL(color.rgb, hsl);
+    SaturationOffsetHSL(hsl, saturationOffset);
+    hsl.y = clamp(hsl.y, 0.0, 1.0);
     HSLtoRGB(hsl, color.rgb);
+}
+
+void BrightnessOffsetHSL(inout float3 hsl, float lightnessOffset)
+{
+    if(lightnessOffset < 0)
+    {
+        // 更接近0.
+        hsl.z *= 1 + lightnessOffset;
+    }
+    else
+    {
+        // 更接近1.
+        hsl.z = hsl.z + (1.0 - hsl.z) * lightnessOffset;
+    }
 }
 
 void BrightnessOffset(inout float4 color, float brightnessOffset)
 {
     float3 hsl;
     RGBtoHSL(color.rgb, hsl);
-    
-    if(brightnessOffset < 0)
-    {
-        // 更接近0.
-        hsl.z *= 1 + brightnessOffset;
-    }
-    else
-    {
-        // 更接近1.
-        hsl.z = hsl.z + (1.0 - hsl.z) * brightnessOffset;
-    }
+    BrightnessOffsetHSL(hsl, brightnessOffset);
     HSLtoRGB(hsl, color.rgb);
 }
 
-void ContrastOffset(inout float4 color, float contrastOffset)
+void ContrastOffsetHSL(inout float3 hsl, float contrastOffset)
 {
-    float3 hsl;
-    RGBtoHSL(color.rgb, hsl);
     if(contrastOffset < 0)
     {
         // 更接近0.5.
@@ -184,6 +197,13 @@ void ContrastOffset(inout float4 color, float contrastOffset)
         hsl.y = hsl.y + (1.0 - hsl.y) * contrastOffset;
         hsl.y = clamp(hsl.y, 0.0, 1.0);
     }
+}
+
+void ContrastOffset(inout float4 color, float contrastOffset)
+{
+    float3 hsl;
+    RGBtoHSL(color.rgb, hsl);
+    ContrastOffsetHSL(hsl, contrastOffset);
     HSLtoRGB(hsl, color.rgb);
 }
 

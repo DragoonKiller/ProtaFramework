@@ -318,5 +318,19 @@ namespace Prota.Unity
         
         public static Vector3 PositionTo(this Transform a, Vector3 b)
             => b - a.position;
+        
+        // from 是 to 的子节点.
+        public static string RelativePath(this Transform from, Transform to)
+        {
+            var sb = new StringBuilder();
+            while(from != to && from != null)
+            {
+                sb.Insert(0, "/" + from.name);
+                from = from.parent;
+            }
+            if(from == null) throw new Exception($"from[{from}] is not subnode of to[{to}]");
+            sb.Remove(0, 1);        // 去掉斜杠
+            return sb.ToString();
+        }
     }
 }

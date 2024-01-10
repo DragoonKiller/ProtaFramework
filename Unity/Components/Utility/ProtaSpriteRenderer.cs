@@ -23,12 +23,17 @@ namespace Prota.Unity
     [RequireComponent(typeof(RectTransform))]
     public class ProtaSpriteRenderer : MonoBehaviour
     {
-        static LocalKeyword keywordUseLight;
+        static LocalKeyword? keywordUseLight;
         public static Material _cachedMaterial;
         public static Material cachedMaterial
         {
             get
             {
+                if(keywordUseLight.HasValue && !keywordUseLight.Value.isValid)
+                {
+                    keywordUseLight = null;
+                    _cachedMaterial = null;
+                }
                 if(_cachedMaterial != null) return _cachedMaterial;
                 var shader = Shader.Find("Prota/Sprite");
                 if(shader == null) throw new Exception("Shader not found: Prota/Sprite");
@@ -335,7 +340,7 @@ namespace Prota.Unity
             SetTexture(material, Hashes._NormalTex, Hashes._NormalTex_ST, normal, uvOffset, uvOffsetByTime, uvOffsetByRealtime);
             SetTexture(material, Hashes._MaskTex, Hashes._MaskTex_ST, mask, maskUVOffset, maskUVOffsetByTime, maskUVOffsetByRealtime);
             
-            material.SetKeyword(keywordUseLight, useLight);
+            material.SetKeyword(keywordUseLight.Value, useLight);
             
             material.SetColor(Hashes._Color, color);
             material.SetColor(Hashes._AddColor, addColor);
@@ -348,8 +353,8 @@ namespace Prota.Unity
             material.SetFloat(Hashes._SaturationOffset, saturationOffset);
             material.SetFloat(Hashes._ContrastOffset, contrastOffset);
             
-            material.SetInteger(Hashes._BlendSrc, (int)srcBlendMode);
-            material.SetInteger(Hashes._BlendDst, (int)dstBlendMode);
+            material.SetFloat(Hashes._BlendSrc, (int)srcBlendMode);
+            material.SetFloat(Hashes._BlendDst, (int)dstBlendMode);
             
             material.SetFloat(Hashes._ZTest, (int)depthTest);
             material.SetFloat(Hashes._ZWrite, (int)depthWrite);
@@ -359,8 +364,8 @@ namespace Prota.Unity
             material.SetInteger(Hashes._StencilRef, unchecked((int)stencilRef));
             material.SetInteger(Hashes._StencilReadMask, unchecked((int)stencilReadMask));
             material.SetInteger(Hashes._StencilWriteMask, unchecked((int)stencilWriteMask));
-            material.SetInteger(Hashes._StencilCompare, unchecked((int)stencilCompare));
-            material.SetInteger(Hashes._StencilOp, unchecked((int)stencilPass));
+            material.SetFloat(Hashes._StencilCompare, unchecked((int)stencilCompare));
+            material.SetFloat(Hashes._StencilOp, unchecked((int)stencilPass));
         }
         
         

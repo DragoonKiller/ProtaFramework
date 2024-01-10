@@ -5,8 +5,8 @@ Shader "Prota/Sprite"
         [Enum(UnityEngine.Rendering.CompareFunction)] _ZTest ("ZTest", Float) = 0.0
         [Enum(Off, 0, On, 1)] _ZWrite ("ZWrite", Float) = 0.0
         
-        [Enum(UnityEngine.Rendering.BlendMode)] _BlendSrc ("Blend Src", Integer) = 1
-        [Enum(UnityEngine.Rendering.BlendMode)] _BlendDst ("Blend Dst", Integer) = 0
+        [Enum(UnityEngine.Rendering.BlendMode)] _BlendSrc ("Blend Src", Float) = 1
+        [Enum(UnityEngine.Rendering.BlendMode)] _BlendDst ("Blend Dst", Float) = 0
         
         _MainTex ("Texture", 2D) = "white" { }
         _MaskTex("Mask", 2D) = "white" { }
@@ -29,8 +29,8 @@ Shader "Prota/Sprite"
         [Range(0, 255)] _StencilRef ("Stencil Ref", Integer) = 0
         [Range(0, 255)] _StencilReadMask ("Stencil Read Mask", Integer) = 0
         [Range(0, 255)] _StencilWriteMask ("Stencil Write Mask", Integer) = 0
-        [Enum(UnityEngine.Rendering.CompareFunction)] _StencilCompare ("Stencil Compare", Integer) = 0
-        [Enum(UnityEngine.Rendering.StencilOp)] _StencilOp ("Stencil Operation", Integer) = 0
+        [Enum(UnityEngine.Rendering.CompareFunction)] _StencilCompare ("Stencil Compare", Float) = 0
+        [Enum(UnityEngine.Rendering.StencilOp)] _StencilOp ("Stencil Operation", Float) = 0
     }
 
     SubShader
@@ -169,10 +169,13 @@ Shader "Prota/Sprite"
                 
                 if(main.a * mask.a <= _AlphaClip) discard;
                 
-                HueOffset(main, _HueOffset);
-                ContrastOffset(main, _ContrastOffset);
-                SaturationOffset(main, _SaturationOffset);
-                BrightnessOffset(main, _BrightnessOffset);
+                float3 hsl;
+                RGBtoHSL(main.rgb, hsl);
+                HueOffsetHSL(hsl, _HueOffset);
+                ContrastOffsetHSL(hsl, _ContrastOffset);
+                SaturationOffsetHSL(hsl, _SaturationOffset);
+                BrightnessOffsetHSL(hsl, _BrightnessOffset);
+                HSLtoRGB(hsl, main.rgb);
                 
                 main.rgb += _AddColor.rgb;
                 main.rgb = _OverlapColor.a * _OverlapColor.rgb + (1 - _OverlapColor.a) * main.rgb;
