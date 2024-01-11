@@ -6,113 +6,35 @@ using Prota.Unity;
 using UnityEngine.UI;
 using Prota;
 using System.Collections.Generic;
-using Codice.CM.Client.Differences;
+using UnityEditor.SceneManagement;
 
 namespace Prota.Editor
 {
+    using VerticalScope = EditorGUILayout.VerticalScope;
+    using HorizontalScope = EditorGUILayout.HorizontalScope;
+    
     public class SpriteGroupControl : EditorWindow
     {
+        static GUIStyle _header;
+        static GUIStyle header
+        {
+            get
+            {
+                if(_header == null)
+                {
+                    _header = new GUIStyle(EditorStyles.boldLabel);
+                    _header.alignment = TextAnchor.MiddleCenter;
+                }
+                return _header;
+            }
+        }
+        
         [MenuItem("ProtaFramework/Editor/Sprite Group Control", priority = 600)]
         static void OpenWindow()
         {
             var window = GetWindow<SpriteGroupControl>();
             window.titleContent = new GUIContent("Sprite Group Control");
             window.Show();
-        }
-        
-        interface ISpriteProcessor
-        {
-            Color editorColor { get; }
-            bool UseProcessor(GameObject g);
-            void SetColor(GameObject g, Color color);
-            void SetSprite(GameObject g, Sprite sprite);
-            void DrawSelect(GameObject g);
-        }
-        
-        class SpriteRendererProcessor : ISpriteProcessor
-        {
-            public Color editorColor => new Color(0.7f, 0.8f, 1f, 1f);
-            
-            public bool UseProcessor(GameObject g)
-            {
-                return g.GetComponent<SpriteRenderer>();
-            }
-            
-            public void SetColor(GameObject g, Color color)
-            {
-                g.GetComponent<SpriteRenderer>().color = color;
-            }
-
-            public void SetSprite(GameObject g, Sprite sprite)
-            {
-                g.GetComponent<SpriteRenderer>().sprite = sprite;
-            }
-
-            public void DrawSelect(GameObject g)
-            {
-                EditorGUILayout.ObjectField("", g.GetComponent<SpriteRenderer>(), typeof(SpriteRenderer), true);
-            }
-        }
-        
-        class ProtaSpriteRendererProcessor : ISpriteProcessor
-        {
-            public Color editorColor => new Color(0.8f, 1f, 0.7f, 1f);
-            
-            public bool UseProcessor(GameObject g)
-            {
-                return g.GetComponent<ProtaSpriteRenderer>();
-            }
-            
-            public void SetColor(GameObject g, Color color)
-            {
-                g.GetComponent<ProtaSpriteRenderer>().color = color;
-            }
-
-            public void SetSprite(GameObject g, Sprite sprite)
-            {
-                g.GetComponent<ProtaSpriteRenderer>().sprite = sprite;
-            }
-
-            public void DrawSelect(GameObject g)
-            {
-                EditorGUILayout.ObjectField("", g.GetComponent<ProtaSpriteRenderer>(), typeof(ProtaSpriteRenderer), true);
-            }
-        }
-        
-        class ImageProcessor : ISpriteProcessor
-        {
-            public Color editorColor => new Color(1f, 0.7f, 0.8f, 1f);
-            
-            public bool UseProcessor(GameObject g)
-            {
-                return g.GetComponent<Image>();
-            }
-            
-            public void SetColor(GameObject g, Color color)
-            {
-                g.GetComponent<Image>().color = color;
-            }
-
-            public void SetSprite(GameObject g, Sprite sprite)
-            {
-                g.GetComponent<Image>().sprite = sprite;
-            }
-
-            public void DrawSelect(GameObject g)
-            {
-                EditorGUILayout.ObjectField("", g.GetComponent<Image>(), typeof(Image), true);
-            }
-        }
-        
-        SpriteRendererProcessor spriteRendererProcessor = new();
-        ProtaSpriteRendererProcessor protaSpriteRendererProcessor = new();
-        ImageProcessor imageProcessor = new();
-        
-        ISpriteProcessor[] processors;
-        
-        SpriteGroupControl()
-        {
-            processors = new ISpriteProcessor[] { spriteRendererProcessor, protaSpriteRendererProcessor, imageProcessor };
         }
         
         // ====================================================================================================
@@ -124,6 +46,8 @@ namespace Prota.Editor
         
         Vector2 scrollPos;
         
+        bool updatesEachFrame;
+        
         void Update()
         {
             bool shouldRepaint = UpdateSelectSprites();
@@ -134,49 +58,109 @@ namespace Prota.Editor
         
         void OnGUI()
         {
+            SaveLoad();
             UpdateSpriteRenderers();
-            using var _ = new EditorGUILayout.HorizontalScope();
-            
-            using(new EditorGUILayout.ScrollViewScope(scrollPos, GUILayout.Width(300)))
-            {
-                locked = EditorGUILayout.Toggle("Lock", locked, GUILayout.ExpandWidth(true));
-                
-                foreach(var g in targets)
-                {
-                    var backgroundColor = GUI.backgroundColor;
-                    var cotenntColor = GetProcessor(g).editorColor;
-                    
-                    using(new EditorGUILayout.HorizontalScope())
-                    {
-                        using(new EditorGUI.DisabledScope(locked))
-                        using(new BackgroundColorScope(locked ? new Color(0.4f, 0.4f, 0.7f, 1f) : GUI.color))
-                        using(new ContentColorScope(cotenntColor))
-                        {
-                            GetProcessor(g).DrawSelect(g);
-                        }
-                        if(GUILayout.Button("X", GUILayout.Width(20))) targets = targets.Where(t => t != g).ToArray();
-                    }
-                }
-                
-                SetRandomSeed();
-            }
-            
-            using(new EditorGUILayout.VerticalScope(GUILayout.Width(400))) SetSpritesUI();
-            using(new EditorGUILayout.VerticalScope(GUILayout.Width(400))) SetColorsUI();
+            SetSpriteRenderersUI();
+            SetSpritesUI();
+            SetColorsUI();
+            SetRandomSeed();
+            DrawExecuteUI();
         }
         
         // ====================================================================================================
         // ====================================================================================================
         
+        [Serializable]
+        struct SaveLoadData
+        {
+            public int randomSeed;
+            public List<Color> colors;
+            public List<GameObject> targets;
+            public List<Sprite> lockedSprites;
+            public float hueOffset;
+            public float saturationOffset;
+            public float brightnessOffset;
+            public float contrastOffset;
+        }
+        
+        void SaveLoad()
+        {
+            using(new HorizontalScope())
+            {
+                if(GUILayout.Button("Save")) Save();
+                if(GUILayout.Button("Load")) Load();
+            }
+        }
+        
+        void Save()
+        {
+            var data = new SaveLoadData
+            {
+                randomSeed = randomSeed,
+                colors = selectColors.ToList(),
+                targets = targets.ToList(),
+                lockedSprites = lockedSprites.ToList(),
+                hueOffset = randomHue,
+                saturationOffset = randomSaturation,
+                brightnessOffset = randomBrightness,
+                contrastOffset = randomContrast,
+            };
+            var json = JsonUtility.ToJson(data, true);
+            
+            var file = EditorUtility.SaveFilePanel("Save", "", "sprite_group_control.json", "json");
+            if(string.IsNullOrEmpty(file)) return;
+            
+            System.IO.File.WriteAllText(file, json);
+            AssetDatabase.Refresh();
+        }
+        
+        void Load()
+        {
+            var file = EditorUtility.OpenFilePanel("Load", "", "json");
+            if(string.IsNullOrEmpty(file)) return;
+            
+            selectSprites = new Sprite[0];
+            selectColors.Clear();
+            lockedSprites.Clear();
+            
+            var json = System.IO.File.ReadAllText(file);
+            var data = JsonUtility.FromJson<SaveLoadData>(json);
+            
+            locked = true;
+            randomSeed = data.randomSeed;
+            targets = data.targets.ToArray();
+            selectColors.AddRange(data.colors);
+            lockedSprites.AddRange(data.lockedSprites);
+            randomHue = data.hueOffset;
+            randomSaturation = data.saturationOffset;
+            randomBrightness = data.brightnessOffset;
+            randomContrast = data.contrastOffset;
+        }
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        bool regenerateRandomSeed;
+        
         int randomSeed;
         
         System.Random random;
         
-        void InitRandom() => random = new System.Random(randomSeed);
+        void InitRandom()
+        {
+            if(regenerateRandomSeed) randomSeed = UnityEngine.Random.Range(0, int.MaxValue);
+            random = new System.Random(randomSeed);
+        }
         
         float NextRandom(float from, float to) => (float)random.NextDouble() * (to - from) + from;
         
         float NextRandom01() => (float)random.NextDouble();
+        
+        void SetRandomSeed()
+        {
+            regenerateRandomSeed = EditorGUILayout.Toggle("Regenerate Random Seed", regenerateRandomSeed);
+            randomSeed = EditorGUILayout.IntField("Random Seed", randomSeed);
+        }
         
         // ====================================================================================================
         // ====================================================================================================
@@ -184,65 +168,53 @@ namespace Prota.Editor
         
         Vector2 colorUIScroll;
         List<Color> selectColors = new();
-        bool randomColorValue;
         float randomHue;
         float randomSaturation;
         float randomBrightness;
         float randomContrast;
         
-        StructStringCache<int> icache = new();
-        
         void SetColorsUI()
         {
+            GUILayout.Label("==== Color ====", header);
+         
+            randomHue = EditorGUILayout.Slider("Hue", randomHue, -1f, 1f);
+            randomSaturation = EditorGUILayout.Slider("Saturation", randomSaturation, -1f, 1f);
+            randomBrightness = EditorGUILayout.Slider("Brightness", randomBrightness, -1f, 1f);
+            randomContrast = EditorGUILayout.Slider("Contrast", randomContrast, -1f, 1f);
+               
             int? removeIndex = null;
-            var n = EditorGUILayout.IntField("Count", selectColors.Count);
+            var n = EditorGUILayout.IntField("Color Count", selectColors.Count);
             if(n != selectColors.Count) selectColors.Resize(n);
             
-            using(var _s = new EditorGUILayout.ScrollViewScope(colorUIScroll, GUILayout.Height(300)))
+            using(var _s = new EditorGUILayout.ScrollViewScope(colorUIScroll, GUILayout.MaxHeight(300)))
             {
                 colorUIScroll = _s.scrollPosition;
                 
                 for(int i = 0; i < selectColors.Count; i++)
                 {
-                    using var _ = new EditorGUILayout.HorizontalScope();
-                    var name = icache[i];
-                    selectColors[i] = EditorGUILayout.ColorField(name, selectColors[i]);
+                    using var _ = new HorizontalScope();
                     if(GUILayout.Button("X", GUILayout.Width(20))) removeIndex = i;
+                    selectColors[i] = EditorGUILayout.ColorField("", selectColors[i]);
                 }
             }
             
             if(removeIndex.HasValue) selectColors.RemoveAt(removeIndex.Value);
-            
-            randomColorValue = EditorGUILayout.Toggle("Random Color Value", randomColorValue);
-            if(randomColorValue)
-            {
-                randomHue = EditorGUILayout.Slider("Hue", randomHue, -1f, 1f);
-                randomSaturation = EditorGUILayout.Slider("Saturation", randomSaturation, -1f, 1f);
-                randomBrightness = EditorGUILayout.Slider("Brightness", randomBrightness, -1f, 1f);
-                randomContrast = EditorGUILayout.Slider("Contrast", randomContrast, -1f, 1f);
-            }
-            
-            using(new EditorGUILayout.ScrollViewScope(Vector2.zero, GUILayout.ExpandHeight(true))) { }
-            if(GUILayout.Button("Set Color")) ExecuteSetColors();
         }
         
         void ExecuteSetColors()
         {
-            InitRandom();
+            if(selectColors.Count == 0) return;
             
             foreach(var g in targets)
             {
                 var colorIndex = random.Next(selectColors.Count);
                 var color = selectColors[colorIndex];
                 
-                if(randomColorValue)
-                {
-                    var hsl = color.ToHSL();
-                    hsl.h += randomHue * NextRandom01();
-                    hsl.s += randomSaturation * NextRandom01();
-                    hsl.l += randomBrightness * NextRandom01();
-                    color = hsl.ToColor(color.a);
-                }
+                var hsl = color.ToHSL();
+                hsl.h += randomHue * NextRandom01();
+                hsl.s += randomSaturation * NextRandom01();
+                hsl.l += randomBrightness * NextRandom01();
+                color = hsl.ToColor(color.a);
                 
                 var processor = GetProcessor(g);
                 Undo.RecordObject(g, "Set Color");
@@ -254,16 +226,20 @@ namespace Prota.Editor
         // ====================================================================================================
         
         Vector2 spriteUIScroll;
-        
         List<Sprite> lockedSprites = new();
         Sprite[] selectSprites = new Sprite[0];
+        
         void SetSpritesUI()
         {
+            GUILayout.Label("==== Sprite ====", header);
+            
             int? removeIndex = null;
-            var n = EditorGUILayout.IntField("Count", lockedSprites.Count);
+            var n = EditorGUILayout.IntField("Sprite Count", lockedSprites.Count);
             if(n != lockedSprites.Count) lockedSprites.Resize(n);
             
-            using(var _s = new EditorGUILayout.ScrollViewScope(spriteUIScroll, GUILayout.Height(300)))
+            if(GUILayout.Button("Lock all sprites")) lockedSprites.AddRange(selectSprites);
+            
+            using(var _s = new EditorGUILayout.ScrollViewScope(spriteUIScroll, GUILayout.MaxHeight(300)))
             {
                 spriteUIScroll = _s.scrollPosition;
                 
@@ -271,16 +247,9 @@ namespace Prota.Editor
                 {
                     remove = false;
                     
-                    using var _ = new EditorGUILayout.HorizontalScope();
+                    using var _ = new HorizontalScope();
                     
                     bool isLocked = lockedSprites.Contains(sprite);
-                    
-                    Sprite res;
-                    using(new BackgroundColorScope(isLocked ? new Color(0.5f, 0.6f, 0.8f, 1f) : GUI.color))
-                    {
-                        var hint = GUILayout.Height(EditorGUIUtility.singleLineHeight);
-                        res = (Sprite)EditorGUILayout.ObjectField("", sprite, typeof(Sprite), false, hint);
-                    }
                     
                     using(new EditorGUI.DisabledScope(isLocked))
                     {
@@ -292,12 +261,18 @@ namespace Prota.Editor
                         if(GUILayout.Button("X", GUILayout.Width(20))) remove = true;
                     }
                     
+                    Sprite res;
+                    using(new BackgroundColorScope(isLocked ? new Color(0.5f, 0.6f, 0.8f, 1f) : GUI.color))
+                    {
+                        var hint = GUILayout.Height(EditorGUIUtility.singleLineHeight);
+                        res = (Sprite)EditorGUILayout.ObjectField("", sprite, typeof(Sprite), false, hint);
+                    }
+                    
                     return res;
                 }
                 
                 for(int i = 0; i < lockedSprites.Count; i++)
                 {
-                    var name = icache[i];
                     lockedSprites[i] = DrawEntry(lockedSprites[i], out var remove);
                     if(remove) lockedSprites.RemoveAt(i--);
                 }
@@ -313,10 +288,6 @@ namespace Prota.Editor
                 lockedSprites.RemoveAt(removeIndex.Value);
             }
             
-            if(GUILayout.Button("Lock all sprites")) lockedSprites.AddRange(selectSprites);
-            
-            using(new EditorGUILayout.ScrollViewScope(Vector2.zero, GUILayout.ExpandHeight(true))) { }
-            if(GUILayout.Button("Set Sprite")) ExecuteSetSprites();
         }
         
         bool UpdateSelectSprites()
@@ -341,7 +312,7 @@ namespace Prota.Editor
 
         void ExecuteSetSprites()
         {
-            InitRandom();
+            if(lockedSprites.Count == 0) return;
             
             foreach(var g in targets)
             {
@@ -351,14 +322,27 @@ namespace Prota.Editor
                 var processor = GetProcessor(g);
                 Undo.RecordObject(g, "Set Sprite");
                 processor.SetSprite(g, sprite);
-                Debug.LogError($"Set sprite {sprite.name} to {g.name}");
+                // Debug.LogError($"Set sprite {sprite.name} to {g.name}");
             }
         }
 
-        void SetRandomSeed()
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        bool updateExecution;
+        
+        void DrawExecuteUI()
         {
-            using(new EditorGUILayout.ScrollViewScope(Vector2.zero, GUILayout.ExpandHeight(true))) { }
-            randomSeed = EditorGUILayout.IntField("Random seed", randomSeed);
+            updateExecution = EditorGUILayout.Toggle("Update Execution", updateExecution);
+            if(GUILayout.Button("Execute") || updateExecution) ExecuteAll();
+        }
+        
+        void ExecuteAll()
+        {
+            InitRandom();
+            ExecuteSetColors();
+            ExecuteSetSprites();
+            SceneView.lastActiveSceneView.Repaint();
         }
 
 
@@ -377,6 +361,31 @@ namespace Prota.Editor
             
             targets = Selection.gameObjects.Where(ValidSprite).ToArray();
         }
+        
+        void SetSpriteRenderersUI()
+        {
+            locked = EditorGUILayout.Toggle("Lock", locked);
+            
+            using(new EditorGUILayout.ScrollViewScope(scrollPos, GUILayout.MinHeight(200)))
+            {
+                foreach(var g in targets)
+                {
+                    var backgroundColor = GUI.backgroundColor;
+                    var cotenntColor = GetProcessor(g).editorColor;
+                    
+                    using(new HorizontalScope())
+                    {
+                        using(new EditorGUI.DisabledScope(locked))
+                        using(new BackgroundColorScope(locked ? new Color(0.4f, 0.4f, 0.7f, 1f) : GUI.color))
+                        using(new ContentColorScope(cotenntColor))
+                        {
+                            GetProcessor(g).DrawSelect(g);
+                        }
+                        if(GUILayout.Button("X", GUILayout.Width(20))) targets = targets.Where(t => t != g).ToArray();
+                    }
+                }
+            }
+        }
     
         bool ValidSprite(GameObject g)
         {
@@ -386,6 +395,114 @@ namespace Prota.Editor
         ISpriteProcessor GetProcessor(GameObject g)
         {
             return processors.First(p => p.UseProcessor(g));
+        }
+        
+        
+        interface ISpriteProcessor
+        {
+            Color editorColor { get; }
+            bool UseProcessor(GameObject g);
+            void SetColor(GameObject g, Color color);
+            void SetSprite(GameObject g, Sprite sprite);
+            void DrawSelect(GameObject g);
+        }
+        
+        class SpriteRendererProcessor : ISpriteProcessor
+        {
+            public Color editorColor => new Color(0.7f, 0.8f, 1f, 1f);
+            
+            public bool UseProcessor(GameObject g)
+            {
+                return g.GetComponent<SpriteRenderer>();
+            }
+            
+            public void SetColor(GameObject g, Color color)
+            {
+                var rd = g.GetComponent<SpriteRenderer>();
+                Undo.RecordObject(rd, "Set Color");
+                rd.color = color;
+            }
+
+            public void SetSprite(GameObject g, Sprite sprite)
+            {
+                var rd = g.GetComponent<SpriteRenderer>();
+                Undo.RecordObject(rd, "Set Sprite");
+                rd.sprite = sprite;
+            }
+
+            public void DrawSelect(GameObject g)
+            {
+                EditorGUILayout.ObjectField("", g.GetComponent<SpriteRenderer>(), typeof(SpriteRenderer), true);
+            }
+        }
+        
+        class ProtaSpriteRendererProcessor : ISpriteProcessor
+        {
+            public Color editorColor => new Color(0.8f, 1f, 0.7f, 1f);
+            
+            public bool UseProcessor(GameObject g)
+            {
+                return g.GetComponent<ProtaSpriteRenderer>();
+            }
+            
+            public void SetColor(GameObject g, Color color)
+            {
+                var rd = g.GetComponent<ProtaSpriteRenderer>();
+                Undo.RecordObject(rd, "Set Color");
+                rd.color = color;
+            }
+
+            public void SetSprite(GameObject g, Sprite sprite)
+            {
+                var rd = g.GetComponent<ProtaSpriteRenderer>();
+                Undo.RecordObject(rd, "Set Sprite");
+                rd.sprite = sprite;
+            }
+
+            public void DrawSelect(GameObject g)
+            {
+                EditorGUILayout.ObjectField("", g.GetComponent<ProtaSpriteRenderer>(), typeof(ProtaSpriteRenderer), true);
+            }
+        }
+        
+        class ImageProcessor : ISpriteProcessor
+        {
+            public Color editorColor => new Color(1f, 0.7f, 0.8f, 1f);
+            
+            public bool UseProcessor(GameObject g)
+            {
+                return g.GetComponent<Image>();
+            }
+            
+            public void SetColor(GameObject g, Color color)
+            {
+                var rd = g.GetComponent<Image>();
+                Undo.RecordObject(rd, "Set Color");
+                rd.color = color;
+            }
+
+            public void SetSprite(GameObject g, Sprite sprite)
+            {
+                var rd = g.GetComponent<Image>();
+                Undo.RecordObject(rd, "Set Sprite");
+                rd.sprite = sprite;
+            }
+
+            public void DrawSelect(GameObject g)
+            {
+                EditorGUILayout.ObjectField("", g.GetComponent<Image>(), typeof(Image), true);
+            }
+        }
+        
+        SpriteRendererProcessor spriteRendererProcessor = new();
+        ProtaSpriteRendererProcessor protaSpriteRendererProcessor = new();
+        ImageProcessor imageProcessor = new();
+        
+        ISpriteProcessor[] processors;
+        
+        SpriteGroupControl()
+        {
+            processors = new ISpriteProcessor[] { spriteRendererProcessor, protaSpriteRendererProcessor, imageProcessor };
         }
         
         
