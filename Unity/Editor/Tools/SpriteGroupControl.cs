@@ -6,7 +6,6 @@ using Prota.Unity;
 using UnityEngine.UI;
 using Prota;
 using System.Collections.Generic;
-using UnityEditor.SceneManagement;
 
 namespace Prota.Editor
 {
@@ -75,8 +74,8 @@ namespace Prota.Editor
         {
             public int randomSeed;
             public List<Color> colors;
-            public List<GameObject> targets;
-            public List<Sprite> lockedSprites;
+            public List<string> targets;
+            public List<string> lockedSprites;
             public float hueOffset;
             public float saturationOffset;
             public float brightnessOffset;
@@ -98,8 +97,8 @@ namespace Prota.Editor
             {
                 randomSeed = randomSeed,
                 colors = selectColors.ToList(),
-                targets = targets.ToList(),
-                lockedSprites = lockedSprites.ToList(),
+                targets = targets.Select(x => x.FormatGameObjectPath()).ToList(),
+                lockedSprites = lockedSprites.Select(x => x.FormatAssetPath()).ToList(),
                 hueOffset = randomHue,
                 saturationOffset = randomSaturation,
                 brightnessOffset = randomBrightness,
@@ -128,13 +127,16 @@ namespace Prota.Editor
             
             locked = true;
             randomSeed = data.randomSeed;
-            targets = data.targets.ToArray();
+            targets = data.targets.Select(x => x.GetGameObjectFromPath()).Where(x => x).ToArray();
             selectColors.AddRange(data.colors);
-            lockedSprites.AddRange(data.lockedSprites);
+            lockedSprites.AddRange(data.lockedSprites.Select(x => x.GetSpriteFromPath()).Where(x => x));
             randomHue = data.hueOffset;
             randomSaturation = data.saturationOffset;
             randomBrightness = data.brightnessOffset;
             randomContrast = data.contrastOffset;
+            
+            (!lockedSprites.Any(x => x == null)).Assert();
+            (!targets.Any(x => x == null)).Assert();
         }
         
         // ====================================================================================================
@@ -177,10 +179,10 @@ namespace Prota.Editor
         {
             GUILayout.Label("==== Color ====", header);
          
-            randomHue = EditorGUILayout.Slider("Hue", randomHue, -1f, 1f);
-            randomSaturation = EditorGUILayout.Slider("Saturation", randomSaturation, -1f, 1f);
-            randomBrightness = EditorGUILayout.Slider("Brightness", randomBrightness, -1f, 1f);
-            randomContrast = EditorGUILayout.Slider("Contrast", randomContrast, -1f, 1f);
+            randomHue = EditorGUILayout.Slider("Hue", randomHue, 0f, 1f);
+            randomSaturation = EditorGUILayout.Slider("Saturation", randomSaturation, 0f, 1f);
+            randomBrightness = EditorGUILayout.Slider("Brightness", randomBrightness, 0f, 1f);
+            randomContrast = EditorGUILayout.Slider("Contrast", randomContrast, 0f, 1f);
                
             int? removeIndex = null;
             var n = EditorGUILayout.IntField("Color Count", selectColors.Count);

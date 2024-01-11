@@ -245,5 +245,15 @@ namespace Prota
             return list[i.Repeat(list.Count)];
         }
         
+        
+        public static T GetOrCreate<K, T>(this SortedList<K, T> list, K key, Func<T> onCreate)
+        {
+            if(!list.ContainsKey(key))
+            {
+                list.Add(key, onCreate());
+            }
+            return list[key];
+        }
+        
     }
 }

@@ -15,6 +15,7 @@ namespace Prota.Unity
     */
     
     [ExecuteAlways]
+    [DefaultExecutionOrder(2250)]
     public class Parallax : MonoBehaviour
     {
         // 与焦平面的距离. 正数代表远离相机, 负数代表靠近相机.
@@ -22,7 +23,14 @@ namespace Prota.Unity
         
         GameObject contentRoot;
         
+        // 注意 Cinemachine 相机控制在 LateUpdate 执行.
+        // 除了自己要在 LateUpdate 更新以外, 还要保证优先级超过 CinemachineBrain.
         void LateUpdate()
+        {
+            UpdatePosition();
+        }
+        
+        void UpdatePosition()
         {
             if(ParallaxCamera.instance == null) return;
             if(contentRoot == null)
@@ -40,7 +48,6 @@ namespace Prota.Unity
                     contentRoot.transform.localPosition = Vector3.zero;
                 }
             }
-            
             
             var myPos = this.transform.position;
             var camPos = ParallaxCamera.instance.transform.position;

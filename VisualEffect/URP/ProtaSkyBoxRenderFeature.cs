@@ -19,13 +19,17 @@ namespace Prota.VisualEffect
         
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
-            if(renderingData.cameraData.cameraType != CameraType.Game) return;
+            if(renderingData.cameraData.cameraType != CameraType.Game
+            && renderingData.cameraData.cameraType != CameraType.SceneView
+            && renderingData.cameraData.cameraType != CameraType.Preview) return;
             renderer.EnqueuePass(pass);
         }
 
         public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData)
         {
-            if(renderingData.cameraData.cameraType != CameraType.Game) return;
+            if(renderingData.cameraData.cameraType != CameraType.Game
+            && renderingData.cameraData.cameraType != CameraType.SceneView
+            && renderingData.cameraData.cameraType != CameraType.Preview) return;
             pass.SetTarget(renderer.cameraColorTargetHandle);
         }
 

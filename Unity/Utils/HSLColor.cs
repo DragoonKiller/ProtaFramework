@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Prota;
-using Unity.Mathematics;
 using UnityEngine;
 
 namespace Prota.Unity
@@ -130,87 +129,84 @@ namespace Prota.Unity
         
         public static void HSL2RGB(float h, float s, float l, out float r, out float g, out float b)
         {
-            h = h.Repeat(1.0f);
-            s = s.Clamp(0.0f, 1.0f);
-            l = l.Clamp(0.0f, 1.0f);
+            if(s == 0)
+            {
+                r = g = b = l;
+            }
+            else
+            {
+                float q = l < 0.5f ? l * (1.0f + s) : l + s - l * s;
+                float p = 2.0f * l - q;
+                r = Hue2RGB(p, q, h + 1.0f / 3.0f);
+                g = Hue2RGB(p, q, h);
+                b = Hue2RGB(p, q, h - 1.0f / 3.0f);
+            }
+        }
+        
+        static float Hue2RGB(float p, float q, float t)
+        {
+            if(t < 0.0f)
+            {
+                t += 1.0f;
+            }
+            else if(t > 1.0f)
+            {
+                t -= 1.0f;
+            }
             
-            float C = (1.0f - (2.0f * l - 1.0f).Abs()) * s;
-            float X = C * (1.0f - ((h * 6.0f).Repeat(2.0f) - 1.0f)).Abs();
-            float m = l - C / 2.0f;
-            
-            if (h < 1.0f / 6.0f)
+            if(t < 1.0f / 6.0f)
             {
-                r = C + m;
-                g = X + m;
-                b = m;
+                return p + (q - p) * 6.0f * t;
             }
-            else if (h < 2.0f / 6.0f)
+            else if(t < 1.0f / 2.0f)
             {
-                r = X + m;
-                g = C + m;
-                b = m;
+                return q;
             }
-            else if (h < 3.0f / 6.0f)
+            else if(t < 2.0f / 3.0f)
             {
-                r = m;
-                g = C + m;
-                b = X + m;
+                return p + (q - p) * (2.0f / 3.0f - t) * 6.0f;
             }
-            else if (h < 4.0f / 6.0f)
+            else
             {
-                r = m;
-                g = X + m;
-                b = C + m;
+                return p;
             }
-            else if (h < 5.0f / 6.0f)
-            {
-                r = X + m;
-                g = m;
-                b = C + m;
-            }
-            else if (h <= 1.0)
-            {
-                r = C + m;
-                g = m;
-                b = X + m;
-            }
-            else throw new Exception($"h=[{h}]");
         }
         
         public static void RGB2HSL(float r, float g, float b, out float h, out float s, out float l)
         {
-            float M = r.Max(g).Max(b);
-            float m = r.Min(g).Min(b);
-            float C = M - m;
+            float max = Mathf.Max(r, g, b);
+            float min = Mathf.Min(r, g, b);
+            float delta = max - min;
             
-            if (C == 0.0f)
+            l = (max + min) / 2.0f;
+            
+            if (delta == 0.0f)
             {
                 h = 0.0f;
-            }
-            else if (M == r)
-            {
-                h = ((g - b) / C).Repeat(6.0f);
-            }
-            else if (M == g)
-            {
-                h = ((b - r) / C + 2.0f);
-            }
-            else if (M == b)
-            {
-                h = ((r - g) / C + 4.0f);
-            }
-            else throw new Exception($"M=[{M}] r=[{r}] g=[{g}] b=[{b}]");
-            h = h / 6.0f;
-            
-            l = (M + m) / 2.0f;
-            
-            if (C == 0.0f)
-            {
                 s = 0.0f;
             }
             else
             {
-                s = C / (1.0f - (2.0f * l - 1.0f).Abs());
+                s = delta / (1.0f - (2.0f * l - 1.0f).Abs());
+                
+                if (r == max)
+                {
+                    h = (g - b) / delta;
+                }
+                else if (g == max)
+                {
+                    h = 2.0f + (b - r) / delta;
+                }
+                else
+                {
+                    h = 4.0f + (r - g) / delta;
+                }
+                
+                h /= 6.0f;
+                if (h < 0.0f)
+                {
+                    h += 1.0f;
+                }
             }
         }
     }
