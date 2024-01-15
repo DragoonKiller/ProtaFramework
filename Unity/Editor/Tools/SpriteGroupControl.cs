@@ -178,7 +178,7 @@ namespace Prota.Editor
         void SetColorsUI()
         {
             GUILayout.Label("==== Color ====", header);
-         
+            
             randomHue = EditorGUILayout.Slider("Hue", randomHue, 0f, 1f);
             randomSaturation = EditorGUILayout.Slider("Saturation", randomSaturation, 0f, 1f);
             randomBrightness = EditorGUILayout.Slider("Brightness", randomBrightness, 0f, 1f);
@@ -451,7 +451,7 @@ namespace Prota.Editor
             {
                 var rd = g.GetComponent<ProtaSpriteRenderer>();
                 Undo.RecordObject(rd, "Set Color");
-                rd.color = color;
+                rd.vertexColor = color;
             }
 
             public void SetSprite(GameObject g, Sprite sprite)
@@ -499,12 +499,15 @@ namespace Prota.Editor
         SpriteRendererProcessor spriteRendererProcessor = new();
         ProtaSpriteRendererProcessor protaSpriteRendererProcessor = new();
         ImageProcessor imageProcessor = new();
-        
         ISpriteProcessor[] processors;
         
         SpriteGroupControl()
         {
-            processors = new ISpriteProcessor[] { spriteRendererProcessor, protaSpriteRendererProcessor, imageProcessor };
+            processors = new ISpriteProcessor[] {
+                spriteRendererProcessor,
+                protaSpriteRendererProcessor,
+                imageProcessor
+            };
         }
         
         

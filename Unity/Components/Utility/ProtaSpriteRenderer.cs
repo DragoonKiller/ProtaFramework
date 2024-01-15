@@ -23,25 +23,37 @@ namespace Prota.Unity
     [RequireComponent(typeof(RectTransform))]
     public class ProtaSpriteRenderer : MonoBehaviour
     {
-        static LocalKeyword? keywordUseLight;
-        public static Material _cachedMaterial;
-        public static Material cachedMaterial
+        static Shader _spriteShader;
+        static LocalKeyword keywordUseLight;
+        
+        static Material _cachedMaterial;
+        static Material cachedMaterial
         {
             get
             {
-                if(keywordUseLight.HasValue && !keywordUseLight.Value.isValid)
+                if(_cachedMaterial == null)
                 {
-                    keywordUseLight = null;
-                    _cachedMaterial = null;
+                    _cachedMaterial = new Material(shader);
+                    _cachedMaterial.hideFlags = HideFlags.HideAndDontSave;
                 }
-                if(_cachedMaterial != null) return _cachedMaterial;
-                var shader = Shader.Find("Prota/Sprite");
-                if(shader == null) throw new Exception("Shader not found: Prota/Sprite");
-                keywordUseLight = new LocalKeyword(shader, "_USE_LIGHT");
-                _cachedMaterial = new Material(shader) { name = "ProtaSprite" };
                 return _cachedMaterial;
             }
         }
+        
+        static Shader shader
+        {
+            get
+            {
+                if(_spriteShader == null)
+                {
+                    _spriteShader = Shader.Find("Prota/Sprite");
+                    if(_spriteShader == null) throw new Exception("Shader not found: Prota/Sprite");
+                    keywordUseLight = new LocalKeyword(_spriteShader, "USE_LIGHT");
+                }
+                return _spriteShader;
+            }
+        }
+        
         
         public MeshRenderer meshRenderer { get; private set; }
         public MeshFilter meshFilter { get; private set; }
@@ -57,6 +69,7 @@ namespace Prota.Unity
         public Vector4 extend;  // (xmin-, ymin-, xmax+, ymax+)
         
         [Header("Sprite")]
+        public bool render = true;
         public Sprite sprite;
         public Sprite normal;
         public Vector2 uvOffset = Vector2.zero;
@@ -79,6 +92,7 @@ namespace Prota.Unity
         
 
         [Header("Color")]
+        [ColorUsage(true, true)] public Color vertexColor = Color.white;
         [ColorUsage(true, true)] public Color color = Color.white;
         [ColorUsage(true, true)] public Color addColor = new Color(0, 0, 0, 0);
         [ColorUsage(true, true)] public Color overlapColor = new Color(0, 0, 0, 0);
@@ -150,6 +164,7 @@ namespace Prota.Unity
         Sprite submittedMask;
         Vector2 submittedFlipSpriteVector;
         Vector2 submittedFlipMaskVector;
+        Color submittedVertexColor;
         
         public bool NeedUpdateVertices()
         {
@@ -160,6 +175,7 @@ namespace Prota.Unity
             if(submittedFlipSpriteVector != spriteFlipVector) return true;
             if(submittedFlipMaskVector != maskFlipVector) return true;
             if(submittedExtend != extend) return true;
+            if(submittedVertexColor != vertexColor) return true;
             return false;
         }
         
@@ -193,11 +209,18 @@ namespace Prota.Unity
             tempVertices[2] = new Vector3(rect.xMin, rect.yMin, 0);
             tempVertices[3] = new Vector3(rect.xMax, rect.yMin, 0);
             
+            var tempColors = new Color[4];
+            tempColors[0] = vertexColor;
+            tempColors[1] = vertexColor;
+            tempColors[2] = vertexColor;
+            tempColors[3] = vertexColor;
+            
             if(sprite) FlipSpriteUV(spriteUV, flipSpriteX, flipSpriteY);
             if(normal) FlipSpriteUV(normalUV, flipSpriteX, flipSpriteY);
             if(mask) FlipSpriteUV(maskUV, flipMaskX, flipMaskY);
             
             mesh.SetVertices(tempVertices);
+            mesh.SetColors(tempColors);
             mesh.SetIndices(defaultTriangles, MeshTopology.Triangles, 0);
             
             mesh.SetUVs(0, sprite ? spriteUV : defaultUVs);
@@ -213,6 +236,7 @@ namespace Prota.Unity
             submittedMask = mask;
             submittedFlipSpriteVector = spriteFlipVector;
             submittedFlipMaskVector = maskFlipVector;
+            submittedVertexColor = vertexColor;
         }
         
         static void FlipSpriteUV(Vector2[] uv, bool flipX, bool flipY)
@@ -341,7 +365,7 @@ namespace Prota.Unity
             SetTexture(material, Hashes._NormalTex, Hashes._NormalTex_ST, normal, uvOffset, uvOffsetByTime, uvOffsetByRealtime);
             SetTexture(material, Hashes._MaskTex, Hashes._MaskTex_ST, mask, maskUVOffset, maskUVOffsetByTime, maskUVOffsetByRealtime);
             
-            material.SetKeyword(keywordUseLight.Value, useLight);
+            material.SetKeyword(keywordUseLight, useLight);
             
             material.SetColor(Hashes._Color, color);
             material.SetColor(Hashes._AddColor, addColor);
@@ -406,19 +430,22 @@ namespace Prota.Unity
         
         void OnDisable()
         {
-            if(mesh != null)
-            {
-                DestroyImmediate(mesh);
-                meshFilter.mesh = null;
-                mesh = null;
-            }
-            
-            if(material != null)
-            {
-                DestroyImmediate(material);
-                meshRenderer.material = null;
-                material = null;
-            }
+            ClearMesh();
+            ClearMaterial();
+        }
+        
+        void ClearMesh()
+        {
+            DestroyImmediate(mesh);
+            meshFilter.mesh = null;
+            mesh = null;
+        }
+        
+        void ClearMaterial()
+        {
+            DestroyImmediate(material);
+            meshRenderer.material = null;
+            material = null;
         }
         
         
