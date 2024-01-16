@@ -29,6 +29,22 @@ namespace Prota
             return changed ? current : record;
         }
         
+        public static float LinearStep(this float x, float a, float b) => ((x - a) / (b - a)).Clamp(0, 1);
+        
+        public static double LinearStep(this double x, double a, double b) => ((x - a) / (b - a)).Clamp(0, 1);
+        
+        public static float SmoothStep(this float x, float a, float b)
+        {
+            var t = ((x - a) / (b - a)).Clamp(0, 1);
+            return t * t * (3 - 2 * t);
+        }
+        
+        public static double SmoothStep(this double x, double a, double b)
+        {
+            var t = ((x - a) / (b - a)).Clamp(0, 1);
+            return t * t * (3 - 2 * t);
+        }
+        
         public static bool ApproximatelyEqual(this float x, float y) => Math.Abs(x - y) < 1e-6f;
         
         public static int ToInt(this float x) => (int)x;
