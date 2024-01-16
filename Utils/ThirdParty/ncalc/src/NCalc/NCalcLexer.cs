@@ -19,6 +19,7 @@
 // Ambiguous reference in cref attribute
 #pragma warning disable 419
 
+#pragma warning disable 3021
 
 using System.Globalization;
 using NCalc.Domain;

@@ -33,6 +33,10 @@ namespace Prota
         
         public static double LinearStep(this double x, double a, double b) => ((x - a) / (b - a)).Clamp(0, 1);
         
+        public static float LinearStepRev(this float x, float a, float b) => 1 - ((x - a) / (b - a)).Clamp(0, 1);
+        
+        public static double LinearStepRev(this double x, double a, double b) => 1 - ((x - a) / (b - a)).Clamp(0, 1);
+        
         public static float SmoothStep(this float x, float a, float b)
         {
             var t = ((x - a) / (b - a)).Clamp(0, 1);

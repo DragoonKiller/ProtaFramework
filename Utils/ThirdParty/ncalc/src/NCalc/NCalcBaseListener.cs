@@ -22,6 +22,7 @@
 
 using System.Globalization;
 using NCalc.Domain;
+#pragma warning disable 3021
 
 
 using Antlr4.Runtime.Misc;
