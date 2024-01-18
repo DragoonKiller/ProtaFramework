@@ -23,6 +23,8 @@ namespace Prota.Unity
     [RequireComponent(typeof(RectTransform))]
     public class ProtaSpriteRenderer : MonoBehaviour
     {
+        static HashSet<ProtaSpriteRenderer> allEnabled = new();
+        
         static Shader _spriteShader;
         static LocalKeyword keywordUseLight;
         
@@ -48,7 +50,7 @@ namespace Prota.Unity
                 {
                     _spriteShader = Shader.Find("Prota/Sprite");
                     if(_spriteShader == null) throw new Exception("Shader not found: Prota/Sprite");
-                    keywordUseLight = new LocalKeyword(_spriteShader, "USE_LIGHT");
+                    keywordUseLight = new LocalKeyword(_spriteShader, "_USE_LIGHT");
                 }
                 return _spriteShader;
             }
@@ -66,7 +68,12 @@ namespace Prota.Unity
         // ====================================================================================================
         // ====================================================================================================
         
+        public bool forceUpdate = false;
+        
         public Vector4 extend;  // (xmin-, ymin-, xmax+, ymax+)
+        
+        [Range(-90, 90)] public float shear;     // 剪切形变, 角度.
+        public bool useRadialShear;              // 剪切形变是否改变高度?
         
         [Header("Sprite")]
         public Sprite sprite;
@@ -125,14 +132,13 @@ namespace Prota.Unity
         public int orderInLayer = 0;
         public int renderLayerMask = -1;
         
-        
         // ====================================================================================================
         // ====================================================================================================
         
-        void LateUpdate()
+        void OnWillRenderObject()
         {
             SyncSpriteInfoToRectTransform();
-            UpdateMeshVertices();
+            UpdateMesh();
             UpdateRendererProperties();
             UpdateMaterial();
         }
@@ -165,78 +171,140 @@ namespace Prota.Unity
         Vector2 submittedFlipSpriteVector;
         Vector2 submittedFlipMaskVector;
         Color submittedVertexColor;
+        float submittedShear;
+        bool submittedUseRadialShear;
         
-        public bool NeedUpdateVertices()
+        public bool NeedUpdateUVs()
         {
-            if(submittedRect != localRect) return true;
             if(submittedSprite != sprite) return true;
             if(submittedNormal != normal) return true;
             if(submittedMask != mask) return true;
             if(submittedFlipSpriteVector != spriteFlipVector) return true;
             if(submittedFlipMaskVector != maskFlipVector) return true;
             if(submittedExtend != extend) return true;
+            return false;
+        }
+        
+        public bool NeedUpdateVerticesColor()
+        {
             if(submittedVertexColor != vertexColor) return true;
             return false;
         }
         
-        public void UpdateMeshVertices()
+        public bool NeedUpdateVertices()
         {
-            if(!NeedUpdateVertices()) return;
+            if(submittedRect != localRect) return true;
+            if(submittedExtend != extend) return true;
+            if(submittedShear != shear) return true;
+            if(submittedUseRadialShear != useRadialShear) return true;
+            return false;
+        }
+        
+        
+        static Color[] tempColorArray = new Color[4];
+        static Vector3[] tempVertices = new Vector3[4];
+        static Vector2[] tempSpriteUVs = new Vector2[4];
+        static Vector2[] tempNormalUVs = new Vector2[4];
+        static Vector2[] tempMaskUVs = new Vector2[4];
+        public void UpdateMesh()
+        {
+            bool needUpdateUVs = NeedUpdateUVs();
+            bool needUpdateVertices = NeedUpdateVertices();
+            bool needUpdateVerticesColor = NeedUpdateVerticesColor();
+            if(!needUpdateUVs && !needUpdateVertices && !needUpdateVerticesColor && !forceUpdate) return;
             
-            var localRect = this.localRect;
+            if(needUpdateVertices || forceUpdate)
+            {
+                var localRect = this.localRect;
+                
+                // 计算扩展后的矩形.
+                var rect = localRect;
+                rect.xMin -= extend.x;
+                rect.yMin -= extend.y;
+                rect.xMax += extend.z;
+                rect.yMax += extend.w;
+                
+                // 顺序: 左上, 右上, 左下, 右下. uv 同.
+                tempVertices[0] = new Vector3(rect.xMin, rect.yMax, 0);
+                tempVertices[1] = new Vector3(rect.xMax, rect.yMax, 0);
+                tempVertices[2] = new Vector3(rect.xMin, rect.yMin, 0);
+                tempVertices[3] = new Vector3(rect.xMax, rect.yMin, 0);
+                
+                // 应用剪切形变.
+                var xOffsetTop = rect.yMax * Mathf.Tan(shear * Mathf.Deg2Rad);
+                var xOffsetBottom = rect.yMin * Mathf.Tan(shear * Mathf.Deg2Rad);
+                tempVertices[0].x += xOffsetTop;
+                tempVertices[1].x += xOffsetTop;
+                tempVertices[2].x += xOffsetBottom;
+                tempVertices[3].x += xOffsetBottom;
+                if(useRadialShear)
+                {
+                    var yOffsetTop = rect.yMax * Mathf.Cos(shear * Mathf.Deg2Rad);
+                    var yOffsetBottom = rect.yMin * Mathf.Cos(shear * Mathf.Deg2Rad);
+                    tempVertices[0].y += yOffsetTop;
+                    tempVertices[1].y += yOffsetTop;
+                    tempVertices[2].y += yOffsetBottom;
+                    tempVertices[3].y += yOffsetBottom;
+                }
+                
+                mesh.SetVertices(tempVertices);
+                mesh.SetIndices(defaultTriangles, MeshTopology.Triangles, 0);
+                submittedRect = rect;
+                submittedExtend = extend;
+                submittedShear = shear;
+                mesh.RecalculateBounds();
+                
+                needUpdateUVs = true;
+            }
             
-            // 计算扩展后的矩形.
-            var rect = localRect;
-            rect.xMin -= extend.x;
-            rect.yMin -= extend.y;
-            rect.xMax += extend.z;
-            rect.yMax += extend.w;
+            if(needUpdateVerticesColor || forceUpdate)
+            {
+                tempColorArray[0] = vertexColor;
+                tempColorArray[1] = vertexColor;
+                tempColorArray[2] = vertexColor;
+                tempColorArray[3] = vertexColor;
+                mesh.SetColors(tempColorArray);
+                submittedVertexColor = vertexColor;
+            }
             
-            // 计算扩展后的 uv.
-            var spriteUV = sprite ? sprite.uv : null;
-            var normalUV = normal ? normal.uv : null;
-            var maskUV = mask ? mask.uv : null;
-            var localSize = localRect.size;
-            if(sprite) TransformUVExtend(localSize, extend, spriteUV);
-            if(normal) TransformUVExtend(localSize, extend, normalUV);
-            if(mask) TransformUVExtend(localSize, extend, maskUV);
+            if(needUpdateUVs || forceUpdate)
+            {
+                if(sprite) Array.Copy(GetSpriteUV(sprite), tempSpriteUVs, 4);
+                else Array.Copy(defaultUVs, tempSpriteUVs, 4);
+                
+                if(normal) Array.Copy(GetSpriteUV(normal), tempNormalUVs, 4);
+                else Array.Copy(defaultUVs, tempNormalUVs, 4);
+                
+                if(mask) Array.Copy(GetSpriteUV(mask), tempMaskUVs, 4);
+                else Array.Copy(defaultUVs, tempMaskUVs, 4);
+                
+                var localSize = localRect.size;
+                if(sprite) TransformUVExtend(localSize, extend, tempSpriteUVs);
+                if(normal) TransformUVExtend(localSize, extend, tempNormalUVs);
+                if(mask) TransformUVExtend(localSize, extend, tempMaskUVs);
+                
+                if(sprite) FlipSpriteUV(tempSpriteUVs, flipSpriteX, flipSpriteY);
+                if(normal) FlipSpriteUV(tempNormalUVs, flipSpriteX, flipSpriteY);
+                if(mask) FlipSpriteUV(tempMaskUVs, flipMaskX, flipMaskY);
+                
+                if(tempSpriteUVs == null) tempSpriteUVs = defaultUVs;
+                if(tempNormalUVs == null) tempNormalUVs = defaultUVs;
+                if(tempMaskUVs == null) tempMaskUVs = defaultUVs;
             
-            var tempVertices = new Vector3[4];
+                mesh.SetUVs(0, tempSpriteUVs);
+                mesh.SetUVs(1, tempNormalUVs);
+                mesh.SetUVs(2, tempMaskUVs);
+                
+                submittedSprite = sprite;
+                submittedNormal = normal;
+                submittedMask = mask;
+                submittedFlipSpriteVector = spriteFlipVector;
+                submittedFlipMaskVector = maskFlipVector;
+                submittedExtend = extend;
+            }
             
-            // 顺序: 左上, 右上, 左下, 右下. uv 同.
-            tempVertices[0] = new Vector3(rect.xMin, rect.yMax, 0);
-            tempVertices[1] = new Vector3(rect.xMax, rect.yMax, 0);
-            tempVertices[2] = new Vector3(rect.xMin, rect.yMin, 0);
-            tempVertices[3] = new Vector3(rect.xMax, rect.yMin, 0);
+            forceUpdate = false;
             
-            var tempColors = new Color[4];
-            tempColors[0] = vertexColor;
-            tempColors[1] = vertexColor;
-            tempColors[2] = vertexColor;
-            tempColors[3] = vertexColor;
-            
-            if(sprite) FlipSpriteUV(spriteUV, flipSpriteX, flipSpriteY);
-            if(normal) FlipSpriteUV(normalUV, flipSpriteX, flipSpriteY);
-            if(mask) FlipSpriteUV(maskUV, flipMaskX, flipMaskY);
-            
-            mesh.SetVertices(tempVertices);
-            mesh.SetColors(tempColors);
-            mesh.SetIndices(defaultTriangles, MeshTopology.Triangles, 0);
-            
-            mesh.SetUVs(0, sprite ? spriteUV : defaultUVs);
-            mesh.SetUVs(1, normal ? normalUV : defaultUVs);
-            mesh.SetUVs(2, mask ? maskUV : defaultUVs);
-            
-            mesh.RecalculateBounds();
-            
-            submittedRect = rect;
-            submittedExtend = extend;
-            submittedSprite = sprite;
-            submittedNormal = normal;
-            submittedMask = mask;
-            submittedFlipSpriteVector = spriteFlipVector;
-            submittedFlipMaskVector = maskFlipVector;
-            submittedVertexColor = vertexColor;
         }
         
         static void FlipSpriteUV(Vector2[] uv, bool flipX, bool flipY)
@@ -384,8 +452,8 @@ namespace Prota.Unity
             material.SetFloat(Hashes._ZTest, (int)depthTest);
             material.SetFloat(Hashes._ZWrite, (int)depthWrite);
             
-            if(useAlphaClip) material.SetFloat(Hashes._AlphaClip, alphaClip);
-            else material.SetFloat(Hashes._AlphaClip, -1);
+            var actualAlphaThreshold = useAlphaClip ? alphaClip : -1e6f;
+            material.SetFloat(Hashes._AlphaClip, actualAlphaThreshold);
             
             if(useStencil)
             {
@@ -413,6 +481,8 @@ namespace Prota.Unity
         
         void OnEnable()
         {
+            allEnabled.Add(this);
+            
             meshRenderer = GetComponent<MeshRenderer>();
             meshFilter = GetComponent<MeshFilter>();
             rectTransform = GetComponent<RectTransform>();
@@ -431,6 +501,7 @@ namespace Prota.Unity
         
         void OnDisable()
         {
+            allEnabled.Remove(this);
             ClearMesh();
             ClearMaterial();
         }
@@ -491,6 +562,18 @@ namespace Prota.Unity
             points[2] = new Vector2(exmin, eymin);
             points[3] = new Vector2(exmax, eymin);
         }
+        
+        
+        static Dictionary<Sprite, Vector2[]> spriteUVCache = new();
+        static Vector2[] GetSpriteUV(Sprite sprite)
+        {
+            if(!Application.isPlaying) return sprite.uv;
             
+            if(sprite == null) return null;
+            if(spriteUVCache.TryGetValue(sprite, out var uv)) return uv;
+            uv = sprite.uv;
+            spriteUVCache[sprite] = uv;
+            return uv;
+        }
     }
 }
