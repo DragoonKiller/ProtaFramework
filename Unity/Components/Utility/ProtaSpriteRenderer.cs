@@ -69,7 +69,6 @@ namespace Prota.Unity
         public Vector4 extend;  // (xmin-, ymin-, xmax+, ymax+)
         
         [Header("Sprite")]
-        public bool render = true;
         public Sprite sprite;
         public Sprite normal;
         public Vector2 uvOffset = Vector2.zero;
@@ -116,7 +115,8 @@ namespace Prota.Unity
         public BlendMode dstBlendMode = BlendMode.OneMinusSrcAlpha;
         public CompareFunction depthTest = CompareFunction.Always;
         public OnOffEnum depthWrite = OnOffEnum.On;
-        [Range(0, 1)] public float alphaClip = 0;
+        public bool useAlphaClip = false;
+        [ShowWhen("useAlphaClip"), Range(0, 1)] public float alphaClip = 0;
         
         
         [Header("Render")]
@@ -384,7 +384,8 @@ namespace Prota.Unity
             material.SetFloat(Hashes._ZTest, (int)depthTest);
             material.SetFloat(Hashes._ZWrite, (int)depthWrite);
             
-            material.SetFloat(Hashes._AlphaClip, alphaClip);
+            if(useAlphaClip) material.SetFloat(Hashes._AlphaClip, alphaClip);
+            else material.SetFloat(Hashes._AlphaClip, -1);
             
             if(useStencil)
             {
@@ -444,7 +445,7 @@ namespace Prota.Unity
         void ClearMaterial()
         {
             DestroyImmediate(material);
-            meshRenderer.material = null;
+            meshRenderer.sharedMaterial = null;
             material = null;
         }
         

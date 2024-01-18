@@ -20,17 +20,19 @@ Shader "Prota/Sprite"
         
         _AlphaClip ("Alpha Clip", float) = 0.5
         
-        _HueOffset ("Hue Offset", float) = 0.0
-        _SaturationOffset ("Saturation Offset", float) = 0.0
-        _BrightnessOffset ("Brightness Offset", float) = 0.0
-        _ContrastOffset ("Contrast Offset", float) = 0.0
-        _HueConcentrate ("Hue Concentration", float) = 0.0
+        [Range(0, 1)] _HueOffset ("Hue Offset", float) = 0.0
+        [Range(0, 1)] _SaturationOffset ("Saturation Offset", float) = 0.0
+        [Range(0, 1)] _BrightnessOffset ("Brightness Offset", float) = 0.0
+        [Range(0, 1)] _ContrastOffset ("Contrast Offset", float) = 0.0
+        [Range(0, 1)] _HueConcentrate ("Hue Concentration", float) = 0.0
         
         [Range(0, 255)] _StencilRef ("Stencil Ref", Integer) = 0
         [Range(0, 255)] _StencilReadMask ("Stencil Read Mask", Integer) = 0
         [Range(0, 255)] _StencilWriteMask ("Stencil Write Mask", Integer) = 0
         [Enum(UnityEngine.Rendering.CompareFunction)] _StencilCompare ("Stencil Compare", Float) = 0
         [Enum(UnityEngine.Rendering.StencilOp)] _StencilOp ("Stencil Operation", Float) = 0
+        
+        [Toggle] _USE_LIGHT ("_USE_LIGHT", Float) = 0.0
     }
 
     SubShader
@@ -152,7 +154,7 @@ Shader "Prota/Sprite"
                 
                 o.lightingUV = half2(ComputeScreenPos(o.positionCS / o.positionCS.w).xy);
 
-                o.color = v.color * _Color;
+                o.color = v.color;
                 
                 o.maskUV = TRANSFORM_TEX(v.maskUV, _MaskTex);
                 
@@ -168,6 +170,8 @@ Shader "Prota/Sprite"
                 const float4 mask = _MaskUsage * SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.maskUV);
                 
                 if(main.a * mask.a <= _AlphaClip) discard;
+                
+                main *= _Color;
                 
                 float3 hsl;
                 RGBtoHSL(main.rgb, hsl);

@@ -1,4 +1,7 @@
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 
 namespace Prota.Editor
@@ -29,6 +32,57 @@ namespace Prota.Editor
         public static SerializedProperty SubBackingField(this SerializedProperty x, string name)
         {
             return x.FindPropertyRelative(name.ToBackingFieldName());
+        }
+        
+        
+        public static IEnumerable<SerializedProperty> EnumerateAsList(this SerializedProperty x)
+        {
+            var n = x.arraySize;
+            for(int i = 0; i < n; i++)
+            {
+                yield return x.GetArrayElementAtIndex(i);
+            }
+        }
+        
+        public static SerializedProperty FindAsList(this SerializedProperty x, Func<SerializedProperty, bool> cond)
+        {
+            return x.EnumerateAsList().FirstOrDefault(cond);
+        }
+        
+        public static SerializedProperty  AddAsList(this SerializedProperty x)
+        {
+            var n = x.arraySize;
+            x.InsertArrayElementAtIndex(n);
+            return x.GetArrayElementAtIndex(n);
+        }
+        
+        public static SerializedProperty RemoveAsList(this SerializedProperty x, Func<SerializedProperty, bool> cond)
+        {
+            var n = x.arraySize;
+            for(int i = 0; i < n; i++)
+            {
+                var e = x.GetArrayElementAtIndex(i);
+                if(cond(e))
+                {
+                    x.DeleteArrayElementAtIndex(i);
+                    return e;
+                }
+            }
+            return null;
+        }
+        
+        public static SerializedProperty RemoveAllAsList(this SerializedProperty x, Func<SerializedProperty, bool> cond)
+        {
+            var n = x.arraySize;
+            for(int i = n - 1; i >= 0; i--)
+            {
+                var e = x.GetArrayElementAtIndex(i);
+                if(cond(e))
+                {
+                    x.DeleteArrayElementAtIndex(i);
+                }
+            }
+            return null;
         }
     }
 }
