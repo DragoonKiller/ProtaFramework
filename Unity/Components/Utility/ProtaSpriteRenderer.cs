@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine.Rendering;
-using Mono.Cecil;
 
 namespace Prota.Unity
 {
@@ -71,6 +70,8 @@ namespace Prota.Unity
         public bool forceUpdate = false;
         
         public Vector4 extend;  // (xmin-, ymin-, xmax+, ymax+)
+        
+        public bool useProtaSpriteMaterial = true;
         
         [Range(-90, 90)] public float shear;     // 剪切形变, 角度.
         public bool useRadialShear;              // 剪切形变是否改变高度?
@@ -474,8 +475,6 @@ namespace Prota.Unity
         }
         
         
-        
-        
         // ====================================================================================================
         // ====================================================================================================
         
@@ -487,6 +486,7 @@ namespace Prota.Unity
             meshFilter = GetComponent<MeshFilter>();
             rectTransform = GetComponent<RectTransform>();
             meshFilter.mesh = mesh = new Mesh() { name = "ProtaSpriteRenderer" };
+            
             meshRenderer.sharedMaterial = material = new Material(cachedMaterial) { name = "ProtaSpriteRenderer" };
             
             meshRenderer.lightProbeUsage = LightProbeUsage.Off;

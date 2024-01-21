@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using UnityEngine.Rendering;
 using System.Text.RegularExpressions;
 using System;
+using Codice.Client.Commands;
 
 namespace Prota.Editor
 {
@@ -112,22 +113,76 @@ namespace Prota.Editor
                 info = new ShaderInfoCache(refMat.shader);
             }
             
+            {
+                EditorGUILayout.LabelField("Targets", EditorStyles.largeLabel);
+                using var _ = new EditorGUI.IndentLevelScope();
+                EditorGUILayout.PropertyField(obj.FindProperty("targets"));
+                if(GUILayout.Button("Select from self")) SelectFromSelf();
+                if(GUILayout.Button("Select from children")) SelectFromChildren();
+                if(GUILayout.Button("Select from parent")) SelectFromParent();
+                if(GUILayout.Button("Select from all")) SelectFromAll();
+                if(GUILayout.Button("Clear targets")) SelectClear();
+            }
+            
+            {
+                EditorGUILayout.LabelField("Material Properties", EditorStyles.largeLabel);
+                using var _ = new EditorGUI.IndentLevelScope();
+                DrawMaterialProperties(obj);
+            }
+            
+            obj.ApplyModifiedProperties();
+        }
+        
+        void SelectFromSelf()
+        {
+            var provider = target as ProtaMaterialProvider;
+            var res = provider.gameObject.GetComponents<Renderer>();
+            if(!provider.targets.IsNullOrEmpty()) res = res.Concat(provider.targets).Distinct().ToArray();
+            provider.targets = res;
+            serializedObject.Update();
+        }
+        
+        void SelectFromChildren()
+        {
+            var provider = target as ProtaMaterialProvider;
+            var res = provider.gameObject.GetComponentsInChildren<Renderer>();
+            if(!provider.targets.IsNullOrEmpty()) res = res.Concat(provider.targets).Distinct().ToArray();
+            provider.targets = res;
+            serializedObject.Update();
+        }
+        
+        void SelectFromParent()
+        {
+            var provider = target as ProtaMaterialProvider;
+            var res = provider.gameObject.GetComponentsInParent<Renderer>();
+            if(!provider.targets.IsNullOrEmpty()) res = res.Concat(provider.targets).Distinct().ToArray();
+            provider.targets = res;
+            serializedObject.Update();
+        }
+        
+        void SelectFromAll()
+        {
+            var provider = target as ProtaMaterialProvider;
+            var res = FindObjectsOfType<Renderer>();
+            if(!provider.targets.IsNullOrEmpty()) res = res.Concat(provider.targets).Distinct().ToArray();
+            provider.targets = res;
+            serializedObject.Update();
+        }
+        
+        void SelectClear()
+        {
+            var provider = target as ProtaMaterialProvider;
+            provider.targets = Array.Empty<Renderer>();
+            serializedObject.Update();
+        }
+        
+        void DrawMaterialProperties(SerializedObject obj)
+        {
             var vecList = obj.FindProperty("vectorEntries");
             var floatList = obj.FindProperty("floatEntries");
             var intList = obj.FindProperty("intEntries");
             var texList = obj.FindProperty("textureEntries");
             // var matList = obj.FindProperty("matrixEntries");     // 填不了?
-            
-            if(GUILayout.Button("Reset"))
-            {
-                info = null;
-                vecList.ClearArray();
-                floatList.ClearArray();
-                intList.ClearArray();
-                texList.ClearArray();
-                serializedObject.ApplyModifiedProperties();
-                return;
-            }
             
             // 确保所有材质中存在的属性都被记录.
             foreach(var name in info.names.Values)
@@ -159,8 +214,6 @@ namespace Prota.Editor
             intList.RemoveAllAsList(x => !info.names.ContainsKey(IdFromProp(x)));
             texList.RemoveAllAsList(x => !info.names.ContainsKey(IdFromProp(x)));
             
-            EditorGUILayout.LabelField("Material");
-            
             foreach(var p in vecList.EnumerateAsList()) if(!IsSTProperty(p)) DrawEntry(p);
             foreach(var p in floatList.EnumerateAsList()) DrawEntry(p);
             foreach(var p in texList.EnumerateAsList())
@@ -173,7 +226,17 @@ namespace Prota.Editor
             }
             foreach(var p in intList.EnumerateAsList()) DrawEntry(p);
             
-            obj.ApplyModifiedProperties();
+            if(GUILayout.Button("Reset"))
+            {
+                info = null;
+                vecList.ClearArray();
+                floatList.ClearArray();
+                intList.ClearArray();
+                texList.ClearArray();
+                serializedObject.ApplyModifiedProperties();
+                return;
+            }
+            
         }
         
         void EnsurePropertyExists(SerializedProperty list, int id, bool init = true)

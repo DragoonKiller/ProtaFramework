@@ -15,6 +15,8 @@ namespace Prota.Unity
         public Material referenceMaterial;
         public Material instanceMaterial;
         
+        public Renderer[] targets = Array.Empty<Renderer>();
+        
         [SerializeField] VectorEntry[] vectorEntries = Array.Empty<VectorEntry>();
         [SerializeField] FloatEntry[] floatEntries = Array.Empty<FloatEntry>();
         [SerializeField] IntEntry[] intEntries = Array.Empty<IntEntry>();
@@ -36,14 +38,43 @@ namespace Prota.Unity
         
         void Update()
         {
+            SyncMaterialState();
             SyncDataToPropertyBlock();
             SyncDataToMaterial();
+            AssignMaterialToAllTargets();
+        }
+        
+        Material submittedMaterial;
+        
+        void SyncMaterialState()
+        {
+            if(useInstantiatedMaterial)
+            {
+                data = null;
+                
+                if(referenceMaterial == null)
+                {
+                    if(instanceMaterial != null) DestroyImmediate(instanceMaterial);
+                    submittedMaterial = instanceMaterial = null;
+                }
+                else if(submittedMaterial != referenceMaterial)
+                {
+                    if(instanceMaterial != null) DestroyImmediate(instanceMaterial);
+                    submittedMaterial = referenceMaterial;
+                    instanceMaterial = new Material(referenceMaterial);
+                }
+            }
+            else
+            {
+                data = new MaterialPropertyBlock();
+                if(instanceMaterial != null) DestroyImmediate(instanceMaterial);
+                submittedMaterial = instanceMaterial = null;
+            }
         }
         
         public void SyncDataToPropertyBlock()
         {
             if(useInstantiatedMaterial) return;
-            if(data == null) data = new MaterialPropertyBlock();
             data.Clear();
             foreach(var entry in vectorEntries) data.SetVector(entry.id, entry.value);
             foreach(var entry in floatEntries) data.SetFloat(entry.id, entry.value);
@@ -52,23 +83,9 @@ namespace Prota.Unity
             foreach(var entry in matrixEntries) data.SetMatrix(entry.id, entry.value);
         }
         
-        [NonSerialized] Material submittedMaterial;
-        
         public void SyncDataToMaterial()
         {
             if(!useInstantiatedMaterial) return;
-            if(referenceMaterial == null)
-            {
-                if(instanceMaterial != null) DestroyImmediate(instanceMaterial);
-                instanceMaterial = null;
-                return;
-            }
-            if(submittedMaterial != referenceMaterial)
-            {
-                if(instanceMaterial != null) DestroyImmediate(instanceMaterial);
-                submittedMaterial = referenceMaterial;
-                instanceMaterial = new Material(referenceMaterial);
-            }
             foreach(var entry in vectorEntries) instanceMaterial.SetVector(entry.id, entry.value);
             foreach(var entry in floatEntries) instanceMaterial.SetFloat(entry.id, entry.value);
             foreach(var entry in intEntries) instanceMaterial.SetInteger(entry.id, entry.value);
@@ -154,6 +171,30 @@ namespace Prota.Unity
                     if(_spriteShader == null) throw new Exception("Shader not found: Prota/Sprite");
                 }
                 return _spriteShader;
+            }
+        }
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        void AssignMaterialToAllTargets()
+        {
+            foreach(var t in targets) AssignMaterial(t);
+        }
+        
+        void AssignMaterial(Renderer rd)
+        {
+            if(rd == null) return;
+            
+            if(useInstantiatedMaterial)
+            {
+                if(instanceMaterial == null) return;
+                rd.material = instanceMaterial;
+            }
+            else
+            {
+                if(data == null) return;
+                rd.SetPropertyBlock(data);
             }
         }
         
