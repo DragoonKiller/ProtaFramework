@@ -184,7 +184,9 @@ Shader "Prota/Sprite"
                 main.rgb += _AddColor.rgb;
                 main.rgb = _OverlapColor.a * _OverlapColor.rgb + (1 - _OverlapColor.a) * main.rgb;
                 
-                main *= mask;
+                // main *= mask;
+                
+                return main;
                 
                 #if _USE_LIGHT
                 SurfaceData2D surfaceData;

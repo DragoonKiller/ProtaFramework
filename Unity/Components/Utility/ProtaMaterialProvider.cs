@@ -1,9 +1,6 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEditor;
-using PlasticGui.Diff;
 
 namespace Prota.Unity
 {
@@ -28,12 +25,15 @@ namespace Prota.Unity
         
         public void OnEnable()
         {
+            submittedMaterial = null;
+            Update();
         }
         
         public void OnDisable()
         {
             if(instanceMaterial != null) DestroyImmediate(instanceMaterial);
             instanceMaterial = null;
+            submittedMaterial = null;
         }
         
         void Update()
@@ -61,7 +61,7 @@ namespace Prota.Unity
                 {
                     if(instanceMaterial != null) DestroyImmediate(instanceMaterial);
                     submittedMaterial = referenceMaterial;
-                    instanceMaterial = new Material(referenceMaterial);
+                    instanceMaterial = new Material(referenceMaterial) { name = referenceMaterial.name + "Instance" };
                 }
             }
             else
@@ -189,11 +189,12 @@ namespace Prota.Unity
             if(useInstantiatedMaterial)
             {
                 if(instanceMaterial == null) return;
-                rd.material = instanceMaterial;
+                rd.sharedMaterial = instanceMaterial;
             }
             else
             {
                 if(data == null) return;
+                rd.sharedMaterial = referenceMaterial;
                 rd.SetPropertyBlock(data);
             }
         }
