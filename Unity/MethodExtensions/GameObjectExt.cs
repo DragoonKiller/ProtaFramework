@@ -95,6 +95,19 @@ namespace Prota.Unity
             foreach(var x in t) yield return x;
         }
         
+        public static T GetComponentAsserted<T>(this GameObject a) where T: Component
+        {
+            if(a.TryGetComponent<T>(out var res)) return res;
+            throw new Exception($"{a.GetNamePath()}: No {typeof(T).Name} found.");
+        }
+        
+        public static T GetComponentCritical<T>(this GameObject a) where T: Component
+        {
+            if(a.TryGetComponent<T>(out var res)) return res;
+            Debug.LogError($"{a.GetNamePath()}: No {typeof(T).Name} found.");
+            return null;
+        }
+        
         public static bool HasDuplicatedComponent(this GameObject g)
         {
             var e = g.EnumerateComponents();

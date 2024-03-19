@@ -38,6 +38,19 @@ namespace Prota.Unity
             return a;
         }
         
+        public static T GetComponentAsserted<T>(this Component a) where T: Component
+        {
+            if(a.TryGetComponent<T>(out var res)) return res;
+            throw new Exception($"{a.GetNamePath()}: No {typeof(T).Name} found.");
+        }
+        
+        public static T GetComponentCritical<T>(this Component a) where T: Component
+        {
+            if(a.TryGetComponent<T>(out var res)) return res;
+            Debug.LogError($"{a.GetNamePath()}: No {typeof(T).Name} found.");
+            return null;
+        }
+        
         // ============================================================================================================
         // ============================================================================================================
         

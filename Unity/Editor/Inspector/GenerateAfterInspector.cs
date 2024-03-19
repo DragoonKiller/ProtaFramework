@@ -14,6 +14,7 @@ namespace Prota.Editor
         {
             var o = serializedObject;
             var generateAfterEvent = o.FindProperty("generateAfterEvent");
+            var selectMode = o.FindProperty("selectMode");
             var generateMode = o.FindProperty("generateMode");
             var targetToGenerate = o.FindProperty("targetToGenerate");
             var referenceTransform = o.FindProperty("referenceTransform");
@@ -31,11 +32,11 @@ namespace Prota.Editor
             
             EditorGUILayout.PropertyField(targetToGenerate);
             EditorGUILayout.PropertyField(generateAfterEvent);
+            EditorGUILayout.PropertyField(selectMode);
             EditorGUILayout.PropertyField(generateMode);
-            EditorGUILayout.PropertyField(loop);
             EditorGUILayout.PropertyField(position);
             EditorGUILayout.PropertyField(localRotation);
-            EditorGUILayout.FloatField("Delay", delay.floatValue);
+            // EditorGUILayout.FloatField("Delay", delay.floatValue);
             
             var modeValue = (GenerateAfter.GenerateMode)generateMode.enumValueIndex;
             if(modeValue == GenerateAfter.GenerateMode.LocalToSpecific)
@@ -52,10 +53,11 @@ namespace Prota.Editor
             }
             else throw new System.Exception("Unknown GenerateMode: " + modeValue);
             
+            EditorGUILayout.PropertyField(loop);
             var loopValue = loop.boolValue;
             if(loopValue)
             {
-                EditorGUILayout.FloatField("Loop Delay", loopDelay.floatValue);
+                loopDelay.floatValue = EditorGUILayout.FloatField("Loop Delay", loopDelay.floatValue);
             }
             
             if(EditorGUI.EndChangeCheck())

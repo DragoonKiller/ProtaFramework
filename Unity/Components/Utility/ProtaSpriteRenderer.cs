@@ -249,10 +249,11 @@ namespace Prota.Unity
                 }
                 
                 mesh.SetVertices(tempVertices);
-                mesh.SetIndices(defaultTriangles, MeshTopology.Triangles, 0);
+                mesh.SetTriangles(defaultTriangles, 0);
                 submittedRect = rect;
                 submittedExtend = extend;
                 submittedShear = shear;
+                
                 mesh.RecalculateBounds();
                 
                 needUpdateUVs = true;

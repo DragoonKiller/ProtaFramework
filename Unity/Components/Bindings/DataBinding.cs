@@ -117,17 +117,13 @@ namespace Prota.Unity
         public static DataBinding DataBinding(this GameObject self)
         {
             if(Prota.Unity.DataBinding.dataBindingCache.TryGetValue(self, out var res)) return res;
-            if(self.TryGetComponent<DataBinding>(out res)) return res;
-            Debug.LogError($"GameObject[{ self.name }] 找不到 DataBinding 组件");
-            return null;
+            return self.GetComponentCritical<DataBinding>();
         }
         
         public static DataBinding DataBinding(this Component self)
         {
             if(Prota.Unity.DataBinding.dataBindingCache.TryGetValue(self.gameObject, out var res)) return res;
-            if(self.TryGetComponent<DataBinding>(out res)) return res;
-            Debug.LogError($"GameObject[{ self.name }] 找不到 DataBinding 组件");
-            return null;
+            return self.GetComponentCritical<DataBinding>();
         }
         
         public static bool TryGetDataBinding(this GameObject self, out DataBinding res)

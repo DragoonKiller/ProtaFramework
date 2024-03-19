@@ -26,7 +26,17 @@ namespace Prota.Unity
             Manually,
         }
         
-        public GameObject targetToGenerate;
+        [Serializable]
+        public enum SelectMode
+        {
+            Random,
+            
+            All,
+        }
+        
+        public GameObject[] targetToGenerate;
+        
+        public SelectMode selectMode = SelectMode.Random;
         
         public GenerateMode generateMode = GenerateMode.World;
         
@@ -76,31 +86,54 @@ namespace Prota.Unity
         
         void Generate()
         {
-            switch(generateMode)
+            var selection = GetSelection();
+            
+            foreach(var targetToGenerate in selection)
             {
-                case GenerateMode.World:
-                    Instantiate(targetToGenerate, position, Quaternion.Euler(localRotation));
-                    break;
-                    
-                case GenerateMode.LocalToThis:
-                    g = Instantiate(targetToGenerate, this.transform);
-                    g.transform.localPosition = position;
-                    g.transform.localRotation = Quaternion.Euler(localRotation);
-                    break;
-                    
-                case GenerateMode.LocalToSpecific:
-                    g = Instantiate(targetToGenerate, referenceTransform);
-                    g.transform.localPosition = position;
-                    g.transform.localRotation = Quaternion.Euler(localRotation);
-                    break;
-                    
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(generateMode), generateMode, null);
+                switch(generateMode)
+                {
+                    case GenerateMode.World:
+                        Instantiate(targetToGenerate, position, Quaternion.Euler(localRotation));
+                        break;
+                        
+                    case GenerateMode.LocalToThis:
+                        g = Instantiate(targetToGenerate, this.transform);
+                        g.transform.localPosition = position;
+                        g.transform.localRotation = Quaternion.Euler(localRotation);
+                        break;
+                        
+                    case GenerateMode.LocalToSpecific:
+                        g = Instantiate(targetToGenerate, referenceTransform);
+                        g.transform.localPosition = position;
+                        g.transform.localRotation = Quaternion.Euler(localRotation);
+                        break;
+                        
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(generateMode), generateMode, null);
+                }
+                
+                g.SendMessage("OnGenerate", this, SendMessageOptions.DontRequireReceiver);
             }
             
-            g.SendMessage("OnGenerate", this, SendMessageOptions.DontRequireReceiver);
             
             if(loop) this.gameObject.NewTimer(loopDelay, Generate);
+        }
+        
+        IEnumerable<GameObject> GetSelection()
+        {
+            if(targetToGenerate == null || targetToGenerate.Length == 0) yield break;
+            
+            if(selectMode == SelectMode.Random)
+            {
+                yield return targetToGenerate[UnityEngine.Random.Range(0, targetToGenerate.Length)];
+            }
+            else
+            {
+                foreach(var g in targetToGenerate)
+                {
+                    yield return g;
+                }
+            }
         }
     }
 }
