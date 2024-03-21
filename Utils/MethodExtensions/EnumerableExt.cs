@@ -143,5 +143,8 @@ namespace Prota
             
             return true;
         }
+        
+        public static IEnumerable<T> OrEmpty<T>(this IEnumerable<T> e)
+            => e == null ? Enumerable.Empty<T>() : e;
     }
 }

@@ -24,6 +24,8 @@ namespace Prota.Editor
             root.AddChild(ignoreSubAsset);
             var ignoreDuplicateAsset = new PropertyField(serializedObject.FindProperty("ignoreDuplicateAsset"));
             root.AddChild(ignoreDuplicateAsset);
+            var regexMatcher = new PropertyField(serializedObject.FindProperty("regexMatcher"));
+            root.AddChild(regexMatcher);
             var subFormat = new PropertyField(serializedObject.FindProperty("subAssetNamingFormat"));
             
             root.AddChild(subFormat);

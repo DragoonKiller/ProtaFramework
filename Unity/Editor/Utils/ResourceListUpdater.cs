@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime;
+using System.Text.RegularExpressions;
 using Prota.Unity;
 using UnityEditor;
 using UnityEngine;
@@ -154,12 +155,24 @@ namespace Prota.Editor
             
             EditorUtility.SetDirty(resList);
             AssetDatabase.SaveAssetIfDirty(resList);
+            compiledRegex.Clear();
             Debug.Log($"Asset update: {resList.name}");
         }
+        
+        static readonly Dictionary<string, Regex> compiledRegex = new();
         
         static void CheckAndAddResource(ResourceList r, Node f)
         {
             if(f.extension == ".meta") return;
+            
+            if(!compiledRegex.TryGetValue(r.regexMatcher, out var regex))
+            {
+                regex = new Regex(r.regexMatcher, RegexOptions.IgnoreCase);
+                compiledRegex[r.regexMatcher] = regex;
+            }
+            
+            if(!regex.IsMatch(f.name)) return;
+            
             var assetPath = f.fullPath.FullPathToAssetPath();
             var assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
             if(assetType == null || assetType == typeof(ProtaRes)) return;
