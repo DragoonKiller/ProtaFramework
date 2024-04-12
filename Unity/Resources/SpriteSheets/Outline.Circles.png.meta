@@ -45,7 +45,7 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 256
@@ -77,6 +77,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -89,6 +90,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -101,6 +103,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
@@ -327,16 +330,16 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
+      Outline.Circles_0: 686007831
+      Outline.Circles_1: -768934017
+      Outline.Circles_2: 811327301
+      Outline.Circles_3: -366150450
+      Outline.Circles_4: -2141161971
+      Outline.Circles_5: -672161930
       Outline.Circles_6: -851917986
       Outline.Circles_7: 359824874
       Outline.Circles_8: 1009782157
       Outline.Circles_9: 705256368
-      Outline.Circles_5: -672161930
-      Outline.Circles_4: -2141161971
-      Outline.Circles_2: 811327301
-      Outline.Circles_3: -366150450
-      Outline.Circles_0: 686007831
-      Outline.Circles_1: -768934017
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

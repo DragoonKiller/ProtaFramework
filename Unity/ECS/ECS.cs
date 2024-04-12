@@ -317,6 +317,35 @@ namespace Prota.Unity
         // ====================================================================================================
         // ====================================================================================================
         
+        public static bool TryFindEntityComponent<T>(this GameObject g, out ERoot root, out T c) where T: EComponent
+        {
+            c = null;
+            if (!g.EntityRoot().PassValue(out root)) return false;
+            return root.TryGetEntityComponent(out c);
+        }
+        
+        public static bool TryFindEntityComponent<T>(this GameObject g, out T c) where T: EComponent
+        {
+            c = null;
+            if (!g.EntityRoot().PassValue(out var root)) return false;
+            return root.TryGetEntityComponent(out c);
+        }
+        
+        public static bool TryFindEntityComponent<T>(this Component x, out ERoot root, out T c) where T: EComponent
+        {
+            c = null;
+            if (!x.EntityRoot().PassValue(out root)) return false;
+            return root.TryGetEntityComponent(out c);
+        }
+        
+        public static bool TryFindEntityComponent<T>(this Component x, out T c) where T: EComponent
+        {
+            c = null;
+            if (!x.EntityRoot().PassValue(out var root)) return false;
+            return root.TryGetEntityComponent(out c);
+        }
+        
+        
         public static ERoot EntityRoot(this GameObject go)
         {
             var tr = go.transform;

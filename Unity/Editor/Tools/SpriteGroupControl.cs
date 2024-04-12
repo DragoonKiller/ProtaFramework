@@ -169,7 +169,7 @@ namespace Prota.Editor
         
         
         Vector2 colorUIScroll;
-        List<Color> selectColors = new();
+        [ColorUsage(true, true)] List<Color> selectColors = new();
         float randomHue;
         float randomSaturation;
         float randomBrightness;
@@ -196,7 +196,7 @@ namespace Prota.Editor
                 {
                     using var _ = new HorizontalScope();
                     if(GUILayout.Button("X", GUILayout.Width(20))) removeIndex = i;
-                    selectColors[i] = EditorGUILayout.ColorField("", selectColors[i]);
+                    selectColors[i] = EditorGUILayout.ColorField(GUIContent.none, selectColors[i], true, true, true);
                 }
             }
             
@@ -213,9 +213,9 @@ namespace Prota.Editor
                 var color = selectColors[colorIndex];
                 
                 var hsl = color.ToHSL();
-                hsl.h += randomHue * NextRandom01();
-                hsl.s += randomSaturation * NextRandom01();
-                hsl.l += randomBrightness * NextRandom01();
+                hsl.h += randomHue * NextRandom01().XMap(0, 1, -1, 1);
+                hsl.s += randomSaturation * NextRandom01().XMap(0, 1, -1, 1);
+                hsl.l += randomBrightness * NextRandom01().XMap(0, 1, -1, 1);
                 color = hsl.ToColor(color.a);
                 
                 var processor = GetProcessor(g);

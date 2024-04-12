@@ -45,7 +45,7 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 256
@@ -77,6 +77,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -89,6 +90,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -101,6 +103,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
@@ -453,22 +456,22 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      Outline.Fogs_7: 1005983549
-      Outline.Fogs_6: -1424016751
-      Outline.Fogs_13: -1130396552
-      Outline.Fogs_11: 1875836875
+      Outline.Fogs_0: 793832162
       Outline.Fogs_1: 594820895
-      Outline.Fogs_9: -27665648
+      Outline.Fogs_10: 1618253280
+      Outline.Fogs_11: 1875836875
+      Outline.Fogs_12: 1034409006
+      Outline.Fogs_13: -1130396552
       Outline.Fogs_14: -64194132
       Outline.Fogs_15: 1352192948
-      Outline.Fogs_3: 428112641
-      Outline.Fogs_10: 1618253280
       Outline.Fogs_2: -355812811
-      Outline.Fogs_8: 868151322
-      Outline.Fogs_5: 222636840
+      Outline.Fogs_3: 428112641
       Outline.Fogs_4: -865365516
-      Outline.Fogs_12: 1034409006
-      Outline.Fogs_0: 793832162
+      Outline.Fogs_5: 222636840
+      Outline.Fogs_6: -1424016751
+      Outline.Fogs_7: 1005983549
+      Outline.Fogs_8: 868151322
+      Outline.Fogs_9: -27665648
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

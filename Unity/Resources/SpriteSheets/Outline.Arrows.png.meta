@@ -45,7 +45,7 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 256
@@ -77,6 +77,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -89,6 +90,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -101,6 +103,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
@@ -453,22 +456,22 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      Outline.Arrows_2: 534981676
-      Outline.Arrows_1: 721382021
-      Outline.Arrows_11: 1943428271
-      Outline.Arrows_14: -1291632959
-      Outline.Arrows_8: -656765387
-      Outline.Arrows_6: -1238160526
       Outline.Arrows_0: 478013052
-      Outline.Arrows_5: 1376371822
-      Outline.Arrows_4: -1539353648
-      Outline.Arrows_12: -333328354
-      Outline.Arrows_9: -984568419
-      Outline.Arrows_15: 408232140
-      Outline.Arrows_3: -262317376
+      Outline.Arrows_1: 721382021
       Outline.Arrows_10: -1018626270
-      Outline.Arrows_7: 1308239725
+      Outline.Arrows_11: 1943428271
+      Outline.Arrows_12: -333328354
       Outline.Arrows_13: -789265875
+      Outline.Arrows_14: -1291632959
+      Outline.Arrows_15: 408232140
+      Outline.Arrows_2: 534981676
+      Outline.Arrows_3: -262317376
+      Outline.Arrows_4: -1539353648
+      Outline.Arrows_5: 1376371822
+      Outline.Arrows_6: -1238160526
+      Outline.Arrows_7: 1308239725
+      Outline.Arrows_8: -656765387
+      Outline.Arrows_9: -984568419
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

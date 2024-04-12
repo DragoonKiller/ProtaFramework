@@ -45,7 +45,7 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 256
@@ -77,6 +77,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -89,6 +90,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -101,6 +103,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
@@ -453,22 +456,22 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      Outline.Dusts_1: -1105531342
-      Outline.Dusts_3: -1559528280
-      Outline.Dusts_14: -1780567297
-      Outline.Dusts_10: 1470038598
-      Outline.Dusts_8: -1577822687
-      Outline.Dusts_7: -1790382229
-      Outline.Dusts_2: -23127119
-      Outline.Dusts_6: 530356987
-      Outline.Dusts_9: -1139496178
-      Outline.Dusts_5: -2073464682
-      Outline.Dusts_12: -1600900825
-      Outline.Dusts_15: -865013671
-      Outline.Dusts_11: 1010120721
-      Outline.Dusts_13: 1751979339
-      Outline.Dusts_4: -117229161
       Outline.Dusts_0: 540706237
+      Outline.Dusts_1: -1105531342
+      Outline.Dusts_10: 1470038598
+      Outline.Dusts_11: 1010120721
+      Outline.Dusts_12: -1600900825
+      Outline.Dusts_13: 1751979339
+      Outline.Dusts_14: -1780567297
+      Outline.Dusts_15: -865013671
+      Outline.Dusts_2: -23127119
+      Outline.Dusts_3: -1559528280
+      Outline.Dusts_4: -117229161
+      Outline.Dusts_5: -2073464682
+      Outline.Dusts_6: 530356987
+      Outline.Dusts_7: -1790382229
+      Outline.Dusts_8: -1577822687
+      Outline.Dusts_9: -1139496178
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

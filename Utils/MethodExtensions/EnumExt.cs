@@ -1,8 +1,6 @@
-using UnityEngine;
 using System;
-using System.Collections.Generic;
 
-namespace Prota.Unity
+namespace Prota
 {
     [Flags]
     public enum PowerOfTwoEnum : uint

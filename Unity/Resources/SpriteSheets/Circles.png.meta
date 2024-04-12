@@ -45,7 +45,7 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 256
@@ -77,6 +77,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -89,6 +90,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -101,6 +103,7 @@ TextureImporter:
     crunchedCompression: 0
     allowsAlphaSplitting: 0
     overridden: 0
+    ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
@@ -327,16 +330,16 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      Circles_5: -1618674401
-      Circles_2: -1761075308
-      Circles_8: 206038242
       Circles_0: -130767099
-      Circles_4: 1746231023
-      Circles_6: 56662404
-      Circles_9: 1744309532
-      Circles_3: 1194033167
-      Circles_7: -33494486
       Circles_1: -1782253186
+      Circles_2: -1761075308
+      Circles_3: 1194033167
+      Circles_4: 1746231023
+      Circles_5: -1618674401
+      Circles_6: 56662404
+      Circles_7: -33494486
+      Circles_8: 206038242
+      Circles_9: 1744309532
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
