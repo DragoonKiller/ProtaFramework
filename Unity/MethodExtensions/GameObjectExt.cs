@@ -71,10 +71,17 @@ namespace Prota.Unity
             return GameObject.Instantiate(g, parent ?? (g.scene == null ? null : g.transform.parent) ?? null, false);
         }
         
-        public static GameObject CloneAsTemplate(this GameObject g, Transform parent = null)
+        public static GameObject CloneAsTemplate(this GameObject g, Transform parent)
         {
             g.SetActive(false);
             var x = g.Clone(parent);
+            x.SetActive(true);
+            return x;
+        }
+        public static GameObject CloneAsTemplate(this GameObject g)
+        {
+            g.SetActive(false);
+            var x = g.Clone(g.transform.parent);
             x.SetActive(true);
             return x;
         }

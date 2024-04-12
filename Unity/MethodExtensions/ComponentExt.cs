@@ -25,10 +25,17 @@ namespace Prota.Unity
             return g.gameObject.Clone(parent).GetComponent<T>();
         }
         
-        public static T CloneAsTemplate<T>(this T g, Transform parent = null) where T: Component
+        public static T CloneAsTemplate<T>(this T g, Transform parent) where T: Component
         {
             return g.gameObject.CloneAsTemplate(parent).GetComponent<T>();
         }
+        
+        public static T CloneAsTemplate<T>(this T g) where T: Component
+        {
+            return g.gameObject.CloneAsTemplate().GetComponent<T>();
+        }
+        
+        
         
         // 设置 Component 对应的 Game Object 是否激活.
         public static T SetActive<T>(this T a, bool activate = true) where T: Component

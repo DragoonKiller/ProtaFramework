@@ -67,7 +67,7 @@ namespace Prota.Unity
         
         protected virtual void Update()
         {
-            if(!awaken) Debug.LogError($"EComponent {this.GetType()} hsa not called Awake. Make sure base.Awake is invoked.");
+            if(!awaken) Debug.LogError($"EComponent {this.GetType()} has not called Awake. Make sure base.Awake() is called when override.");
             if(Application.isPlaying) return;
             InitAttachment();
         }
