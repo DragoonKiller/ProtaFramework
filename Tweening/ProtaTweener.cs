@@ -130,7 +130,7 @@ namespace Prota.Tween
         public void UpdateValue()
         {
             // move
-            if(move) this.transform.position = (moveFrom, moveTo).Lerp(TweenEase.GetFromEnum(moveEase).Evaluate(progress));
+            if(move) this.transform.localPosition = (moveFrom, moveTo).Lerp(TweenEase.GetFromEnum(moveEase).Evaluate(progress));
             
             // rotate
             if(rotate) this.transform.eulerAngles = (rotateFrom, rotateTo).Lerp(TweenEase.GetFromEnum(rotateEase).Evaluate(progress));
@@ -257,7 +257,7 @@ namespace Prota.Tween
 
         public void RecordTo()
         {
-            if (move) moveTo = this.transform.position;
+            if (move) moveTo = this.transform.localPosition;
             if (rotate) rotateTo = this.transform.eulerAngles;
             if (scale) scaleTo = this.transform.localScale;
             if (color) colorTo = GetColorValue();
@@ -265,7 +265,7 @@ namespace Prota.Tween
 
         public void RecordFrom()
         {
-            if (move) moveFrom = this.transform.position;
+            if (move) moveFrom = this.transform.localPosition;
             if (rotate) rotateFrom = this.transform.eulerAngles;
             if (scale) scaleFrom = this.transform.localScale;
             if (color) colorFrom = GetColorValue();
