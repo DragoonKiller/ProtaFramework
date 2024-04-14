@@ -1,14 +1,16 @@
 using UnityEngine;
 using Prota.Unity;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 
 namespace Prota.Tween
 {
     [ExecuteAlways]
     public class ProtaTweener : MonoBehaviour
     {
+        #if UNITY_EDITOR
+        public string animName;     // 写注释/好看用的.
+        #endif
+        
         [Serializable]
         public struct ActivateEntry
         {
@@ -20,7 +22,8 @@ namespace Prota.Tween
         [Range(0, 1)] public float progress = 0;
         
         [Header("自动播放")]
-        public bool autoPlay = true;
+        public bool play = true;        // 播放. 根据progress控制参数变化.
+        public bool running = true;    // 自动播放. 根据时间流逝控制progress变化.
         
         // 播放完毕后是否停下来(设置 autoPlay = true).
         // 如果 loop = true, 则在起始位置(包括反向时的起始位置)停留. 否则, 在结束位置停留.
@@ -34,7 +37,7 @@ namespace Prota.Tween
         // 指示当前的更新是从 0 到 1 还是反过来.
         public bool playReversed = false;
         
-        // 循环一次后反转 from/to.
+        // 循环一次后反转 from/to. false 即一直重复从0到1, true即从0到1再到0再到1循环.
         public bool reverseOnLoop = false;
         
         // 组件被激活后是否重置.
@@ -89,38 +92,39 @@ namespace Prota.Tween
             
             recordMode = false;
             
-            if(!autoPlay) return;
-            
-            if(playReversed) progress -= Time.deltaTime / duration;
-            else progress += Time.deltaTime / duration;
-            
-            bool finished = false;
-            if(loop)
+            if(running)
             {
-                if(reverseOnLoop)
+                if(playReversed) progress -= Time.deltaTime / duration;
+                else progress += Time.deltaTime / duration;
+                
+                bool finished = false;
+                if(loop)
                 {
-                    finished = (!playReversed && progress >= 1)
-                        || (playReversed && progress <= 0);
-                    if(finished && reverseOnLoop) playReversed = !playReversed;
-                    else if(finished && reverseOnLoop) playReversed = !playReversed;
-                    progress = progress.Clamp(0, 1);
+                    if(reverseOnLoop)
+                    {
+                        finished = (!playReversed && progress >= 1)
+                            || (playReversed && progress <= 0);
+                        if(finished && reverseOnLoop) playReversed = !playReversed;
+                        else if(finished && reverseOnLoop) playReversed = !playReversed;
+                        progress = progress.Clamp(0, 1);
+                    }
+                    else
+                    {
+                        if(progress >= 1 || progress <= 0) finished = true;
+                        if(stopWhenFinished && finished) progress = progress.Clamp(0, 1);
+                        else progress = progress.Repeat(1);
+                    }
                 }
                 else
                 {
-                    if(progress >= 1 || progress <= 0) finished = true;
-                    if(stopWhenFinished && finished) progress = progress.Clamp(0, 1);
-                    else progress = progress.Repeat(1);
+                    progress = progress.Clamp(0, 1);
+                    finished = progress == 1;
                 }
-            }
-            else
-            {
-                progress = progress.Clamp(0, 1);
-                finished = progress == 1;
+                
+                if(stopWhenFinished && finished) running = false;
             }
             
-            if(stopWhenFinished && finished) autoPlay = false;
-            
-            UpdateValue();
+            if(play) UpdateValue();
         }
         
         // ====================================================================================================
@@ -153,7 +157,7 @@ namespace Prota.Tween
             else if(colorTarget is UnityEngine.CanvasGroup cg) cg.ClearAllTween();
         }
         
-        public void Play() => autoPlay = true;
+        public void Play() => running = true;
         
         public void Play(float startProgress)
         {

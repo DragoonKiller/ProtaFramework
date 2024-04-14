@@ -54,7 +54,7 @@ namespace Prota.Tween
             tweeners = e.Values.ToArray();
             Array.Sort(tweeners, (a, b) => a.tweener.name.CompareTo(b.tweener.name));
         
-            foreach(var t in tweeners) t.tweener.autoPlay = false;
+            foreach(var t in tweeners) t.tweener.running = false;
         }
         
         

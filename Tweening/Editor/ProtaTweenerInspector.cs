@@ -3,13 +3,9 @@ using UnityEditor;
 using Prota.Editor;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
-using System.IO;
 using Prota.Tween;
 using System.Collections.Generic;
 using System;
-using UnityEditor.Build.Content;
-using System.Configuration;
-
 namespace Prota.Editor
 {
     [CustomEditor(typeof(ProtaTweener), false)]
@@ -22,19 +18,22 @@ namespace Prota.Editor
             
             Func<string, SerializedProperty> prop = serializedObject.FindProperty;
             
+            root.AddChild(new PropertyField(prop("animName")));
+            
+            root.AddChild(new VisualElement().AsHorizontalSeperator(2));
             root.AddChild(new VisualElement()
                 .SetHorizontalLayout()
-                .AddChild(new PropertyField(prop("progress"), "进度 progress")
+                .AddChild(new PropertyField(prop("progress"), "进度 Progress")
                     .SetGrow()
                 )
             );
             
             root.AddChild(new VisualElement().AsHorizontalSeperator(2));
-            
-            root.AddChild(new VisualElement().AsToggle("autoPlay", "自动播放 auto play", prop("autoPlay")));
+            root.AddChild(new VisualElement().AsToggle("play", "播放 play", prop("play")));
+            root.AddChild(new VisualElement().AsToggle("running", "正在播放 running", prop("running")));
             
             root.AddChild(
-                new VisualElement() { name = "autoPlayGroup" }
+                new VisualElement() { name = "playGroup" }
                     .AddChild(new VisualElement().AsToggle("stopWhenFinished", "播放完毕后停止 stop when finished", prop("stopWhenFinished")))
                     .AddChild(new PropertyField(prop("duration"), "播放时长 duration"))
                     .AddChild(new PropertyField(prop("playReversed"), "反向播放 play reversed"))
@@ -94,11 +93,6 @@ namespace Prota.Editor
             root.AddChild(new VisualElement().AsHorizontalSeperator(2));
             
             root.AddChild(new VisualElement().AsToggle("recordMode", "录制模式 record mode", prop("recordMode")));
-            
-            root.Q("autoPlayGroup").ShowOnCondition(
-                root.Q<Toggle>("autoPlay"),
-                (bool from, bool to) => to == true
-            );
             
             root.Q("moveGroup").ShowOnCondition(
                 root.Q<Toggle>("move"),

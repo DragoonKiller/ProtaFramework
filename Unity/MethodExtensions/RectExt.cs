@@ -34,5 +34,20 @@ namespace Prota.Unity
             ;
         }
         
+        public static Rect MoveDown(this Rect x, float a) => new Rect(x.x, x.y - a, x.width, x.height);
+        
+        public static Rect MoveLeft(this Rect x, float a) => new Rect(x.x - a, x.y, x.width, x.height);
+        
+        public static Rect MoveRight(this Rect x, float a) => new Rect(x.x + a, x.y, x.width, x.height);
+        
+        public static Rect MoveUp(this Rect x, float a) => new Rect(x.x, x.y + a, x.width, x.height);
+        
+        public static Rect MarginIn(this Rect x, float l, float r, float b, float t) => new Rect(x.x + l, x.y + b, x.width - l - r, x.height - b - t);
+        
+        public static Rect MarginOut(this Rect x, float l, float r, float b, float t) => new Rect(x.x - l, x.y - b, x.width + l + r, x.height + b + t);
+        
+        public static Rect WithHeight(this Rect x, float a) => new Rect(x.x, x.y, x.width, a);
+        
+        public static Rect WithWidth(this Rect x, float a) => new Rect(x.x, x.y, a, x.height);
     }
 }
