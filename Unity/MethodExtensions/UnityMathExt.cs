@@ -421,6 +421,10 @@ namespace Prota.Unity
         
         public static float SmoothStep(this float x) => x * x * (3 - 2 * x);
         
+        public static float ToDegree(this float x) => x * Mathf.Rad2Deg;
+        
+        public static float ToRadian(this float x) => x * Mathf.Deg2Rad;
+        
     }
     
 }

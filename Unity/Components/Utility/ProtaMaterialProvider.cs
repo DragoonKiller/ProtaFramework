@@ -15,10 +15,15 @@ namespace Prota.Unity
         public Renderer[] targets = Array.Empty<Renderer>();
         
         [SerializeField] VectorEntry[] vectorEntries = Array.Empty<VectorEntry>();
+        [SerializeField] bool[] vectorValid = Array.Empty<bool>();
         [SerializeField] FloatEntry[] floatEntries = Array.Empty<FloatEntry>();
+        [SerializeField] bool[] floatValid = Array.Empty<bool>();
         [SerializeField] IntEntry[] intEntries = Array.Empty<IntEntry>();
+        [SerializeField] bool[] intValid = Array.Empty<bool>();
         [SerializeField] TextureEntry[] textureEntries = Array.Empty<TextureEntry>();
+        [SerializeField] bool[] textureValid = Array.Empty<bool>();
         [SerializeField] MatrixEntry[] matrixEntries = Array.Empty<MatrixEntry>();
+        [SerializeField] bool[] matrixValid = Array.Empty<bool>();
         
         // ====================================================================================================
         // ====================================================================================================
@@ -76,21 +81,35 @@ namespace Prota.Unity
         {
             if(useInstantiatedMaterial) return;
             data.Clear();
-            foreach(var entry in vectorEntries) data.SetVector(entry.id, entry.value);
-            foreach(var entry in floatEntries) data.SetFloat(entry.id, entry.value);
-            foreach(var entry in intEntries) data.SetInteger(entry.id, entry.value);
-            foreach(var entry in textureEntries) if(entry.value != null) data.SetTexture(entry.id, entry.value);
-            foreach(var entry in matrixEntries) data.SetMatrix(entry.id, entry.value);
+            for(int i = 0; i < vectorEntries.Length; i++) if(vectorValid[i]) data.SetVector(vectorEntries[i].id, vectorEntries[i].value);
+            for(int i = 0; i < floatEntries.Length; i++) if(floatValid[i]) data.SetFloat(floatEntries[i].id, floatEntries[i].value);
+            for(int i = 0; i < intEntries.Length; i++) if(intValid[i]) data.SetInt(intEntries[i].id, intEntries[i].value);
+            for(int i = 0; i < textureEntries.Length; i++) if(textureValid[i]) data.SetTexture(textureEntries[i].id, textureEntries[i].value.OrDefault());
+            for(int i = 0; i < matrixEntries.Length; i++) if(matrixValid[i]) data.SetMatrix(matrixEntries[i].id, matrixEntries[i].value);
         }
         
         public void SyncDataToMaterial()
         {
             if(!useInstantiatedMaterial) return;
-            foreach(var entry in vectorEntries) instanceMaterial.SetVector(entry.id, entry.value);
-            foreach(var entry in floatEntries) instanceMaterial.SetFloat(entry.id, entry.value);
-            foreach(var entry in intEntries) instanceMaterial.SetInteger(entry.id, entry.value);
-            foreach(var entry in textureEntries) if(entry.value != null) instanceMaterial.SetTexture(entry.id, entry.value);
-            foreach(var entry in matrixEntries) instanceMaterial.SetMatrix(entry.id, entry.value);
+            for(int i = 0; i < vectorEntries.Length; i++)
+                if(vectorValid[i]) instanceMaterial.SetVector(vectorEntries[i].id, vectorEntries[i].value);
+                else instanceMaterial.SetVector(vectorEntries[i].id, referenceMaterial.GetVector(vectorEntries[i].id));
+            
+            for(int i = 0; i < floatEntries.Length; i++)
+                if(floatValid[i]) instanceMaterial.SetFloat(floatEntries[i].id, floatEntries[i].value);
+                else instanceMaterial.SetFloat(floatEntries[i].id, referenceMaterial.GetFloat(floatEntries[i].id));
+                
+            for(int i = 0; i < intEntries.Length; i++)
+                if(intValid[i]) instanceMaterial.SetInteger(intEntries[i].id, intEntries[i].value);
+                else instanceMaterial.SetInteger(intEntries[i].id, referenceMaterial.GetInt(intEntries[i].id));
+                
+            for(int i = 0; i < textureEntries.Length; i++)
+                if(textureValid[i]) instanceMaterial.SetTexture(textureEntries[i].id, textureEntries[i].value.OrDefault());
+                else instanceMaterial.SetTexture(textureEntries[i].id, referenceMaterial.GetTexture(textureEntries[i].id));
+                
+            for(int i = 0; i < matrixEntries.Length; i++)
+                if(matrixValid[i]) instanceMaterial.SetMatrix(matrixEntries[i].id, matrixEntries[i].value);
+                else instanceMaterial.SetMatrix(matrixEntries[i].id, referenceMaterial.GetMatrix(matrixEntries[i].id));
         }
         
         // ====================================================================================================
@@ -190,6 +209,7 @@ namespace Prota.Unity
             {
                 if(instanceMaterial == null) return;
                 rd.sharedMaterial = instanceMaterial;
+                rd.SetPropertyBlock(null);
             }
             else
             {

@@ -13,6 +13,9 @@ namespace Prota.Unity
         MeshFilter meshFilter;
         Mesh mesh;
         
+        // 用以确定 uv.
+        public Sprite sprite;
+        
         // xyzw:左右上下的扩展.
         public Vector4 extend = Vector4.zero;
         
@@ -48,7 +51,8 @@ namespace Prota.Unity
             }
         }
         
-        void Update()
+        
+        void OnWillRenderObject()
         {
             if(NeedUpdateMesh()) UpdateMesh();
         }
@@ -59,16 +63,21 @@ namespace Prota.Unity
 
         public bool forceUpdateMesh = false;
         
-        Rect submittedRect;
-        Vector4 submittedExtend;
-        bool submittedUseRadialShear;
-        float submittedShear;
-        Vector2 submittedUvOffset;
-        bool submittedUvOffsetByTime;
-        bool submittedUvOffsetByRealtime;
-        bool submittedFlipX;
-        bool submittedFlipY;
-        Color submittedVertexColor;
+        
+        public Rect localRect => rectTransform.rect;
+        
+        
+        [NonSerialized] Rect submittedRect;
+        [NonSerialized] Vector4 submittedExtend;
+        [NonSerialized] bool submittedUseRadialShear;
+        [NonSerialized] float submittedShear;
+        [NonSerialized] Vector2 submittedUvOffset;
+        [NonSerialized] bool submittedUvOffsetByTime;
+        [NonSerialized] bool submittedUvOffsetByRealtime;
+        [NonSerialized] bool submittedFlipX;
+        [NonSerialized] bool submittedFlipY;
+        [NonSerialized] Color submittedVertexColor;
+        [NonSerialized] Sprite submittedSprite;
         
         private bool NeedUpdateMesh()
         {
@@ -83,6 +92,7 @@ namespace Prota.Unity
             if(submittedFlipX != flipX) return true;
             if(submittedFlipY != flipY) return true;
             if(submittedVertexColor != vertexColor) return true;
+            if(submittedSprite != sprite) return true;
             return false;
         }
         
@@ -95,7 +105,7 @@ namespace Prota.Unity
             2, 1, 3,
         };
         
-        private void UpdateMesh()
+        void UpdateMesh()
         {
             if(tempVertices == null) tempVertices = new Vector3[4];
             if(tempUV == null) tempUV = new Vector2[4];
@@ -116,33 +126,55 @@ namespace Prota.Unity
             tempVertices[3] = new Vector3(rect.xMax, rect.yMin, 0);
             
             // 应用剪切形变.
-            var xOffsetTop = rect.yMax * Mathf.Tan(shear * Mathf.Deg2Rad);
-            var xOffsetBottom = rect.yMin * Mathf.Tan(shear * Mathf.Deg2Rad);
-            tempVertices[0].x += xOffsetTop;
-            tempVertices[1].x += xOffsetTop;
-            tempVertices[2].x += xOffsetBottom;
-            tempVertices[3].x += xOffsetBottom;
             if(useRadialShear)
             {
-                var yOffsetTop = rect.yMax * Mathf.Cos(shear * Mathf.Deg2Rad);
-                var yOffsetBottom = rect.yMin * Mathf.Cos(shear * Mathf.Deg2Rad);
-                tempVertices[0].y += yOffsetTop;
-                tempVertices[1].y += yOffsetTop;
-                tempVertices[2].y += yOffsetBottom;
-                tempVertices[3].y += yOffsetBottom;
+                var xOffsetTop = rect.yMax * Mathf.Sin(shear.ToRadian());
+                var xOffsetBottom = rect.yMin * Mathf.Sin(shear.ToRadian());
+                var yOffsetTop = rect.yMax * (1 - Mathf.Cos(shear.ToRadian()));
+                var yOffsetBottom = rect.yMin * (1 - Mathf.Cos(shear.ToRadian()));
+                tempVertices[0].x += xOffsetTop;
+                tempVertices[1].x += xOffsetTop;
+                tempVertices[2].x += xOffsetBottom;
+                tempVertices[3].x += xOffsetBottom;
+                tempVertices[0].y -= yOffsetTop;
+                tempVertices[1].y -= yOffsetTop;
+                tempVertices[2].y -= yOffsetBottom;
+                tempVertices[3].y -= yOffsetBottom;
             }
-            
+            else
+            {
+                var xOffsetTop = rect.yMax * Mathf.Tan(shear.ToRadian());
+                var xOffsetBottom = rect.yMin * Mathf.Tan(shear.ToRadian());
+                tempVertices[0].x += xOffsetTop;
+                tempVertices[1].x += xOffsetTop;
+                tempVertices[2].x += xOffsetBottom;
+                tempVertices[3].x += xOffsetBottom;
+            }
             
             tempColors[0] = vertexColor;
             tempColors[1] = vertexColor;
             tempColors[2] = vertexColor;
             tempColors[3] = vertexColor;
             
+            if(sprite)
+            {
+                var uv = sprite.uv;
+                tempUV[0] = uv[0];
+                tempUV[1] = uv[1];
+                tempUV[2] = uv[2];
+                tempUV[3] = uv[3];
+            }
+            else
+            {
+                tempUV[0] = new Vector2(0, 1);
+                tempUV[1] = new Vector2(1, 1);
+                tempUV[2] = new Vector2(0, 0);
+                tempUV[3] = new Vector2(1, 0);
+            }
             
-            tempUV[0] = new Vector2(0, 1);
-            tempUV[1] = new Vector2(1, 1);
-            tempUV[2] = new Vector2(0, 0);
-            tempUV[3] = new Vector2(1, 0);
+            TransformUVExtend(rectTransform.rect.size, extend, tempUV);
+            
+            
             if(flipX)
             {
                 Swap(ref tempUV[0], ref tempUV[1]);
@@ -159,9 +191,7 @@ namespace Prota.Unity
             mesh.SetColors(tempColors);
             mesh.SetIndices(defaultTriangles, MeshTopology.Triangles, 0);
             
-            
             mesh.RecalculateBounds();
-            
             
             forceUpdateMesh = false;
             submittedRect = rect;
@@ -174,6 +204,7 @@ namespace Prota.Unity
             submittedFlipX = flipX;
             submittedFlipY = flipY;
             submittedVertexColor = vertexColor;
+            submittedSprite = sprite;
         }
 
         static void Swap<T>(ref T a, ref T b)
@@ -182,6 +213,29 @@ namespace Prota.Unity
             a = b;
             b = t;
         }
+        
+        
+        static void TransformUVExtend(Vector2 size, Vector4 extend, Vector2[] points)
+        {
+            // 顺序: 左上, 右上, 左下, 右下.
+            var xmin = points[0].x;
+            var xmax = points[1].x;
+            var ymin = points[2].y;
+            var ymax = points[0].y;
+            
+            var uvsize = new Vector2(xmax - xmin, ymax - ymin);
+            
+            var exmin = xmin - extend.x / size.x * uvsize.x;
+            var exmax = xmax + extend.z / size.x * uvsize.x;
+            var eymin = ymin - extend.y / size.y * uvsize.y;
+            var eymax = ymax + extend.w / size.y * uvsize.y;
+            
+            points[0] = new Vector2(exmin, eymax);
+            points[1] = new Vector2(exmax, eymax);
+            points[2] = new Vector2(exmin, eymin);
+            points[3] = new Vector2(exmax, eymin);
+        }
+        
         
     }
 }

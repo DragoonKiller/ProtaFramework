@@ -37,7 +37,7 @@ namespace Prota.Editor
             public Dictionary<int, Vector2> ranges = new();
             public HashMapList<int, EnumEntry> enums = new();
             public Dictionary<int, int> stIds = new();
-            public HashSet<int> sts = new();
+            public Dictionary<int, int> sts = new();
             public ShaderInfoCache(Shader shader)
             {
                 this.shader = shader;
@@ -76,7 +76,7 @@ namespace Prota.Editor
                         names[stId] = $"{names[id]}_ST";
                         types[stId] = ShaderPropertyType.Vector;
                         stIds[id] = stId;
-                        sts.Add(stId);
+                        sts.Add(stId, id);
                     }
                 }
             }
@@ -214,17 +214,49 @@ namespace Prota.Editor
             intList.RemoveAllAsList(x => !info.names.ContainsKey(IdFromProp(x)));
             texList.RemoveAllAsList(x => !info.names.ContainsKey(IdFromProp(x)));
             
-            foreach(var p in vecList.EnumerateAsList()) if(!IsSTProperty(p)) DrawEntry(p);
-            foreach(var p in floatList.EnumerateAsList()) DrawEntry(p);
-            foreach(var p in texList.EnumerateAsList())
+            // 重新设置激活数组.
+            var vecValid = obj.FindProperty("vectorValid");
+            var floatValid = obj.FindProperty("floatValid");
+            var intValid = obj.FindProperty("intValid");
+            var texValid = obj.FindProperty("textureValid");
+            // var matValid = obj.FindProperty("matrixValid");
+            
+            MatchValidArray(vecList, vecValid);
+            MatchValidArray(floatList, floatValid);
+            MatchValidArray(intList, intValid);
+            MatchValidArray(texList, texValid);
+            
+            for(int i = 0; i < vecList.arraySize; i++)
             {
-                DrawEntry(p);
+                var p = vecList.GetArrayElementAtIndex(i);
+                var v = vecValid.GetArrayElementAtIndex(i);
+                if(!IsSTProperty(p)) DrawEntry(p, v);
+            }
+            
+            for(int i = 0; i < floatList.arraySize; i++)
+            {
+                var p = floatList.GetArrayElementAtIndex(i);
+                var v = floatValid.GetArrayElementAtIndex(i);
+                DrawEntry(p, v);
+            }
+            
+            for(int i = 0; i < intList.arraySize; i++)
+            {
+                var p = intList.GetArrayElementAtIndex(i);
+                var v = intValid.GetArrayElementAtIndex(i);
+                DrawEntry(p, v);
+            }
+            
+            for(int i = 0; i < texList.arraySize; i++)
+            {
+                var p = texList.GetArrayElementAtIndex(i);
+                var v = texValid.GetArrayElementAtIndex(i);
+                DrawEntry(p, v);
                 var stid = info.stIds[IdFromProp(p)];
                 foreach(var q in vecList.EnumerateAsList())
                     if(IsSTProperty(q) && IdFromProp(q) == stid)
                         DrawEntry(q);
             }
-            foreach(var p in intList.EnumerateAsList()) DrawEntry(p);
             
             if(GUILayout.Button("Reset"))
             {
@@ -233,10 +265,24 @@ namespace Prota.Editor
                 floatList.ClearArray();
                 intList.ClearArray();
                 texList.ClearArray();
-                serializedObject.ApplyModifiedProperties();
+                // matList.ClearArray();
+                vecValid.ClearArray();
+                floatValid.ClearArray();
+                intValid.ClearArray();
+                texValid.ClearArray();
+                // matValid.ClearArray();
                 return;
             }
-            
+        }
+        
+        void MatchValidArray(SerializedProperty arr, SerializedProperty valid)
+        {
+            var originalSize = valid.arraySize;
+            valid.arraySize = arr.arraySize;
+            for(int i = originalSize; i < arr.arraySize; i++)
+            {
+                valid.GetArrayElementAtIndex(i).boolValue = true;
+            }
         }
         
         void EnsurePropertyExists(SerializedProperty list, int id, bool init = true)
@@ -261,18 +307,32 @@ namespace Prota.Editor
                 case ShaderPropertyType.Float: valueProp.floatValue = info.shader.GetPropertyDefaultFloatValue(index); break;
                 case ShaderPropertyType.Range: valueProp.floatValue = info.shader.GetPropertyDefaultFloatValue(index); break;
                 case ShaderPropertyType.Color: valueProp.vector4Value = info.shader.GetPropertyDefaultVectorValue(index); break;
-                case ShaderPropertyType.Vector: valueProp.vector4Value = info.shader.GetPropertyDefaultVectorValue(index); break;
+                case ShaderPropertyType.Vector:
+                    if(info.stIds.Values.Contains(id))
+                    {
+                        valueProp.vector4Value = new Vector4(1, 1, 0, 0);
+                    }
+                    else
+                    {
+                        valueProp.vector4Value = info.shader.GetPropertyDefaultVectorValue(index);
+                    }
+                break;
                 case ShaderPropertyType.Texture: valueProp.objectReferenceValue = Resources.Load<Texture>(info.shader.GetPropertyTextureDefaultName(index)); break;
                 default: break; // no default value.
             }
         }
         
-        void DrawEntry(SerializedProperty p)
+        void DrawEntry(SerializedProperty p, SerializedProperty ac = null)
         {
             var id = IdFromProp(p);
             var name = info.names[id];
             var value = p.FindPropertyRelative("value");
             var type = info.types[id];
+            
+            using var _ = new EditorGUILayout.HorizontalScope();
+            
+            if(ac != null) ac.boolValue = EditorGUILayout.Toggle(GUIContent.none, ac.boolValue, GUILayout.Width(20));
+            else EditorGUILayout.LabelField("", GUILayout.Width(20));
             
             switch (type)
             {
@@ -361,7 +421,7 @@ namespace Prota.Editor
         // ====================================================================================================
         // ====================================================================================================
         
-        bool IsSTProperty(SerializedProperty p) => info.sts.Contains(IdFromProp(p));
+        bool IsSTProperty(SerializedProperty p) => info.sts.ContainsKey(IdFromProp(p));
         
         int IdFromProp(SerializedProperty p) => p.FindPropertyRelative("id").intValue;
         

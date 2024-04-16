@@ -22,6 +22,5 @@ namespace Prota.Unity
         {
             return !x.IsActualNull() && x == null;
         }
-        
     }
 }

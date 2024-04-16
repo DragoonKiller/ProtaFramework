@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System;
+using System.Net.Http.Headers;
 
 namespace Prota.Unity
 {
@@ -49,5 +50,19 @@ namespace Prota.Unity
         public static Rect WithHeight(this Rect x, float a) => new Rect(x.x, x.y, x.width, a);
         
         public static Rect WithWidth(this Rect x, float a) => new Rect(x.x, x.y, a, x.height);
+        
+        public static Rect Move(this Rect x, Vector2 d) => new Rect(x.position + d, x.size);
+        
+        public static Vector2 ToLocalPosition(this Rect r, Vector2 d) => new Vector2((d.x - r.x) / r.size.x, (d.y - r.y) / r.size.y);
+        
+        // return: dx, dy (for top points);
+        // shear: angle in degree.
+        public static Vector2 ShearOffset(this Rect r, float shear)
+        {
+            var angle = shear * Mathf.Deg2Rad;
+            var dx = r.height * Mathf.Sin(angle);
+            var dy = r.width * (1 - Mathf.Cos(angle));
+            return new Vector2(dx, dy);
+        }
     }
 }
