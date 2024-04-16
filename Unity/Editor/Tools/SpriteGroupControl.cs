@@ -438,35 +438,6 @@ namespace Prota.Editor
             }
         }
         
-        class ProtaSpriteRendererProcessor : ISpriteProcessor
-        {
-            public Color editorColor => new Color(0.8f, 1f, 0.7f, 1f);
-            
-            public bool UseProcessor(GameObject g)
-            {
-                return g.GetComponent<ProtaSpriteRenderer>();
-            }
-            
-            public void SetColor(GameObject g, Color color)
-            {
-                var rd = g.GetComponent<ProtaSpriteRenderer>();
-                Undo.RecordObject(rd, "Set Color");
-                rd.vertexColor = color;
-            }
-
-            public void SetSprite(GameObject g, Sprite sprite)
-            {
-                var rd = g.GetComponent<ProtaSpriteRenderer>();
-                Undo.RecordObject(rd, "Set Sprite");
-                rd.sprite = sprite;
-            }
-
-            public void DrawSelect(GameObject g)
-            {
-                EditorGUILayout.ObjectField("", g.GetComponent<ProtaSpriteRenderer>(), typeof(ProtaSpriteRenderer), true);
-            }
-        }
-        
         class ImageProcessor : ISpriteProcessor
         {
             public Color editorColor => new Color(1f, 0.7f, 0.8f, 1f);
@@ -497,7 +468,6 @@ namespace Prota.Editor
         }
         
         SpriteRendererProcessor spriteRendererProcessor = new();
-        ProtaSpriteRendererProcessor protaSpriteRendererProcessor = new();
         ImageProcessor imageProcessor = new();
         ISpriteProcessor[] processors;
         
@@ -505,7 +475,6 @@ namespace Prota.Editor
         {
             processors = new ISpriteProcessor[] {
                 spriteRendererProcessor,
-                protaSpriteRendererProcessor,
                 imageProcessor
             };
         }
