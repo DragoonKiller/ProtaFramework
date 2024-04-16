@@ -1,12 +1,16 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace Prota.Unity
 {
     [ExecuteAlways]
     public class ProtaMaterialProvider : MonoBehaviour
     {
+        const int executionPriority = 1601;
+        
         [NonSerialized] MaterialPropertyBlock data;
         public bool useInstantiatedMaterial;
         public Material referenceMaterial;
@@ -29,9 +33,9 @@ namespace Prota.Unity
         // ====================================================================================================
         
         public void OnEnable()
-        {
+        {    
             submittedMaterial = null;
-            Update();
+            Step();
         }
         
         public void OnDisable()
@@ -41,13 +45,23 @@ namespace Prota.Unity
             submittedMaterial = null;
         }
         
-        void Update()
+        void OnWillRenderObject()
+        {
+            Step();
+        }
+        
+        void Step()
         {
             SyncMaterialState();
             SyncDataToPropertyBlock();
             SyncDataToMaterial();
             AssignMaterialToAllTargets();
         }
+        
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
         
         Material submittedMaterial;
         
@@ -71,7 +85,7 @@ namespace Prota.Unity
             }
             else
             {
-                data = new MaterialPropertyBlock();
+                if(data == null) data = new MaterialPropertyBlock();
                 if(instanceMaterial != null) DestroyImmediate(instanceMaterial);
                 submittedMaterial = instanceMaterial = null;
             }
@@ -80,12 +94,23 @@ namespace Prota.Unity
         public void SyncDataToPropertyBlock()
         {
             if(useInstantiatedMaterial) return;
+            
             data.Clear();
-            for(int i = 0; i < vectorEntries.Length; i++) if(vectorValid[i]) data.SetVector(vectorEntries[i].id, vectorEntries[i].value);
-            for(int i = 0; i < floatEntries.Length; i++) if(floatValid[i]) data.SetFloat(floatEntries[i].id, floatEntries[i].value);
-            for(int i = 0; i < intEntries.Length; i++) if(intValid[i]) data.SetInt(intEntries[i].id, intEntries[i].value);
-            for(int i = 0; i < textureEntries.Length; i++) if(textureValid[i]) data.SetTexture(textureEntries[i].id, textureEntries[i].value.OrDefault());
-            for(int i = 0; i < matrixEntries.Length; i++) if(matrixValid[i]) data.SetMatrix(matrixEntries[i].id, matrixEntries[i].value);
+            
+            for(int i = 0; i < vectorEntries.Length; i++)
+                if(vectorValid[i]) data.SetVector(vectorEntries[i].id, vectorEntries[i].value);
+                
+            for(int i = 0; i < floatEntries.Length; i++)
+                if(floatValid[i]) data.SetFloat(floatEntries[i].id, floatEntries[i].value);
+                
+            for(int i = 0; i < intEntries.Length; i++)
+                if(intValid[i]) data.SetInt(intEntries[i].id, intEntries[i].value);
+                
+            for(int i = 0; i < textureEntries.Length; i++)
+                if(textureValid[i]) data.SetTexture(textureEntries[i].id, textureEntries[i].value.OrDefault());
+                
+            for(int i = 0; i < matrixEntries.Length; i++)
+                if(matrixValid[i]) data.SetMatrix(matrixEntries[i].id, matrixEntries[i].value);
         }
         
         public void SyncDataToMaterial()

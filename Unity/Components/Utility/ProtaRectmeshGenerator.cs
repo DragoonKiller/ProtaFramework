@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Prota.Unity
 {
@@ -9,6 +10,8 @@ namespace Prota.Unity
     [RequireComponent(typeof(MeshFilter))]
     public class ProtaRectmeshGenerator : MonoBehaviour
     {
+        const int executionPriority = 1600;
+        
         RectTransform rectTransform;
         MeshFilter meshFilter;
         Mesh mesh;
@@ -34,6 +37,9 @@ namespace Prota.Unity
         public bool flipY;
         [ColorUsage(true, true)] public Color vertexColor = Color.white;
         
+        // ====================================================================================================
+        // ====================================================================================================
+        
         void OnEnable()
         {
             rectTransform = GetComponent<RectTransform>();
@@ -51,8 +57,13 @@ namespace Prota.Unity
             }
         }
         
-        
         void OnWillRenderObject()
+        {
+            Step();
+        }
+        
+        
+        void Step()
         {
             if(NeedUpdateMesh()) UpdateMesh();
         }
@@ -79,7 +90,7 @@ namespace Prota.Unity
         [NonSerialized] Color submittedVertexColor;
         [NonSerialized] Sprite submittedSprite;
         
-        private bool NeedUpdateMesh()
+        bool NeedUpdateMesh()
         {
             if(forceUpdateMesh) return true;
             if(submittedRect != rectTransform.rect) return true;

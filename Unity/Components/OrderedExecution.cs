@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Prota.Unity
 {
@@ -35,6 +36,16 @@ namespace Prota.Unity
             }
         }
         
+        public static bool PriorityIsSetInUpdate(int priority)
+        {
+            return updateExecutionList.ContainsKey(priority);
+        }
+        
+        public static bool PriorityIsSetInLateUpdate(int priority)
+        {
+            return lateUpdateExecutionList.ContainsKey(priority);
+        }
+        
         public static void RegisterUpdate(Action f, int priority)
         {
             OrderedExecution.EnsureExists();
@@ -51,6 +62,7 @@ namespace Prota.Unity
             priorityMap[f] = priority;
         }
         
+
         public static void DeregisterUpdate(Action f)
         {
             OrderedExecution.EnsureExists();
@@ -70,7 +82,6 @@ namespace Prota.Unity
             priorityMap.Remove(f);
             if(p.Count == 0) lateUpdateExecutionList.Remove(priority);
         }
-        
         
     }
     
