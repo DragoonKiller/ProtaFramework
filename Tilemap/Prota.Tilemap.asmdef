@@ -1,0 +1,19 @@
+{
+    "name": "Prota.Tilemap",
+    "rootNamespace": "Prota.Unity",
+    "references": [
+        "GUID:4af5db39d74318c4fa1288b56207dbe1",
+        "GUID:1d01d2fa0687c4240ac5dc6551db391a",
+        "GUID:c3352a8bbbe14fb4ab52ae7bfff927ea",
+        "GUID:613783dc1674e844b87788ea74ede0f6"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

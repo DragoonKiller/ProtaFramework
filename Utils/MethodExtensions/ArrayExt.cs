@@ -105,5 +105,7 @@ namespace Prota
             for(int i = 0; i < list.Length; i++) if(!l.Contains(list[i])) l.Add(list[i]);
             return l.ToArray();
         }
+        
+        internal static Span<T> AsSpan<T>(this T[] arr) => new Span<T>(arr);
     }
 }

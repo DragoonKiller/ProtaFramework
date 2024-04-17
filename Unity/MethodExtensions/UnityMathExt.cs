@@ -425,6 +425,85 @@ namespace Prota.Unity
         
         public static float ToRadian(this float x) => x * Mathf.Deg2Rad;
         
+        public static Vector2Int Abs(this Vector2Int a) => new Vector2Int(a.x.Abs(), a.y.Abs());
+        
+        public static Vector3Int Abs(this Vector3Int a) => new Vector3Int(a.x.Abs(), a.y.Abs(), a.z.Abs());
+        
+        public static Vector2Int Min(this Vector2Int a, Vector2Int b) => new Vector2Int(a.x.Min(b.x), a.y.Min(b.y));
+        
+        public static Vector3Int Min(this Vector3Int a, Vector3Int b) => new Vector3Int(a.x.Min(b.x), a.y.Min(b.y), a.z.Min(b.z));
+        
+        public static Vector2Int Max(this Vector2Int a, Vector2Int b) => new Vector2Int(a.x.Max(b.x), a.y.Max(b.y));
+        
+        public static Vector3Int Max(this Vector3Int a, Vector3Int b) => new Vector3Int(a.x.Max(b.x), a.y.Max(b.y), a.z.Max(b.z));
+        
+        public static float MaxComponent(this Vector2 a) => a.x.Max(a.y);
+        
+        public static float MaxComponent(this Vector3 a) => a.x.Max(a.y).Max(a.z);
+        
+        public static float MinComponent(this Vector2 a) => a.x.Min(a.y);
+        
+        public static float MinComponent(this Vector3 a) => a.x.Min(a.y).Min(a.z);
+        
+        public static int MaxComponent(this Vector2Int a) => a.x.Max(a.y);
+        
+        public static int MaxComponent(this Vector3Int a) => a.x.Max(a.y).Max(a.z);
+        
+        public static int MinComponent(this Vector2Int a) => a.x.Min(a.y);
+        
+        public static int MinComponent(this Vector3Int a) => a.x.Min(a.y).Min(a.z);
+        
+        public static float SumAllComponents(this Vector2 a) => a.x + a.y;
+        
+        public static float SumAllComponents(this Vector3 a) => a.x + a.y + a.z;
+        
+        public static int SumAllComponents(this Vector2Int a) => a.x + a.y;
+        
+        public static int SumAllComponents(this Vector3Int a) => a.x + a.y + a.z;
+        
+        
+        
+        // 切比雪夫距离
+        public static int DistanceChebyshev(this Vector2Int a, Vector2Int b)
+            => (a - b).Abs().MaxComponent();
+        
+        public static int DistanceChebyshev(this Vector3Int a, Vector3Int b)
+            => (a - b).Abs().MaxComponent();
+            
+        public static float DistanceChebyshev(this Vector2 a, Vector2 b)
+            => (a - b).Abs().MaxComponent();
+            
+        public static float DistanceChebyshev(this Vector3 a, Vector3 b)
+            => (a - b).Abs().MaxComponent();
+            
+        public static int DistanceManhattan(this Vector2Int a, Vector2Int b)
+            => (a - b).Abs().SumAllComponents();
+            
+        public static int DistanceManhattan(this Vector3Int a, Vector3Int b)
+            => (a - b).Abs().SumAllComponents();
+            
+        public static float DistanceManhattan(this Vector2 a, Vector2 b)
+            => (a - b).Abs().SumAllComponents();
+            
+        public static float DistanceManhattan(this Vector3 a, Vector3 b)
+            => (a - b).Abs().SumAllComponents();
+        
+        public static float Distance(this Vector2 a, Vector2 b)
+            => (a - b).magnitude;
+        
+        public static float Distance(this Vector3 a, Vector3 b)
+            => (a - b).magnitude;
+            
+        public static float Distance(this Vector2Int a, Vector2Int b)
+            => (a - b).magnitude;
+        
+        public static float Distance(this Vector3Int a, Vector3Int b)
+            => (a - b).magnitude;
+            
+        
+        public static Vector2Int ToVec2Int(this Vector3Int a) => new Vector2Int(a.x, a.y);
+        
+        public static Vector3Int ToVec3Int(this Vector2Int a, int z = 0) => new Vector3Int(a.x, a.y, z);
     }
     
 }

@@ -1,0 +1,23 @@
+{
+    "name": "Prota.Tilemap.Editor",
+    "rootNamespace": "Prota.Editor",
+    "references": [
+        "GUID:4af5db39d74318c4fa1288b56207dbe1",
+        "GUID:1d01d2fa0687c4240ac5dc6551db391a",
+        "GUID:ed55c1bd9f006f447971218e893b30b7",
+        "GUID:57a91ddabee057f4c8a812afd043eedb",
+        "GUID:3a9781db4804a9945b9883f3a7c46d45",
+        "GUID:c3352a8bbbe14fb4ab52ae7bfff927ea",
+        "GUID:bd2461be96e5f744bbe6bdbc5276eb61",
+        "GUID:cbdf09464b6b87745be748a67e5a21a0"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

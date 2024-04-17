@@ -1,6 +1,7 @@
 using System;
+using Prota;
 
-namespace Prota
+namespace Prota.Unity
 {
     public class DataVector
     {
