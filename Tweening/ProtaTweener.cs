@@ -157,7 +157,7 @@ namespace Prota.Tween
             else if(colorTarget is UnityEngine.CanvasGroup cg) cg.ClearAllTween();
         }
         
-        public void Play() => running = true;
+        public void Play() => play = running = true;
         
         public void Play(float startProgress)
         {
