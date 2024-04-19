@@ -340,6 +340,7 @@ namespace Prota.Unity
         
         public static bool TryFindEntityComponent<T>(this Component x, out T c) where T: EComponent
         {
+            Debug.Assert(x);
             c = null;
             if (!x.EntityRoot().PassValue(out var root)) return false;
             return root.TryGetEntityComponent(out c);
