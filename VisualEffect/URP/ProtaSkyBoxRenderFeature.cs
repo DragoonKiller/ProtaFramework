@@ -97,7 +97,36 @@ namespace Prota.VisualEffect
         void GenerateTextureFromGradient()
         {
             if(feature.colorGradient == null) return;
-            if(submittedGradient != null && submittedGradient.Equals(feature.colorGradient)) return;
+            if(submittedGradient != null)
+            {
+                var colorKeys = submittedGradient.colorKeys;
+                var alphaKeys = submittedGradient.alphaKeys;
+                var newColorKeys = feature.colorGradient.colorKeys;
+                var newAlphaKeys = feature.colorGradient.alphaKeys;
+                if(colorKeys.Length == newColorKeys.Length
+                && alphaKeys.Length == newAlphaKeys.Length)
+                {
+                    bool same = true;
+                    for (int i = 0; i < colorKeys.Length; i++)
+                    {
+                        if(colorKeys[i].color != newColorKeys[i].color)
+                        {
+                            same = false;
+                            break;
+                        }
+                    }
+                    for (int i = 0; i < alphaKeys.Length; i++)
+                    {
+                        if(alphaKeys[i].alpha != newAlphaKeys[i].alpha)
+                        {
+                            same = false;
+                            break;
+                        }
+                    }
+                    
+                    if(same) return;
+                }
+            }
             
             // Debug.LogError("GenerateTextureFromGradient");
             

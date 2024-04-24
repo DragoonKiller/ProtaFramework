@@ -156,27 +156,44 @@ namespace Prota.VisualEffect
         
         void PrepareMaterial()
         {
-            materialX = "Hidden/Prota/GaussianBlurSinglePassHorizontal".CreateMaterialFromShaderName();
-            materialX.name = "Prota God Light Render Pass Horizontal";
-            // materialX.SetFloat("_Mult", feature.intensity);
-        
-            materialY = "Hidden/Prota/GaussianBlurSinglePassVertical".CreateMaterialFromShaderName();
-            materialY.name = "Prota God Light Render Pass Vertical";
-            // materialX.SetFloat("_Mult", feature.intensity);
-        
-        
-            finalBlit = "Hidden/Prota/GaussianBlurResult".CreateMaterialFromShaderName();
-            finalBlit.name = "Prota Gaussian Blur Final Blit";
-        
-            drawCullArea = "Hidden/Prota/DrawDepth".CreateMaterialFromShaderName();
-            drawCullArea.name = "Prota Gaussian Blur Draw Cull Area";
-            drawCullArea.SetFloat("_AlphaClip", 0.5f);
-        
-            drawCulled = "Hidden/Prota/DrawCulled".CreateMaterialFromShaderName();
-            drawCulled.name = "Prota Gaussian Blur Draw Culled";
+            if(!materialX)
+            {
+                materialX = "Hidden/Prota/GaussianBlurSinglePassHorizontal".CreateMaterialFromShaderName();
+                materialX.name = "Prota God Light Render Pass Horizontal";
+                // materialX.SetFloat("_Mult", feature.intensity);
+            }
             
-            drawRadialBlur = "Hidden/Prota/RadialBlur".CreateMaterialFromShaderName();
-            drawRadialBlur.name = "Prota Gaussian Blur Radial Blur";
+            if(!materialY)
+            {
+                materialY = "Hidden/Prota/GaussianBlurSinglePassVertical".CreateMaterialFromShaderName();
+                materialY.name = "Prota God Light Render Pass Vertical";
+                // materialX.SetFloat("_Mult", feature.intensity);
+            }
+            
+            if(!finalBlit)
+            {
+                finalBlit = "Hidden/Prota/GaussianBlurResult".CreateMaterialFromShaderName();
+                finalBlit.name = "Prota Gaussian Blur Final Blit";
+            }
+            
+            if(!drawCullArea)
+            {
+                drawCullArea = "Hidden/Prota/DrawDepth".CreateMaterialFromShaderName();
+                drawCullArea.name = "Prota Gaussian Blur Draw Cull Area";
+                drawCullArea.SetFloat("_AlphaClip", 0.5f);
+            }
+            
+            if(!drawCulled)
+            {
+                drawCulled = "Hidden/Prota/DrawCulled".CreateMaterialFromShaderName();
+                drawCulled.name = "Prota Gaussian Blur Draw Culled";
+            }
+            
+            if(!drawRadialBlur)
+            {
+                drawRadialBlur = "Hidden/Prota/RadialBlur".CreateMaterialFromShaderName();
+                drawRadialBlur.name = "Prota Gaussian Blur Radial Blur";
+            }
         }
 
         void CreateSwapBuffer()

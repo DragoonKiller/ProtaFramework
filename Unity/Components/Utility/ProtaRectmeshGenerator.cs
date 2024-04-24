@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using UnityEngine.Profiling;
 
 namespace Prota.Unity
 {
@@ -10,11 +11,14 @@ namespace Prota.Unity
     [RequireComponent(typeof(MeshFilter))]
     public class ProtaRectmeshGenerator : MonoBehaviour
     {
+        public static HashSet<ProtaRectmeshGenerator> all = new HashSet<ProtaRectmeshGenerator>();
+        
         const int executionPriority = 1600;
         
-        RectTransform rectTransform;
-        MeshFilter meshFilter;
-        Mesh mesh;
+        // ====================================================================================================
+        // 控制属性
+        // ====================================================================================================
+        
         
         // 用以确定 uv.
         public Sprite sprite;
@@ -24,9 +28,8 @@ namespace Prota.Unity
         
         // uv 偏移.
         public bool uvOffsetByTime = false;
-        [ShowWhen("uvOffsetByTime")] public Vector2 uvOffset = Vector2.zero;
-        [ShowWhen("uvOffsetByTime")] public bool uvOffsetByRealtime = false;
-        
+        public Vector2 uvOffset = Vector2.zero;
+        public bool uvOffsetByRealtime = false;
         
         // 剪切形变, 角度.
         [Range(-90, 90)] public float shear;
@@ -37,6 +40,21 @@ namespace Prota.Unity
         public bool flipY;
         [ColorUsage(true, true)] public Color vertexColor = Color.white;
         
+        [NonSerialized] public bool needUpdateMesh = false;
+        
+        // ====================================================================================================
+        // 记录属性
+        // ====================================================================================================
+        
+        [NonSerialized] RectTransform rectTransform;
+        [NonSerialized] MeshFilter meshFilter;
+        [NonSerialized] Mesh mesh;
+        
+        [NonSerialized] int updatedToFrame;
+        static int thisFrame;
+        [NonSerialized] Rect trRect;
+        
+        
         // ====================================================================================================
         // ====================================================================================================
         
@@ -45,11 +63,13 @@ namespace Prota.Unity
             rectTransform = GetComponent<RectTransform>();
             meshFilter = GetComponent<MeshFilter>();
             meshFilter.sharedMesh = mesh = new Mesh() { name = "GeneratedMesh" };
-            forceUpdateMesh = true;
+            all.Add(this);
+            needUpdateMesh = true;
         }
         
         void OnDisable()
         {
+            all.Remove(this);
             if(meshFilter.sharedMesh == mesh)
             {
                 DestroyImmediate(meshFilter.sharedMesh);
@@ -57,72 +77,90 @@ namespace Prota.Unity
             }
         }
         
+        
+        
+        // ====================================================================================================
+        // 更新控制
+        // ====================================================================================================
+        // 还有多线程支持
+        
         void OnWillRenderObject()
         {
-            Step();
+            if(!Application.isPlaying)
+            {
+                Step();
+                return;
+            }
+            
+            // 只有运行时才会并行计算.
+            // 并行计算会更新所有的 updatedToFrame, 这样被更新后的组件就不会再次更新.
+            thisFrame = Time.frameCount;
+            if(updatedToFrame != thisFrame)
+            {
+                StepAll();
+            }
         }
         
+        static void StepAll()
+        {
+            Profiler.BeginSample("::ProtaRectmeshGenerator.StepAll");
+            foreach(var x in all) x.trRect = x.rectTransform.rect;
+            foreach(var x in all) SpriteUVCache.Prepare(x.sprite);
+            Parallel.ForEach(all, x => x.StepSingleMultithread());
+            foreach(var x in all) x.SetMesh();
+            Profiler.EndSample();
+        }
+        
+        void StepSingleMultithread()
+        {
+            updatedToFrame = thisFrame;
+            RemoveTempObjectsWhenTimesUp();
+            if(!needUpdateMesh) return;
+            UpdateMeshValues();
+        }
         
         void Step()
         {
-            if(NeedUpdateMesh()) UpdateMesh();
+            thisFrame = Time.frameCount;
+            trRect = rectTransform.rect;
+            SpriteUVCache.Prepare(sprite);
+            if(needUpdateMesh)
+            {
+                UpdateMeshValues();
+                SetMesh();
+            }
+            RemoveTempObjectsWhenTimesUp();
         }
         
         
         // ====================================================================================================
+        // 网格更新逻辑
         // ====================================================================================================
 
-        public bool forceUpdateMesh = false;
-        
-        
         public Rect localRect => rectTransform.rect;
         
         
-        [NonSerialized] Rect submittedRect;
-        [NonSerialized] Vector4 submittedExtend;
-        [NonSerialized] bool submittedUseRadialShear;
-        [NonSerialized] float submittedShear;
-        [NonSerialized] Vector2 submittedUvOffset;
-        [NonSerialized] bool submittedUvOffsetByTime;
-        [NonSerialized] bool submittedUvOffsetByRealtime;
-        [NonSerialized] bool submittedFlipX;
-        [NonSerialized] bool submittedFlipY;
-        [NonSerialized] Color submittedVertexColor;
-        [NonSerialized] Sprite submittedSprite;
-        
-        bool NeedUpdateMesh()
-        {
-            if(forceUpdateMesh) return true;
-            if(submittedRect != rectTransform.rect) return true;
-            if(submittedExtend != extend) return true;
-            if(submittedUseRadialShear != useRadialShear) return true;
-            if(submittedShear != shear) return true;
-            if(submittedUvOffset != uvOffset) return true;
-            if(submittedUvOffsetByTime != uvOffsetByTime) return true;
-            if(submittedUvOffsetByRealtime != uvOffsetByRealtime) return true;
-            if(submittedFlipX != flipX) return true;
-            if(submittedFlipY != flipY) return true;
-            if(submittedVertexColor != vertexColor) return true;
-            if(submittedSprite != sprite) return true;
-            return false;
-        }
-        
-        [ThreadStatic] static Vector3[] tempVertices;
-        [ThreadStatic] static Vector2[] tempUV;
-        [ThreadStatic] static Color[] tempColors;
+        [NonSerialized] Vector3[] tempVertices;
+        [NonSerialized] Vector2[] tempUV;
+        [NonSerialized] Color[] tempColors;
+        [NonSerialized] Bounds tempBounds;
+        [NonSerialized] float lastTempCreatedTime;
+        [NonSerialized] bool meshNeedsToBeSet;
         
         static readonly int[] defaultTriangles = new int[] {
             0, 1, 2,
             2, 1, 3,
         };
         
-        void UpdateMesh()
+        void UpdateMeshValues()
         {
+            // 记录临时对象被创建的时间.
+            if(tempVertices == null || tempUV == null || tempColors == null) lastTempCreatedTime = thisFrame;
             if(tempVertices == null) tempVertices = new Vector3[4];
             if(tempUV == null) tempUV = new Vector2[4];
             if(tempColors == null) tempColors = new Color[4];
             
-            var rect = rectTransform.rect;
+            var rect = trRect;
         
             // 计算扩展后的矩形.
             rect.xMin -= extend.x;
@@ -169,7 +207,7 @@ namespace Prota.Unity
             
             if(sprite)
             {
-                var uv = sprite.uv;
+                var uv = SpriteUVCache.Get(sprite);
                 tempUV[0] = uv[0];
                 tempUV[1] = uv[1];
                 tempUV[2] = uv[2];
@@ -183,8 +221,7 @@ namespace Prota.Unity
                 tempUV[3] = new Vector2(1, 0);
             }
             
-            TransformUVExtend(rectTransform.rect.size, extend, tempUV);
-            
+            TransformUVExtend(trRect.size, extend, tempUV);
             
             if(flipX)
             {
@@ -197,25 +234,33 @@ namespace Prota.Unity
                 Swap(ref tempUV[1], ref tempUV[3]);
             }
             
+            tempBounds.center = rect.center;
+            tempBounds.size = rect.size;      // 扩展后的矩形的大小.
+            
+            needUpdateMesh = false;
+            meshNeedsToBeSet = true;
+        }
+        
+        void SetMesh()
+        {
+            if(!meshNeedsToBeSet) return;
             mesh.SetVertices(tempVertices);
             mesh.SetUVs(0, tempUV);
             mesh.SetColors(tempColors);
             mesh.SetIndices(defaultTriangles, MeshTopology.Triangles, 0);
-            
-            mesh.RecalculateBounds();
-            
-            forceUpdateMesh = false;
-            submittedRect = rect;
-            submittedExtend = extend;
-            submittedUseRadialShear = useRadialShear;
-            submittedShear = shear;
-            submittedUvOffset = uvOffset;
-            submittedUvOffsetByTime = uvOffsetByTime;
-            submittedUvOffsetByRealtime = uvOffsetByRealtime;
-            submittedFlipX = flipX;
-            submittedFlipY = flipY;
-            submittedVertexColor = vertexColor;
-            submittedSprite = sprite;
+            mesh.bounds = tempBounds;
+            meshNeedsToBeSet = false;
+        }
+        
+        void RemoveTempObjectsWhenTimesUp()
+        {
+            // 100 帧以后, 临时对象会被清除.
+            if(thisFrame - lastTempCreatedTime > 100f)
+            {
+                tempVertices = null;
+                tempUV = null;
+                tempColors = null;
+            }
         }
 
         static void Swap<T>(ref T a, ref T b)
@@ -247,6 +292,9 @@ namespace Prota.Unity
             points[3] = new Vector2(exmax, eymin);
         }
         
+        
+        // ====================================================================================================
+        // ====================================================================================================
         
     }
 }

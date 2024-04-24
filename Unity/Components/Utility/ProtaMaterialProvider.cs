@@ -3,12 +3,16 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using UnityEditor;
+using UnityEngine.Profiling;
 
 namespace Prota.Unity
 {
     [ExecuteAlways]
     public class ProtaMaterialProvider : MonoBehaviour
     {
+        static HashSet<ProtaMaterialProvider> all = new HashSet<ProtaMaterialProvider>();
+        
         const int executionPriority = 1601;
         
         [NonSerialized] MaterialPropertyBlock data;
@@ -32,14 +36,30 @@ namespace Prota.Unity
         // ====================================================================================================
         // ====================================================================================================
         
+        static Texture2D whiteTexture;
+        
+        static int thisFrame;
+        
+        int updatedFrame;
+        
+        
+        [InitializeOnLoadMethod]
+        [RuntimeInitializeOnLoadMethod]
+        static void Init()
+        {
+            whiteTexture = Texture2D.whiteTexture;
+        }
+        
         public void OnEnable()
-        {    
+        {
+            all.Add(this);
             submittedMaterial = null;
             Step();
         }
         
         public void OnDisable()
         {
+            all.Remove(this);
             if(instanceMaterial != null) DestroyImmediate(instanceMaterial);
             instanceMaterial = null;
             submittedMaterial = null;
@@ -47,11 +67,30 @@ namespace Prota.Unity
         
         void OnWillRenderObject()
         {
-            Step();
+            if(!Application.isPlaying) Step();
+            else
+            {
+                thisFrame = Time.frameCount;
+                if(updatedFrame == thisFrame) return;
+                StepAll();
+            }
+        }
+        
+        void StepAll()
+        {
+            Profiler.BeginSample("::ProtaMaterialProvider.StepAll");
+            foreach(var x in all) x.SyncMaterialState();
+            foreach(var x in all) x.ClearNullTextures();
+            Parallel.ForEach(all, x => x.SyncDataToPropertyBlock());
+            foreach(var x in all) x.SyncDataToMaterial();
+            foreach(var x in all) x.AssignMaterialToAllTargets();
+            foreach(var x in all) x.updatedFrame = thisFrame;
+            Profiler.EndSample();
         }
         
         void Step()
         {
+            ClearNullTextures();
             SyncMaterialState();
             SyncDataToPropertyBlock();
             SyncDataToMaterial();
@@ -107,7 +146,7 @@ namespace Prota.Unity
                 if(intValid[i]) data.SetInt(intEntries[i].id, intEntries[i].value);
                 
             for(int i = 0; i < textureEntries.Length; i++)
-                if(textureValid[i]) data.SetTexture(textureEntries[i].id, textureEntries[i].value.OrDefault());
+                if(textureValid[i]) data.SetTexture(textureEntries[i].id, textureEntries[i].value);
                 
             for(int i = 0; i < matrixEntries.Length; i++)
                 if(matrixValid[i]) data.SetMatrix(matrixEntries[i].id, matrixEntries[i].value);
@@ -129,12 +168,24 @@ namespace Prota.Unity
                 else instanceMaterial.SetInteger(intEntries[i].id, referenceMaterial.GetInt(intEntries[i].id));
                 
             for(int i = 0; i < textureEntries.Length; i++)
-                if(textureValid[i]) instanceMaterial.SetTexture(textureEntries[i].id, textureEntries[i].value.OrDefault());
+                if(textureValid[i]) instanceMaterial.SetTexture(textureEntries[i].id, textureEntries[i].value);
                 else instanceMaterial.SetTexture(textureEntries[i].id, referenceMaterial.GetTexture(textureEntries[i].id));
                 
             for(int i = 0; i < matrixEntries.Length; i++)
                 if(matrixValid[i]) instanceMaterial.SetMatrix(matrixEntries[i].id, matrixEntries[i].value);
                 else instanceMaterial.SetMatrix(matrixEntries[i].id, referenceMaterial.GetMatrix(matrixEntries[i].id));
+        }
+        
+        
+        void ClearNullTextures()
+        {
+            for(int i = 0; i < textureEntries.Length; i++)
+            {
+                if(textureEntries[i].value == null)
+                {
+                    textureEntries[i].value = Texture2D.whiteTexture;
+                }
+            }
         }
         
         // ====================================================================================================

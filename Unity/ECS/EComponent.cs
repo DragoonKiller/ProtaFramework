@@ -9,7 +9,7 @@ namespace Prota.Unity
     [ExecuteAlways]
     public abstract class EComponent : MonoBehaviour
     {
-        bool awaken = false;
+        [NonSerialized] bool awaken = false;
         
         public class TypeRecord
         {
@@ -26,7 +26,7 @@ namespace Prota.Unity
         public static IEnumerable<T> Instances<T>() where T : EComponent
         {
             if(!records.TryGetValue(typeof(T), out var record)) return Enumerable.Empty<T>();
-            return record.components.Select(x => (T)x);
+            return record.components.Cast<T>();
         }
         
         public static T Instance<T>() where T : EComponent
@@ -42,16 +42,17 @@ namespace Prota.Unity
         
         protected virtual void Awake()
         {
+            awaken = true;
             if(this.gameObject.scene == null) return;
             InitAttachment();
             entity.AssertNotNull();
             AddToRecord();
-            awaken = true;
         }
         
         protected virtual void OnEnable()
         {
-            AddToRecord();
+            if(awaken) AddToRecord();
+            else Awake();
         }
         
         protected virtual void OnDisable()
@@ -67,7 +68,11 @@ namespace Prota.Unity
         
         protected virtual void Update()
         {
-            if(!awaken) Debug.LogError($"EComponent {this.GetType()} has not called Awake. Make sure base.Awake() is called when override.");
+            if(!awaken)
+            {
+                Debug.LogError($"EComponent [{this.GetType()}] on [{this.GetNamePath()}] has not called Awake. Make sure base.Awake() is called when override.");
+                return;
+            }
             if(Application.isPlaying) return;
             InitAttachment();
         }

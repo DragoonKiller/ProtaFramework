@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEditor;
 using System.Reflection;
-using UnityEngine.Assertions;
 
 namespace Prota.Unity
 {
