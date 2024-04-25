@@ -103,9 +103,5 @@ namespace Prota.Unity
             
             serializedChunk = null;
         }
-
-        
-        
-        
     }
 }

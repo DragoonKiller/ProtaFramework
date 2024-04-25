@@ -220,7 +220,9 @@ namespace Prota.Editor
                     name = r.subAssetNamingFormat.Replace("$main", f.nameNoExt).Replace("$sub", recordName);
                 }
                 
-                r.resources.Add(name.ToLower(), a, r.ignoreDuplicateAsset);
+                var lowerName = name.ToLower();
+                if(!r.ignoreDuplicateAsset && r.resources.ContainsKey(lowerName)) Debug.LogError($"Duplicate resource name[{name}]");
+                r.resources[lowerName] = a;
             }
         }
     }
