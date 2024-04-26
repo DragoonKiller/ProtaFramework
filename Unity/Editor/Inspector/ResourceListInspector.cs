@@ -46,7 +46,7 @@ namespace Prota.Editor
                 ResourceListUpdater.UpdateResourceList(list);
             }){ text = "refresh" });
             
-            root.AddChild(new ListView(d, -1, MakeItem, BindItem).PassValue(out var ll).SetMaxHeight(500));
+            root.AddChild(new ListView(d, -1, MakeItem, BindItem).PassValue(out var ll).SetMaxHeight(700));
             
             return root;
             
