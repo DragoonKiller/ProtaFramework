@@ -171,7 +171,10 @@ namespace Prota.Editor
                 compiledRegex[r.regexMatcher] = regex;
             }
             
-            if(!regex.IsMatch(f.name)) return;
+            if(!regex.IsMatch(f.name))
+            {
+                return;
+            }
             
             var assetPath = f.fullPath.FullPathToAssetPath();
             var assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
