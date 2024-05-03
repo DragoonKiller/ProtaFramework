@@ -106,6 +106,18 @@ namespace Prota
             return l.ToArray();
         }
         
+        public static int FindIndex<T>(this T[] arr, Predicate<T> match)
+        {
+            for(int i = 0; i < arr.Length; i++) if(match(arr[i])) return i;
+            return -1;
+        }
+        
+        public static int FindIndex<T>(this T[] arr, T value)
+        {
+            for(int i = 0; i < arr.Length; i++) if(EqualityComparer<T>.Default.Equals(arr[i], value)) return i;
+            return -1;
+        }
+        
         internal static Span<T> AsSpan<T>(this T[] arr) => new Span<T>(arr);
     }
 }

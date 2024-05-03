@@ -3,12 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System;
-using System.Net.Http.Headers;
 
 namespace Prota.Unity
 {
     public static partial class MethodExtensions
     {
+        public static bool ContainsInclusive(this Rect rect, Vector2 point)
+        {
+            return rect.xMin <= point.x
+                && point.x <= rect.xMax
+                && rect.yMin <= point.y
+                && point.y <= rect.yMax;
+        }
+        
         public static Vector2 BottomLeft(this Rect rect) => rect.min;
         
         public static Vector2 BottomRight(this Rect rect) => new Vector2(rect.xMax, rect.yMin);
@@ -16,6 +23,14 @@ namespace Prota.Unity
         public static Vector2 TopLeft(this Rect rect) => new Vector2(rect.xMin, rect.yMax);
         
         public static Vector2 TopRight(this Rect rect) => rect.max;
+        
+        public static Vector2 TopCenter(this Rect rect) => new Vector2(rect.center.x, rect.yMax);
+        
+        public static Vector2 BottomCenter(this Rect rect) => new Vector2(rect.center.x, rect.yMin);
+        
+        public static Vector2 LeftCenter(this Rect rect) => new Vector2(rect.xMin, rect.center.y);
+        
+        public static Vector2 RightCenter(this Rect rect) => new Vector2(rect.xMax, rect.center.y);
         
         public static float EdgeDistanceToPoint(this Rect rect, Vector2 point)
         {
@@ -64,5 +79,6 @@ namespace Prota.Unity
             var dy = r.width * (1 - Mathf.Cos(angle));
             return new Vector2(dx, dy);
         }
+        
     }
 }

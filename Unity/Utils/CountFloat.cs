@@ -56,6 +56,8 @@ namespace Prota.Unity
         }
     }
     
+    
+    
     public static partial class MethodExtensions
     {
         public static float Evaluate(this AnimationCurve curve, CountFloat countFloat)

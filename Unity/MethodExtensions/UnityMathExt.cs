@@ -504,6 +504,12 @@ namespace Prota.Unity
         public static Vector2Int ToVec2Int(this Vector3Int a) => new Vector2Int(a.x, a.y);
         
         public static Vector3Int ToVec3Int(this Vector2Int a, int z = 0) => new Vector3Int(a.x, a.y, z);
+        
+        public static Vector2 HitXYPlane(this Ray a, float z = 0)
+        {
+            var t = -(a.origin.z - z) / a.direction.z;
+            return a.origin + a.direction * t;
+        }
     }
     
 }
