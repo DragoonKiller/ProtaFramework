@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Prota;
+using System.Linq;
 
 namespace Prota.Unity
 {
@@ -25,7 +26,7 @@ namespace Prota.Unity
         
         // 边界, 左闭右闭区间.
         public Rect range;
-        public SceneEntry[] adjacentScenes;
+        public int[] adjacentScenes;
         
         // true: 激活(需要加载), false: 不激活(需要卸载)
         [field: Header("runtime"), SerializeField]
@@ -37,6 +38,10 @@ namespace Prota.Unity
         [field: SerializeField]
         public Scene runtimeScene { get; private set; }
         
+        public IEnumerable<SceneEntry> GetAdjacent(SceneEntry[] entries)
+        {
+            return adjacentScenes.Select(x => entries[x]);
+        }
         
         public bool ContainsPoint(Vector2 p)
         {
@@ -94,12 +99,12 @@ namespace Prota.Unity
     // 注意不能存 SceneAsset, 这是编辑器的内容.
     // 也不能存 Scene, 因为这是场景加载过后的对象.
     [CreateAssetMenu(menuName = "Prota Framework/Overworld Scenes Info", fileName = "OverworldScenesInfo")]
-    public class OverworldScenesInfo : ScriptableObject
+    public class OverworldSceneInfo : ScriptableObject
     {
         // Resources 相对路径.
         public string scenePath;
         
-        [SerializeReference] public SceneEntry[] entries = Array.Empty<SceneEntry>();
+        public SceneEntry[] entries = Array.Empty<SceneEntry>();
         
         
     }

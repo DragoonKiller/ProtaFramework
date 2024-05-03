@@ -13,14 +13,14 @@ namespace Prota.Unity
     public class OverworldSceneController : Singleton<OverworldSceneController>
     {
         
-        public OverworldScenesInfo info;
+        public OverworldSceneInfo info;
         
         #if UNITY_EDITOR
         void OnValidate()
         {
             if(!info)
             {
-                info = Resources.LoadAll<OverworldScenesInfo>("").FirstOrDefault();
+                info = Resources.LoadAll<OverworldSceneInfo>("").FirstOrDefault();
             }
             
             if(!info)
@@ -69,7 +69,7 @@ namespace Prota.Unity
         // ====================================================================================================
         
         
-        AsyncControl asyncControl;
+        AsyncControl asyncControl = new AsyncControl();
         
         void Update()
         {

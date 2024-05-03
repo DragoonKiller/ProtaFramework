@@ -178,6 +178,19 @@ namespace Prota.Unity
             colliders.RemoveWhere(x => x == null);
         }
         
+        void OnEnable()
+        {
+            // 需要吗?
+            // colliders.Clear();
+            // events.Clear();
+        }
+        
+        void OnDisable()
+        {
+            colliders.Clear();
+            events.Clear();
+        }
+        
         void LateUpdate()
         {
             events.Clear();

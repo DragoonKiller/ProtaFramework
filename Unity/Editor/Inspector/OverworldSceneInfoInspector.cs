@@ -8,16 +8,13 @@ using System;
 
 namespace Prota.Editor
 {
-    [CustomEditor(typeof(OverworldSceneController), false)]
-    public class OverworldSceneSelectorInspector : UnityEditor.Editor
+    [CustomEditor(typeof(OverworldSceneInfo), false)]
+    public class OverworldSceneInfoInspector : UnityEditor.Editor
     {
-        public OverworldSceneController controller => target as OverworldSceneController;
-        public OverworldScenesInfo info => controller.info;
+        public OverworldSceneInfo info => target as OverworldSceneInfo;
         
         
         string newSceneName;
-        
-        
         
         bool activated;
         bool isDragging;
@@ -43,7 +40,7 @@ namespace Prota.Editor
             
             if(info == null)
             {
-                Debug.LogWarning("OverworldSceneController.info is null.");
+                Debug.LogWarning("info is null.");
                 return;
             }
             
@@ -74,7 +71,7 @@ namespace Prota.Editor
             var entry = new SceneEntry();
             entry.name = newSceneName;
             entry.range = new Rect(dragFrom.Value, dragTo.Value - dragFrom.Value);
-            entry.adjacentScenes = Array.Empty<SceneEntry>();
+            entry.adjacentScenes = Array.Empty<int>();
             
             if(info.entries.FindIndex(x => x.name == newSceneName).PassValue(out var index) == -1)
             {
@@ -91,10 +88,12 @@ namespace Prota.Editor
         
         void ComputeAdjacents(SceneEntry[] entries)
         {
+            using var _ = TempDict.Get<SceneEntry, int>(out var reverseMap);
             Parallel.ForEach(entries, (x, _, i) => {
                 x.adjacentScenes = entries
                     .Where((x, j) => i != j)
                     .Where(y => x.range.Overlaps(y.range))
+                    .Select(x => reverseMap[x])
                     .ToArray();
             });
         }
@@ -113,12 +112,20 @@ namespace Prota.Editor
         // ====================================================================================================
         // ====================================================================================================
         
+        void OnEnable()
+        {
+            SceneView.duringSceneGui += SOOnSceneGUI;
+        }
+        
+        void OnDisable()
+        {
+            SceneView.duringSceneGui -= SOOnSceneGUI;
+        }
+        
+
         public override void OnInspectorGUI()
         {
-            Undo.RecordObject(target, "OverworldSceneController");
-            
-            EditorGUILayout.LabelField(">>> OverworldSceneController <<<");
-            base.OnInspectorGUI();
+            Undo.RecordObject(target, "OverworldSceneInfo");
             
             EditorGUILayout.LabelField(">>> New Scene <<<");
             newSceneName = EditorGUILayout.TextField("Name", newSceneName);
@@ -133,12 +140,15 @@ namespace Prota.Editor
                 if(dragTo.HasValue) EditorGUILayout.Vector2Field("DragTo", dragTo.Value);            
             }
             
+            EditorGUILayout.LabelField(">>> OverworldSceneInfo <<<");
+            base.OnInspectorGUI();
+            
             serializedObject.ApplyModifiedProperties();
             
             Repaint();
         }
         
-        void OnSceneGUI()
+        void SOOnSceneGUI(SceneView v)
         {
             switch(Event.current.type)
             {
@@ -193,11 +203,6 @@ namespace Prota.Editor
                         );
                     }
                     
-                    var style = new GUIStyle();
-                    style.fontSize = 20;
-                    var sstyle = new GUIStyle();
-                    sstyle.fontSize = 10;
-                    
                     foreach(var s in info.entries)
                     {
                         Handles.DrawSolidRectangleWithOutline(
@@ -205,15 +210,11 @@ namespace Prota.Editor
                             Color.green.WithA(0.0f),
                             Color.red.WithA(1f)
                         );
-                        
-                        using(new HandleColorScope(Color.red))
-                        {
-                            Handles.Label(s.range.TopLeft(), "  " + s.name, style);
-                            Handles.Label(s.range.LeftCenter(), s.range.xMin.ToString(), sstyle);
-                            Handles.Label(s.range.RightCenter(), s.range.xMax.ToString(), sstyle);
-                            Handles.Label(s.range.BottomCenter(), s.range.yMin.ToString(), sstyle);
-                            Handles.Label(s.range.TopCenter(), s.range.yMax.ToString(), sstyle);
-                        }
+                    }
+                    
+                    foreach(var s in info.entries)
+                    {
+                        Handles.Label(s.range.TopLeft(), "  " + name, new GUIStyle() { fontSize = 14 });
                     }
                     
                     break;
@@ -222,8 +223,42 @@ namespace Prota.Editor
                 default: break;
             }
             
+            ShowSceneViewText(v);
+            
             Repaint();
         }
+        
+        void ShowSceneViewText(SceneView v)
+        {
+            if(v.camera.transform.forward != Vector3.forward) return;
+            var cam = v.camera;
+            var bottomLeft = cam.ViewportPointToRay(Vector2.zero).HitXYPlane();
+            var topRight = cam.ViewportPointToRay(Vector2.one).HitXYPlane();
+            var minLength = (topRight - bottomLeft).MinComponent();
+            // 找到它是几位数.
+            var l = Mathf.Pow(10, Mathf.Log10(minLength).FloorToInt());
+            var left = (bottomLeft.x / l).FloorToInt() * l;
+            var right = (topRight.x / l).CeilToInt() * l;
+            var bottom = (bottomLeft.y / l).FloorToInt() * l;
+            var top = (topRight.y / l).CeilToInt() * l;
+            if(((right - left) / l + 1) * ((top - bottom) / l + 1) > 500) return;
+            for(var i = left; i <= right; i += l)
+            for(var j = bottom; j <= top; j += l)
+            {
+                Handles.Label(new Vector3(i, j, 0), $"[{i},{j}]", new GUIStyle() { fontSize = 8 });
+            }
+        }
+        
+        // void ShowAreaText(string name, Rect rect)
+        // {
+        //     using(new HandleColorScope(Color.red))
+        //     {
+        //         Handles.Label(rect.LeftCenter(), rect.xMin.ToString(), new GUIStyle() { fontSize = 10 });
+        //         Handles.Label(rect.RightCenter(), rect.xMax.ToString(), new GUIStyle() { fontSize = 10 });
+        //         Handles.Label(rect.BottomCenter(), rect.yMin.ToString(), new GUIStyle() { fontSize = 10 });
+        //         Handles.Label(rect.TopCenter(), rect.yMax.ToString(), new GUIStyle() { fontSize = 10 });
+        //     }
+        // }
         
         void SwapDrag()
         {
