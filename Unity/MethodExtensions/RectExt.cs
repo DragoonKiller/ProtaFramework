@@ -80,5 +80,15 @@ namespace Prota.Unity
             return new Vector2(dx, dy);
         }
         
+        
+        public static Rect BoundingBox(this Rect r, Rect g)
+        {
+            var xMin = r.xMin.Min(g.xMin);
+            var xMax = r.xMax.Max(g.xMax);
+            var yMin = r.yMin.Min(g.yMin);
+            var yMax = r.yMax.Max(g.yMax);
+            return Rect.MinMaxRect(xMin, yMin, xMax, yMax);
+        }
+        
     }
 }

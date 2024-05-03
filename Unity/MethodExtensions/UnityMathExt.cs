@@ -222,6 +222,8 @@ namespace Prota.Unity
         public static Vector3 WithY(this Vector3 a, float y) => new Vector3(a.x, y, a.z);
         public static Vector3 WithZ(this Vector3 a, float z) => new Vector3(a.x, a.y, z);
         
+        public static Vector3 WithXY(this Vector3 a, Vector2 xy) => new Vector3(xy.x, xy.y, a.z);
+        
         
         public static Vector4 WithX(this Vector4 a, float x) => new Vector4(x, a.y, a.z, a.w);
         public static Vector4 WithY(this Vector4 a, float y) => new Vector4(a.x, y, a.z, a.w);

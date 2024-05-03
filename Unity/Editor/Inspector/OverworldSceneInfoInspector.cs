@@ -5,6 +5,8 @@ using System.Linq;
 using UnityEditor.SceneManagement;
 using System.Threading.Tasks;
 using System;
+using System.Collections.Generic;
+using UnityEditor.SearchService;
 
 namespace Prota.Editor
 {
@@ -14,12 +16,16 @@ namespace Prota.Editor
         public OverworldSceneInfo info => target as OverworldSceneInfo;
         
         
-        string newSceneName;
+        static string newSceneName;
         
-        bool activated;
-        bool isDragging;
-        Vector2? dragFrom;
-        Vector2? dragTo;
+        static bool drawAdjacents;
+        
+        static bool showScenesInView;
+        
+        static bool activated;
+        static bool isDragging;
+        static Vector2? dragFrom;
+        static Vector2? dragTo;
         
         // ====================================================================================================
         // ====================================================================================================
@@ -82,13 +88,21 @@ namespace Prota.Editor
             info.entries[index] = entry;
             ComputeAdjacents(info.entries);
             
+            AssetDatabase.SaveAssetIfDirty(info);
+            
+            EditorUtility.SetDirty(info);
             AssetDatabase.SaveAssets();
+            
             AssetDatabase.Refresh();
         }
         
         void ComputeAdjacents(SceneEntry[] entries)
         {
             using var _ = TempDict.Get<SceneEntry, int>(out var reverseMap);
+            for(int i = 0; i < entries.Length; i++)
+            {
+                reverseMap[entries[i]] = i;
+            }
             Parallel.ForEach(entries, (x, _, i) => {
                 x.adjacentScenes = entries
                     .Where((x, j) => i != j)
@@ -127,11 +141,35 @@ namespace Prota.Editor
         {
             Undo.RecordObject(target, "OverworldSceneInfo");
             
+            EditorGUI.BeginChangeCheck();
+            
             EditorGUILayout.LabelField(">>> New Scene <<<");
             newSceneName = EditorGUILayout.TextField("Name", newSceneName);
-            if(GUILayout.Button("Create")) CreateNewScecne();
             
-            EditorGUILayout.LabelField(">>> Runtime <<<");
+            var buttonName = info.entries.Any(x => x.name == newSceneName) ? "Change" : "Create";
+            if(GUILayout.Button(buttonName)) CreateNewScecne();
+            
+            EditorGUILayout.LabelField(">>> Editor <<<");
+            
+            if(GUILayout.Button("Focus"))
+            {
+                Focus(SceneView.lastActiveSceneView);
+            }
+            
+            if(GUILayout.Button("ShowAll"))
+            {
+                ShowAll(SceneView.lastActiveSceneView);
+            }
+            
+            if(GUILayout.Button("Load Scenes By View"))
+            {
+                LoadSceneByView(SceneView.lastActiveSceneView);
+            }
+            
+            showScenesInView = EditorGUILayout.Toggle("Show Scenes In View", showScenesInView);
+            
+            drawAdjacents = EditorGUILayout.Toggle("Draw Adjacents", drawAdjacents);
+            
             using(new EditorGUI.DisabledScope(true))
             {
                 activated = EditorGUILayout.Toggle("Activated", activated);
@@ -140,10 +178,20 @@ namespace Prota.Editor
                 if(dragTo.HasValue) EditorGUILayout.Vector2Field("DragTo", dragTo.Value);            
             }
             
+            if(showScenesInView)
+            {
+                ShowScenesInViewInInspector(SceneView.lastActiveSceneView.camera);
+            }
+            
             EditorGUILayout.LabelField(">>> OverworldSceneInfo <<<");
             base.OnInspectorGUI();
             
-            serializedObject.ApplyModifiedProperties();
+            if(EditorGUI.EndChangeCheck())
+            {
+                EditorUtility.SetDirty(target);
+                AssetDatabase.SaveAssetIfDirty(target);
+            }
+            serializedObject.UpdateIfRequiredOrScript();
             
             Repaint();
         }
@@ -180,6 +228,7 @@ namespace Prota.Editor
                 
                 case EventType.MouseUp:
                 {
+                    if(Event.current.button != 0) break;
                     Event.current.Use();
                     isDragging = false;
                     SwapDrag();
@@ -214,7 +263,18 @@ namespace Prota.Editor
                     
                     foreach(var s in info.entries)
                     {
-                        Handles.Label(s.range.TopLeft(), "  " + name, new GUIStyle() { fontSize = 14 });
+                        Handles.Label(s.range.TopLeft(), "  " + s.name, new GUIStyle() { fontSize = 14 });
+                    }
+                    
+                    if(drawAdjacents)
+                    {
+                        foreach(var s in info.entries)
+                        {
+                            foreach(var a in s.GetAdjacent(info.entries))
+                            {
+                                Handles.DrawLine(s.range.center, a.range.center);
+                            }
+                        }
                     }
                     
                     break;
@@ -228,20 +288,73 @@ namespace Prota.Editor
             Repaint();
         }
         
+        void Focus(SceneView view)
+        {
+            if(dragFrom == null || dragTo == null) return;
+            var select = new Rect(dragFrom.Value, dragTo.Value - dragFrom.Value);
+            var center = select.center;
+            view.pivot = view.pivot.WithXY(center);
+            var aspect = view.camera.aspect;
+            var y = select.size.y.Max(select.size.x / aspect);
+            view.size = y / 2 + 1f;
+        }
+        
+        void ShowAll(SceneView view)
+        {
+            Rect? all = null;
+            foreach(var s in info.entries)
+            {
+                if(all == null) all = s.range;
+                else all = all.Value.BoundingBox(s.range);
+            }
+            
+            view.pivot = view.pivot.WithXY(all.Value.center);
+            var aspect = view.camera.aspect;
+            var y = all.Value.size.y.Max(all.Value.size.x / aspect);
+            view.size = y / 2 + 1f;
+        }
+        
+        void ShowScenesInViewInInspector(Camera camera)
+        {
+            var view = camera.GetCameraWorldView();
+            var scenesInView = info.entries.Where(x => view.Overlaps(x.range)).ToArray();
+            EditorGUILayout.LabelField("Scenes In View");
+            EditorGUILayout.LabelField("Count: " + scenesInView.Length);
+            foreach(var s in scenesInView) EditorGUILayout.LabelField(s.name);
+        }
+        
+        
+        void LoadSceneByView(SceneView sv)
+        {
+            // 加载状态由 EditorSceneManager 获取.
+            var view = sv.camera.GetCameraWorldView();
+            foreach(var entry in info.entries)
+            {
+                if(view.Overlaps(entry.range))
+                {
+                    var path = "Assets/Resources/" + info.scenePath.PathCombine(entry.name).ToStandardPath() + ".unity";
+                    EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
+                }
+                else
+                {
+                    var scene = EditorSceneManager.GetSceneByName(entry.name);
+                    EditorSceneManager.CloseScene(scene, true);
+                }
+            }
+        }
+        
         void ShowSceneViewText(SceneView v)
         {
             if(v.camera.transform.forward != Vector3.forward) return;
-            var cam = v.camera;
-            var bottomLeft = cam.ViewportPointToRay(Vector2.zero).HitXYPlane();
-            var topRight = cam.ViewportPointToRay(Vector2.one).HitXYPlane();
-            var minLength = (topRight - bottomLeft).MinComponent();
-            // 找到它是几位数.
-            var l = Mathf.Pow(10, Mathf.Log10(minLength).FloorToInt());
-            var left = (bottomLeft.x / l).FloorToInt() * l;
-            var right = (topRight.x / l).CeilToInt() * l;
-            var bottom = (bottomLeft.y / l).FloorToInt() * l;
-            var top = (topRight.y / l).CeilToInt() * l;
-            if(((right - left) / l + 1) * ((top - bottom) / l + 1) > 500) return;
+            var view = v.camera.GetCameraWorldView();
+            var minLength = view.size.MinComponent();
+            var baseNum = 10;
+            var l = Mathf.Pow(baseNum, Mathf.Log(minLength, baseNum).FloorToInt());
+            var left = (view.xMin / l).FloorToInt() * l;
+            var right = (view.xMax / l).CeilToInt() * l;
+            var bottom = (view.yMin / l).FloorToInt() * l;
+            var top = (view.yMax / l).CeilToInt() * l;
+            if(((right - left) / l + 1) * ((top - bottom) / l + 1) > 400) return;
             for(var i = left; i <= right; i += l)
             for(var j = bottom; j <= top; j += l)
             {
