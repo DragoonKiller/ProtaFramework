@@ -48,6 +48,16 @@ namespace Prota.Unity
             return range.ContainsInclusive(p);
         }
         
+        public bool ContainsAny(IEnumerable<Transform> transforms)
+        {
+            return transforms.Any(x => ContainsPoint(x.position));
+        }
+        
+        public bool ContainsAny(IEnumerable<Vector2> points)
+        {
+            return points.Any(x => ContainsPoint(x));
+        }
+        
         
         public void SetTargetState(bool targetState)
         {
@@ -104,10 +114,14 @@ namespace Prota.Unity
         // Resources 相对路径.
         public string scenePath;
         
+        public string scenePathRelativeToAssets => $"Resources/{scenePath}";
+        public string scenePathRelativeToRoot => $"Assets/Resources/{scenePath}";
+        
         public SceneEntry[] entries = Array.Empty<SceneEntry>();
         
         [Header("Loading Config")]
         public int checkPerFrame = 1;
+        public int adjacentStep = 1;
         
     }
 }

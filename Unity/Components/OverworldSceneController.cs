@@ -3,7 +3,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Codice.CM.SEIDInfo;
 using Codice.LogWrapper;
+using UnityEditor.Build.Reporting;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -34,42 +37,104 @@ namespace Prota.Unity
         // ====================================================================================================
         // ====================================================================================================
         
-        public void CheckAllActivation()
+        bool proceeding = false;
+        [SerializeField] bool[] shouldActive;
+        [SerializeField] int[] distance;
+        [SerializeField] Vector2[] recordPositions;
+        [SerializeField] bool[] reached;
+        
+        Dictionary<string, SceneEntry> name2entry = new();
+        Dictionary<SceneEntry, int> entry2id = new();
+        
+        void CheckAllActivateImmediately()
         {
-            foreach(var entry in info.entries)
-            {
-                SetSceneActivation(entry);
-            }
+            _ = CheckAllActivate();
+            asyncControl.StepUntilClear();
         }
         
-        void SetSceneActivation(SceneEntry entry)
-        {
-            entry.SetTargetState(ShouldActive(entry));
-        }
+        Queue<int> activeQueue = new();
         
-        bool ShouldActive(SceneEntry entry)
-        {
-            foreach(var referencePoint in referencePoints)
-            {
-                if(entry.ContainsPoint(referencePoint.position)) return true;
-            }
-            return false;
-        }
         
-        void UnloadAllUnrelatedScenes()
+        async Task CheckAllActivate()
         {
-            foreach(var entry in info.entries)
+            try
             {
-                var shouldActive = ShouldActive(entry);
-                var n = SceneManager.sceneCount;
+                var n = info.entries.Length;
+                if(shouldActive.IsNullOrEmpty())
+                {
+                    shouldActive = new bool[n];
+                    distance = new int[n];
+                    reached = new bool[n];
+                    name2entry = info.entries.ToDictionary(x => x.name, x => x);
+                    entry2id = info.entries.Select((x, i) => (x, i)).ToDictionary(x => x.x, x => x.i);
+                }
+                
+                proceeding = true;
+                
+                shouldActive.Fill(x => false);
+                distance.Fill(x => (int)1e6);
+                reached.Fill(x => false);
+                
+                var m = referencePoints.Count;
+                if(recordPositions.IsNullOrEmpty() || recordPositions.Length != m)
+                {
+                    recordPositions = new Vector2[m];
+                }
+                for(int i = 0; i < m; i++)
+                {
+                    recordPositions[i] = referencePoints[i].position;
+                }
+                
+                await asyncControl;
+                
+                void Enqueue(int id, int d)
+                {
+                    reached[id] = true;
+                    shouldActive[id] = true;
+                    distance[id] = d;
+                    activeQueue.Enqueue(id);
+                }
+                
+                activeQueue.Clear();
                 for(int i = 0; i < n; i++)
                 {
-                    var scene = SceneManager.GetSceneAt(i);
-                    if(scene.name == entry.name)
+                    if(info.entries[i].ContainsAny(recordPositions))
                     {
-                        SceneManager.UnloadSceneAsync(scene);
+                        Enqueue(i, 0);
                     }
                 }
+                
+                await asyncControl;
+                
+                for(int i = 0; i < 1e4 && activeQueue.Count != 0; i++)
+                {
+                    var id = activeQueue.Dequeue();
+                    var entry = info.entries[id];
+                    if(distance[id] >= info.adjacentStep) continue;     // 不能再走了.
+                    
+                    foreach(var adj in entry.GetAdjacent(info.entries))
+                    {
+                        var adjId = entry2id[adj];
+                        if(reached[adjId]) continue;
+                        Enqueue(adjId, distance[id] + 1);
+                    }
+                    await asyncControl;
+                }
+                
+                proceeding = false;
+            }
+            catch(Exception e)
+            {
+                Debug.LogError(e);
+            }
+        }
+        void ApplyActivation()
+        {
+            if(proceeding) throw new Exception("Cannot apply activation while proceeding.");
+            foreach(var e in info.entries)
+            {
+                var id = entry2id[e];
+                e.SetTargetState(shouldActive[id]);
             }
         }
         
@@ -91,20 +156,21 @@ namespace Prota.Unity
         // ====================================================================================================
         // ====================================================================================================
         
-        [field: SerializeField] public int cur { get; private set; } = 0;
+        AsyncControl asyncControl = new AsyncControl();
         
         void Start()
         {
-            UnloadAllUnrelatedScenes();
+            CheckAllActivateImmediately();
+            ApplyActivation();
         }
         
         void Update()
         {
-            for(int i = 0; i < info.checkPerFrame; i++)
+            asyncControl.Step();
+            if(asyncControl.isClear)
             {
-                cur = (cur + 1).Repeat(info.entries.Length);
-                var entry = info.entries[cur];
-                SetSceneActivation(entry);
+                ApplyActivation();
+                _ = CheckAllActivate();
             }
         }
         

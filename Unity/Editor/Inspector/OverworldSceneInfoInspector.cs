@@ -6,6 +6,7 @@ using UnityEditor.SceneManagement;
 using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
+using UnityEditor.VersionControl;
 
 namespace Prota.Editor
 {
@@ -168,6 +169,11 @@ namespace Prota.Editor
                 LoadSceneByView(SceneView.lastActiveSceneView);
             }
             
+            if(GUILayout.Button("Clear Loaded Scenes"))
+            {
+                ClearLoadedScenes();
+            }
+            
             showScenesInView = EditorGUILayout.Toggle("Show Scenes In View", showScenesInView);
             
             drawAdjacents = EditorGUILayout.Toggle("Draw Adjacents", drawAdjacents);
@@ -190,6 +196,16 @@ namespace Prota.Editor
             
             if(EditorGUI.EndChangeCheck())
             {
+                var path = new string[] { info.scenePathRelativeToRoot };
+                var scenes = AssetDatabase.FindAssets("t:scene", path)
+                    .Select(x => AssetDatabase.GUIDToAssetPath(x))
+                    .ToArray();
+                
+                var ss = EditorBuildSettings.scenes.ToList();
+                ss.RemoveAll(x => scenes.Contains(x.path));
+                ss.AddRange(scenes.Select(x => new EditorBuildSettingsScene(x, true)));
+                EditorBuildSettings.scenes = ss.ToArray();
+                
                 EditorUtility.SetDirty(target);
                 AssetDatabase.SaveAssetIfDirty(target);
             }
@@ -197,7 +213,16 @@ namespace Prota.Editor
             
             Repaint();
         }
-        
+
+        private void ClearLoadedScenes()
+        {
+            foreach(var entry in info.entries)
+            {
+                var scene = EditorSceneManager.GetSceneByName(entry.name);
+                EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
         void SOOnSceneGUI(SceneView v)
         {
             switch(Event.current.type)

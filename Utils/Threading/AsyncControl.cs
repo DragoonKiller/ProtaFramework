@@ -21,6 +21,8 @@ namespace Prota
         
         public readonly List<Action> callbacks = new List<Action>();
         
+        public bool isClear => callbacks.Count == 0;
+        
         public Awaiter GetAwaiter() => new Awaiter(stepId, this);
         
         public struct Awaiter : INotifyCompletion
@@ -74,7 +76,7 @@ namespace Prota
         {
             for(int i = 0; i <= max; i++)
             {
-                if(callbacks.Count == 0) break;
+                if(isClear) break;
                 Step();
                 if(i == max) throw new Exception("AsyncControl.StepUntilClear() reached max. There could be a dead loop.");
             }
