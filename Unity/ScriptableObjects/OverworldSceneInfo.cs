@@ -106,6 +106,8 @@ namespace Prota.Unity
         
         public SceneEntry[] entries = Array.Empty<SceneEntry>();
         
+        [Header("Loading Config")]
+        public int checkPerFrame = 1;
         
     }
 }

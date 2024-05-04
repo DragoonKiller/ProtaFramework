@@ -6,7 +6,6 @@ using UnityEditor.SceneManagement;
 using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
-using UnityEditor.SearchService;
 
 namespace Prota.Editor
 {
@@ -116,7 +115,10 @@ namespace Prota.Editor
         {
             var ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
             var p = ray.HitXYPlane();
-            var entry = info.entries.FirstOrDefault(x => x.range.ContainsInclusive(p));
+            var i = info.entries.FindIndex(x => newSceneName == x.name);
+            var arr = info.entries as IEnumerable<SceneEntry>;
+            if(i != -1) arr = arr.LeftRotate(i + 1);
+            var entry = arr.FirstOrDefault(x => x.range.ContainsInclusive(p));
             if(entry == null) return;
             dragFrom = entry.range.position;
             dragTo = entry.range.position + entry.range.size;
@@ -272,7 +274,7 @@ namespace Prota.Editor
                         {
                             foreach(var a in s.GetAdjacent(info.entries))
                             {
-                                Handles.DrawLine(s.range.center, a.range.center);
+                                Handles.DrawLine(s.range.center, a.range.center, 2);
                             }
                         }
                     }
@@ -343,35 +345,6 @@ namespace Prota.Editor
             }
         }
         
-        void ShowSceneViewText(SceneView v)
-        {
-            if(v.camera.transform.forward != Vector3.forward) return;
-            var view = v.camera.GetCameraWorldView();
-            var minLength = view.size.MinComponent();
-            var baseNum = 10;
-            var l = Mathf.Pow(baseNum, Mathf.Log(minLength, baseNum).FloorToInt());
-            var left = (view.xMin / l).FloorToInt() * l;
-            var right = (view.xMax / l).CeilToInt() * l;
-            var bottom = (view.yMin / l).FloorToInt() * l;
-            var top = (view.yMax / l).CeilToInt() * l;
-            if(((right - left) / l + 1) * ((top - bottom) / l + 1) > 400) return;
-            for(var i = left; i <= right; i += l)
-            for(var j = bottom; j <= top; j += l)
-            {
-                Handles.Label(new Vector3(i, j, 0), $"[{i},{j}]", new GUIStyle() { fontSize = 8 });
-            }
-        }
-        
-        // void ShowAreaText(string name, Rect rect)
-        // {
-        //     using(new HandleColorScope(Color.red))
-        //     {
-        //         Handles.Label(rect.LeftCenter(), rect.xMin.ToString(), new GUIStyle() { fontSize = 10 });
-        //         Handles.Label(rect.RightCenter(), rect.xMax.ToString(), new GUIStyle() { fontSize = 10 });
-        //         Handles.Label(rect.BottomCenter(), rect.yMin.ToString(), new GUIStyle() { fontSize = 10 });
-        //         Handles.Label(rect.TopCenter(), rect.yMax.ToString(), new GUIStyle() { fontSize = 10 });
-        //     }
-        // }
         
         void SwapDrag()
         {
@@ -398,5 +371,27 @@ namespace Prota.Editor
             dragTo = to;
         }
         
+        
+        // ====================================================================================================
+        // ====================================================================================================
+        
+        public static void ShowSceneViewText(SceneView v)
+        {
+            if(v.camera.transform.forward != Vector3.forward) return;
+            var view = v.camera.GetCameraWorldView();
+            var minLength = view.size.MinComponent();
+            var baseNum = 10;
+            var l = Mathf.Pow(baseNum, Mathf.Log(minLength, baseNum).FloorToInt());
+            var left = (view.xMin / l).FloorToInt() * l;
+            var right = (view.xMax / l).CeilToInt() * l;
+            var bottom = (view.yMin / l).FloorToInt() * l;
+            var top = (view.yMax / l).CeilToInt() * l;
+            if(((right - left) / l + 1) * ((top - bottom) / l + 1) > 400) return;
+            for(var i = left; i <= right; i += l)
+            for(var j = bottom; j <= top; j += l)
+            {
+                Handles.Label(new Vector3(i, j, 0), $"[{i},{j}]", new GUIStyle() { fontSize = 8 });
+            }
+        }
     }
 }

@@ -146,5 +146,23 @@ namespace Prota
         
         public static IEnumerable<T> OrEmpty<T>(this IEnumerable<T> e)
             => e == null ? Enumerable.Empty<T>() : e;
+        
+        // 元素 i 移动到 (i + a) % len.
+        public static IEnumerable<T> RightRotate<T>(this IEnumerable<T> e, int a)
+        {
+            var n = e.Count();
+            a = a.Repeat(n);
+            if(a == 0) return e;
+            return e.TakeLast(a).Concat(e.Take(n - a));
+        }
+        
+        // 元素 i 移动到 (i - a) % len.
+        public static IEnumerable<T> LeftRotate<T>(this IEnumerable<T> e, int a)
+        {
+            var n = e.Count();
+            a = a.Repeat(n);
+            if(a == 0) return e;
+            return e.Skip(a).Concat(e.Take(a));
+        }
     }
 }
