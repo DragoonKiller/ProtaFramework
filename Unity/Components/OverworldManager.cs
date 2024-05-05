@@ -4,11 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Codice.CM.SEIDInfo;
-using Codice.LogWrapper;
 using UnityEditor;
-using UnityEditor.Build.Reporting;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -16,7 +12,7 @@ namespace Prota.Unity
 {
     
     // 用于管理所有的 scene.
-    public class OverworldSceneController : Singleton<OverworldSceneController>
+    public class OverworldManager : Singleton<OverworldManager>
     {
         
         public OverworldSceneInfo info;
@@ -31,7 +27,7 @@ namespace Prota.Unity
             
             if(!info)
             {
-                Debug.LogError("OverworldSceneController: info is null, must have one.");
+                Debug.LogError("OverworldManager: info is null, must have one.");
             }
         }
         #endif

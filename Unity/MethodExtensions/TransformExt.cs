@@ -214,6 +214,12 @@ namespace Prota.Unity
             return d;
         }
         
+        
+        public static string GetNamePathScene(this Component t)
+        {
+            return $"[{t.gameObject.scene.name}]{t.GetNamePath()}";
+        }
+        
         public static string GetNamePath(this Component t)
         {
             t = t.transform;

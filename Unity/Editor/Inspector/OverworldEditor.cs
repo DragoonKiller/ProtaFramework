@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using UnityEditor.VersionControl;
+using GluonGui.WorkspaceWindow.Views.WorkspaceExplorer.Configuration;
 
 namespace Prota.Editor
 {
@@ -21,7 +22,8 @@ namespace Prota.Editor
             window.Show();
         }
         
-        static bool editMode = false;
+        bool showMode = true;
+        bool editMode = false;
         
         OverworldSceneInfo info;
         
@@ -140,12 +142,12 @@ namespace Prota.Editor
         
         void OnEnable()
         {
-            SceneView.duringSceneGui += SOOnSceneGUI;
+            
         }
         
         void OnDisable()
         {
-            SceneView.duringSceneGui -= SOOnSceneGUI;
+            
         }
         
 
@@ -159,7 +161,12 @@ namespace Prota.Editor
                 return;
             }
             
+            showMode = EditorGUILayout.Toggle("ShowMode", showMode);
+            SceneView.duringSceneGui -= SOOnSceneGUI;
+            if(showMode) SceneView.duringSceneGui += SOOnSceneGUI;
+            
             editMode = EditorGUILayout.Toggle("EditMode", editMode);
+            if(editMode) OpenOrCloseTilemapWindow(true);
             
             Undo.RecordObject(info, "OverworldSceneInfo");
             
@@ -183,6 +190,11 @@ namespace Prota.Editor
                 ShowAll(SceneView.lastActiveSceneView);
             }
             
+            if(GUILayout.Button("Load Selected scene"))
+            {
+                LoadSelectedScene();
+            }
+            
             if(GUILayout.Button("Load Scenes By View"))
             {
                 LoadSceneByView(SceneView.lastActiveSceneView);
@@ -193,6 +205,11 @@ namespace Prota.Editor
                 ClearLoadedScenes();
             }
             
+            if(GUILayout.Button("Open/Close Tilemap Window"))
+            {
+                OpenOrCloseTilemapWindow();
+            }
+
             showScenesInView = EditorGUILayout.Toggle("Show Scenes In View", showScenesInView);
             
             drawAdjacents = EditorGUILayout.Toggle("Draw Adjacents", drawAdjacents);
@@ -229,8 +246,28 @@ namespace Prota.Editor
             Repaint();
         }
 
+        static void OpenOrCloseTilemapWindow(bool forceClose = false)
+        {
+            var type = TypeCache.GetTypesDerivedFrom(typeof(EditorWindow))
+                .FirstOrDefault(x => x.Name == "GridPaintPaletteWindow");
+            var hasOpenInstanceMethod = typeof(EditorWindow).GetMethod("HasOpenInstances");
+            var constructedMethod = hasOpenInstanceMethod.MakeGenericMethod(type);
+            var hasOpenInstance = (bool)constructedMethod.Invoke(null, null);
+            if (hasOpenInstance)
+            {
+                var window = EditorWindow.GetWindow(type);
+                window.Close();
+            }
+            else if(!forceClose)
+            {
+                EditorWindow.GetWindow(type);
+            }
+        }
+
         private void ClearLoadedScenes()
         {
+            EditorSceneManager.SaveOpenScenes();
+            
             foreach(var entry in info.entries)
             {
                 var scene = EditorSceneManager.GetSceneByName(entry.name);
@@ -297,17 +334,19 @@ namespace Prota.Editor
                         var rect = new Rect(dragFrom.Value, dragTo.Value - dragFrom.Value);
                         Handles.DrawSolidRectangleWithOutline(
                             rect,
-                            Color.blue.WithA(0.3f),
+                            Color.blue.WithA(0.1f),
                             Color.blue.WithA(0.8f)
                         );
                     }
                     
                     foreach(var s in info.entries)
                     {
+                        var insideColor = s.state == SceneLoadingState.Loaded ? Color.green : Color.red;
+                        var outlineColor = s.state == SceneLoadingState.Loaded ? Color.green : Color.red;
                         Handles.DrawSolidRectangleWithOutline(
                             s.range,
-                            Color.green.WithA(0.0f),
-                            Color.red.WithA(1f)
+                            insideColor.WithA(0.01f),
+                            outlineColor.WithA(1f)
                         );
                     }
                     
@@ -374,8 +413,31 @@ namespace Prota.Editor
         }
         
         
+        void LoadSelectedScene()
+        {
+            EditorSceneManager.SaveOpenScenes();
+            
+            if(!info.entries.Any(x => x.name == newSceneName))
+            {
+                Debug.LogWarning("Scene not found.");
+                return;
+            }
+            
+            var path = "Assets/Resources/" + info.scenePath.PathCombine(newSceneName).ToStandardPath() + ".unity";
+            EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
+            
+            foreach(var entry in info.entries)
+            {
+                if(entry.name == newSceneName) continue;
+                var scene = EditorSceneManager.GetSceneByName(entry.name);
+                EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+        
         void LoadSceneByView(SceneView sv)
         {
+            EditorSceneManager.SaveOpenScenes();
+            
             // 加载状态由 EditorSceneManager 获取.
             var view = sv.camera.GetCameraWorldView();
             foreach(var entry in info.entries)

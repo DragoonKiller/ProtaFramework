@@ -29,13 +29,13 @@ namespace Prota.Unity
         public int[] adjacentScenes;
         
         // true: 激活(需要加载), false: 不激活(需要卸载)
-        [field: Header("runtime"), SerializeField]
+        [field: Header("runtime"), NonSerialized]
         public bool targetState { get; private set; }
         
-        [field: SerializeField]
+        [field: NonSerialized]
         public SceneLoadingState state { get; private set; } = SceneLoadingState.None;
         
-        [field: SerializeField]
+        [field: NonSerialized]
         public Scene runtimeScene { get; private set; }
         
         public IEnumerable<SceneEntry> GetAdjacent(SceneEntry[] entries)
