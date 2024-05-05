@@ -306,6 +306,7 @@ namespace Prota.Editor
                 case EventType.MouseDrag:
                 {
                     if(!editMode) break;
+                    if(Event.current.button != 0) break;
                     Event.current.Use();
                     var ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
                     if(isDragging) dragTo = ray.HitXYPlane();
