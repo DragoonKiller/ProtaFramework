@@ -10,11 +10,20 @@ using UnityEditor.VersionControl;
 
 namespace Prota.Editor
 {
-    [CustomEditor(typeof(OverworldSceneInfo), false)]
-    public class OverworldSceneInfoInspector : UnityEditor.Editor
+    
+    public class OverworldEditor : UnityEditor.EditorWindow
     {
-        public OverworldSceneInfo info => target as OverworldSceneInfo;
+        [MenuItem("ProtaFramework/Window/Overworld Editor")]
+        public static void ShowWindow()
+        {
+            var window = GetWindow<OverworldEditor>();
+            window.titleContent = new GUIContent("Overworld Editor");
+            window.Show();
+        }
         
+        static bool editMode = false;
+        
+        OverworldSceneInfo info;
         
         static string newSceneName;
         
@@ -140,9 +149,19 @@ namespace Prota.Editor
         }
         
 
-        public override void OnInspectorGUI()
+        void OnGUI()
         {
-            Undo.RecordObject(target, "OverworldSceneInfo");
+            if(info == null) info = FindObjectOfType<OverworldSceneInfo>();
+            info = EditorGUILayout.ObjectField("OverworldSceneInfo", info, typeof(OverworldSceneInfo), false) as OverworldSceneInfo;
+            if(info == null)
+            {
+                EditorGUILayout.LabelField("OverworldSceneInfo is null.");
+                return;
+            }
+            
+            editMode = EditorGUILayout.Toggle("EditMode", editMode);
+            
+            Undo.RecordObject(info, "OverworldSceneInfo");
             
             EditorGUI.BeginChangeCheck();
             
@@ -191,9 +210,6 @@ namespace Prota.Editor
                 ShowScenesInViewInInspector(SceneView.lastActiveSceneView.camera);
             }
             
-            EditorGUILayout.LabelField(">>> OverworldSceneInfo <<<");
-            base.OnInspectorGUI();
-            
             if(EditorGUI.EndChangeCheck())
             {
                 var path = new string[] { info.scenePathRelativeToRoot };
@@ -206,10 +222,9 @@ namespace Prota.Editor
                 ss.AddRange(scenes.Select(x => new EditorBuildSettingsScene(x, true)));
                 EditorBuildSettings.scenes = ss.ToArray();
                 
-                EditorUtility.SetDirty(target);
-                AssetDatabase.SaveAssetIfDirty(target);
+                EditorUtility.SetDirty(info);
+                AssetDatabase.SaveAssetIfDirty(info);
             }
-            serializedObject.UpdateIfRequiredOrScript();
             
             Repaint();
         }
@@ -225,10 +240,16 @@ namespace Prota.Editor
 
         void SOOnSceneGUI(SceneView v)
         {
+            if(!editMode)
+            {
+                dragFrom = dragTo = null;
+            }
+            
             switch(Event.current.type)
             {
                 case EventType.MouseDown:
                 {
+                    if(!editMode) break;
                     if(Event.current.button == 0)
                     {
                         Event.current.Use();
@@ -247,6 +268,7 @@ namespace Prota.Editor
                 
                 case EventType.MouseDrag:
                 {
+                    if(!editMode) break;
                     Event.current.Use();
                     var ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
                     if(isDragging) dragTo = ray.HitXYPlane();
@@ -255,6 +277,7 @@ namespace Prota.Editor
                 
                 case EventType.MouseUp:
                 {
+                    if(!editMode) break;
                     if(Event.current.button != 0) break;
                     Event.current.Use();
                     isDragging = false;
@@ -407,15 +430,23 @@ namespace Prota.Editor
             var minLength = view.size.MinComponent();
             var baseNum = 10;
             var l = Mathf.Pow(baseNum, Mathf.Log(minLength, baseNum).FloorToInt());
+            var n = (minLength / l).FloorToInt();
+            // Debug.LogWarning(n);
+            if(n < 5 && l % 2 == 0) l /= 2;
             var left = (view.xMin / l).FloorToInt() * l;
             var right = (view.xMax / l).CeilToInt() * l;
             var bottom = (view.yMin / l).FloorToInt() * l;
             var top = (view.yMax / l).CeilToInt() * l;
-            if(((right - left) / l + 1) * ((top - bottom) / l + 1) > 400) return;
+            
+            var total = (right - left) / l * (top - bottom) / l;
+            if(total > 1000 || total is float.NaN) return;
+            
+            var style = new GUIStyle() { fontSize = 9 };
             for(var i = left; i <= right; i += l)
             for(var j = bottom; j <= top; j += l)
             {
-                Handles.Label(new Vector3(i, j, 0), $"[{i},{j}]", new GUIStyle() { fontSize = 8 });
+                if((i % 1).Abs() > 1e-5f || (j % 1).Abs() > 1e-5f) continue;
+                Handles.Label(new Vector3(i, j, 0), $"[{i.RoundToInt()},{j.RoundToInt()}]", style);
             }
         }
     }

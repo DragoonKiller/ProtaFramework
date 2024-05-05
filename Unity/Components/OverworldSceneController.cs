@@ -2,9 +2,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Codice.CM.SEIDInfo;
 using Codice.LogWrapper;
+using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -178,15 +180,22 @@ namespace Prota.Unity
         
         // ====================================================================================================
         // ====================================================================================================
-        
-        void OnDrawGizmos()
-        {
-            if(!Application.isPlaying) return;
-            foreach(var entry in info.entries)
-            {
-                Gizmos.color = entry.targetState ? Color.green : Color.red;
-                Gizmos.DrawWireCube(entry.range.center, entry.range.size);
-            }
-        }
+        // 
+        // #if UNITY_EDITOR
+        // void OnDrawGizmos()
+        // {
+        //     var sstyle = new GUIStyle() { fontSize = 14 };
+        //     // if(!Application.isPlaying) return;
+        //     foreach(var entry in info.entries)
+        //     {
+        //         Gizmos.color = entry.targetState ? Color.green : Color.red;
+        //         Gizmos.DrawWireCube(entry.range.center, entry.range.size);
+        //         var c = GUI.color;
+        //         GUI.color = Color.blue;
+        //         Handles.Label(entry.range.TopLeft(), "  " + entry.name, sstyle);
+        //         GUI.color = c;
+        //     }
+        // }
+        // #endif
     }
 }
