@@ -439,6 +439,14 @@ namespace Prota.Unity
         
         public static Vector3Int Max(this Vector3Int a, Vector3Int b) => new Vector3Int(a.x.Max(b.x), a.y.Max(b.y), a.z.Max(b.z));
         
+        public static Vector2 Min(this Vector2 a, Vector2 b) => new Vector2(a.x.Min(b.x), a.y.Min(b.y));
+        
+        public static Vector3 Min(this Vector3 a, Vector3 b) => new Vector3(a.x.Min(b.x), a.y.Min(b.y), a.z.Min(b.z));
+        
+        public static Vector2 Max(this Vector2 a, Vector2 b) => new Vector2(a.x.Max(b.x), a.y.Max(b.y));
+        
+        public static Vector3 Max(this Vector3 a, Vector3 b) => new Vector3(a.x.Max(b.x), a.y.Max(b.y), a.z.Max(b.z));
+        
         public static float MaxComponent(this Vector2 a) => a.x.Max(a.y);
         
         public static float MaxComponent(this Vector3 a) => a.x.Max(a.y).Max(a.z);

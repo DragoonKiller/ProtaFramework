@@ -22,6 +22,8 @@ namespace Prota.Unity
     [Serializable]
     public class SceneEntry
     {
+        [SerializeField] public OverworldSceneInfo info;
+        
         public string name;
         
         // 边界, 左闭右闭区间.
@@ -37,6 +39,19 @@ namespace Prota.Unity
         
         [field: NonSerialized]
         public Scene runtimeScene { get; private set; }
+        
+        public string assetPath => $"Assets/Resources/{info.scenePath}/{name}.unity";
+        
+        public string resourcePath => $"{info.scenePath}/{name}";
+        
+        public string assetFileName => $"{name}.unity";
+        
+        
+        public SceneEntry(string name, OverworldSceneInfo overworld)
+        {
+            this.name = name;
+            this.info = overworld;
+        }
         
         public IEnumerable<SceneEntry> GetAdjacent(SceneEntry[] entries)
         {
@@ -123,5 +138,10 @@ namespace Prota.Unity
         public int checkPerFrame = 1;
         public int adjacentStep = 1;
         
+        
+        public string GetAssetPathOfName(string name)
+        {
+            return $"Assets/Resources/{scenePath}/{name}.unity";
+        }
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 namespace Prota
 {
@@ -116,6 +117,23 @@ namespace Prota
         {
             for(int i = 0; i < arr.Length; i++) if(EqualityComparer<T>.Default.Equals(arr[i], value)) return i;
             return -1;
+        }
+        
+        public static T[] Remove<T>(this T[] arr, T value)
+        {
+            return arr.Where(v => !EqualityComparer<T>.Default.Equals(v, value)).ToArray();
+        }
+        
+        public static T[] Remove<T>(this T[] arr, Predicate<T> match)
+        {
+            return arr.Where(v => !match(v)).ToArray();
+        }
+        
+        public static T[] RemoveAt<T>(this T[] arr, int index)
+        {
+            var l = new List<T>(arr);
+            l.RemoveAt(index);
+            return l.ToArray();
         }
         
         internal static Span<T> AsSpan<T>(this T[] arr) => new Span<T>(arr);

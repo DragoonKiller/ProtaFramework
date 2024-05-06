@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
-using UnityEditor.EditorTools;
+using System.IO;
 
 namespace Prota.Editor
 {
@@ -31,32 +31,9 @@ namespace Prota.Editor
         
         static string selectSceneName;
         
-        GameObject[] gameObjectsInSelect;
+        GameObject[] gameObjectsInSelect = Array.Empty<GameObject>();
         
         bool drawAdjacents;
-        
-        bool showScenesInView;
-        
-        Vector2? cachedSnapTo;
-        Vector2 snap
-        {
-            get
-            {
-                if(cachedSnapTo == null)
-                {
-                    var s = PlayerPrefs.GetString("ProtaFramework::OverworldEditor.SnapTo", "0,0");
-                    var ss = s.Split(',');
-                    cachedSnapTo = new Vector2(float.Parse(ss[0]), float.Parse(ss[1]));   
-                }
-                return cachedSnapTo.Value;
-            }
-            set
-            {
-                if(value == cachedSnapTo) return;
-                PlayerPrefs.SetString("ProtaFramework::OverworldEditor.SnapTo", $"{value.x},{value.y}");
-                cachedSnapTo = value;
-            }
-        }
         
         static bool activated;
         static Vector2? dragFrom;
@@ -68,6 +45,12 @@ namespace Prota.Editor
         Vector2[] selectOriginalPos;
         
         SceneEntry selectedScene => info.entries.FirstOrDefault(x => x.name == selectSceneName);
+        
+        EditorPrefEntryBool showScenesInView;
+        EditorPrefEntryVec snap;
+        EditorPrefEntryString<SceneAsset> templateSceneAsset;
+        
+        Type tilemapWindowClass;
         
         // ====================================================================================================
         // ====================================================================================================
@@ -104,36 +87,50 @@ namespace Prota.Editor
                 else
                 {
                     Debug.LogWarning($"Add exist scene [{ selectSceneName }] to OverworldScenesInfo.");
-                    Debug.LogWarning($"You may need to set range manually.");
                 }
             }
             else
             {
-                var setup = NewSceneSetup.EmptyScene;
-                var s = EditorSceneManager.NewScene(setup, NewSceneMode.Additive);
-                EditorSceneManager.SaveScene(s, "Assets/" + assetPath + ".unity");
+                var path = $"Assets/{ assetPath }.unity";
+                if(templateSceneAsset.value)
+                {
+                    AssetDatabase.CopyAsset(AssetDatabase.GetAssetPath(templateSceneAsset.value), path);
+                    EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
+                }
+                else
+                {
+                    var setup = NewSceneSetup.EmptyScene;
+                    var s = EditorSceneManager.NewScene(setup, NewSceneMode.Additive);
+                    EditorSceneManager.SaveScene(s, path);
+                }
             }
             
             Undo.RecordObject(info, "OverworldScenesInfo");
             
-            var entry = new SceneEntry();
-            entry.name = selectSceneName;
-            entry.range = new Rect(dragFrom.Value, dragTo.Value - dragFrom.Value);
-            entry.adjacentScenes = Array.Empty<int>();
-            
+            SceneEntry entry = null;
             if(info.entries.FindIndex(x => x.name == selectSceneName).PassValue(out var index) == -1)
             {
                 info.entries = info.entries.Resize(info.entries.Length + 1);
                 index = info.entries.Length - 1;
+                entry = new SceneEntry(selectSceneName, info);
+                entry.adjacentScenes = Array.Empty<int>();
+                info.entries[index] = entry;
             }
             
-            info.entries[index] = entry;
+            entry = info.entries[index];
+            entry.range = new Rect(dragFrom.Value, dragTo.Value - dragFrom.Value);
             ComputeAdjacents(info.entries);
             
-            AssetDatabase.SaveAssetIfDirty(info);
+            if(IsSceneOpened(entry.name))
+            {
+                var gs = EditorSceneManager.GetSceneByName(entry.name).GetRootGameObjects();
+                foreach(var g in gs) g.BroadcastMessage("OnOverworldUpdate", SendMessageOptions.DontRequireReceiver);
+            }
+            
+            ApplySelect(entry);
             
             EditorUtility.SetDirty(info);
-            AssetDatabase.SaveAssets();
+            AssetDatabase.SaveAssetIfDirty(info);
             
             AssetDatabase.Refresh();
         }
@@ -154,7 +151,7 @@ namespace Prota.Editor
             });
         }
         
-        void Select()
+        void SelectByPointer()
         {
             var ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
             var p = ray.HitXYPlane();
@@ -163,9 +160,17 @@ namespace Prota.Editor
             if(i != -1) arr = arr.LeftRotate(i + 1);
             var entry = arr.FirstOrDefault(x => x.range.ContainsInclusive(p));
             if(entry == null) return;
+            ApplySelect(entry);
+        }
+        
+        void ApplySelect(SceneEntry entry)
+        {
             dragFrom = entry.range.position;
             dragTo = entry.range.position + entry.range.size;
             selectSceneName = entry.name;
+            
+            // 选择了就要加载.....
+            EditorSceneManager.OpenScene(entry.assetPath, OpenSceneMode.Additive);
             var scene = EditorSceneManager.GetSceneByName(selectSceneName);
             gameObjectsInSelect = scene.GetRootGameObjects();
             selectOriginalPos = gameObjectsInSelect.Select(x => x.transform.position.ToVec2()).ToArray();
@@ -177,20 +182,32 @@ namespace Prota.Editor
         
         void OnEnable()
         {
+            showScenesInView = new EditorPrefEntryBool("ProtaFramework::OverworldEditor.ShowScenesInView", false);
             
+            snap = new EditorPrefEntryVec("ProtaFramework::OverworldEditor.Snap");
+            
+            templateSceneAsset = new EditorPrefEntryString<SceneAsset>(
+                "ProtaFramework::OverworldEditor.TemplateSceneAsset",
+                path => AssetDatabase.LoadAssetAtPath<SceneAsset>(path),
+                asset => AssetDatabase.GetAssetPath(asset)
+            );
+            
+            tilemapWindowClass = TypeCache.GetTypesDerivedFrom(typeof(EditorWindow))
+                .FirstOrDefault(x => x.Name == "GridPaintPaletteWindow");
         }
         
         void OnDisable()
         {
-            
+            ClearLoadedScenes();
         }
         
 
         void OnGUI()
         {
-            scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
+            using var _ = new EditorGUILayout.ScrollViewScope(scrollPos);
+            scrollPos = _.scrollPosition;
             
-            if(info == null) info = FindObjectOfType<OverworldSceneInfo>();
+            if(info == null) info = Resources.LoadAll<OverworldSceneInfo>("").FirstOrDefault();
             info = EditorGUILayout.ObjectField("OverworldSceneInfo", info, typeof(OverworldSceneInfo), false) as OverworldSceneInfo;
             if(info == null)
             {
@@ -214,44 +231,28 @@ namespace Prota.Editor
             if(showMode) SceneView.duringSceneGui += SOOnSceneGUI;
             
             editMode = EditorGUILayout.Toggle("Edit Mode", editMode);
-            if(editMode) OpenOrCloseTilemapWindow(true);
+            if(editMode && tilemapWindowClass != null) OpenOrCloseTilemapWindow(true);
             
             loadSceneDynamically = EditorGUILayout.Toggle("Load Scene Dynamically", loadSceneDynamically);
             if(loadSceneDynamically) LoadSceneByView(SceneView.lastActiveSceneView);
             
-            if(GUILayout.Button("Focus"))
-            {
-                Focus(SceneView.lastActiveSceneView);
-            }
+            if(GUILayout.Button("Focus")) Focus(SceneView.lastActiveSceneView);
             
-            if(GUILayout.Button("ShowAll"))
-            {
-                ShowAll(SceneView.lastActiveSceneView);
-            }
+            if(GUILayout.Button("ShowAll"))ShowAll(SceneView.lastActiveSceneView);
             
-            if(GUILayout.Button("Load Selected scene"))
-            {
-                LoadSelectedScene();
-            }
+            if(GUILayout.Button("Load Selected scene")) LoadSelectedScene();
             
-            if(GUILayout.Button("Load Scenes By View"))
-            {
-                LoadSceneByView(SceneView.lastActiveSceneView);
-            }
+            if(GUILayout.Button("Load Scenes By View")) LoadSceneByView(SceneView.lastActiveSceneView);
             
-            if(GUILayout.Button("Clear Loaded Scenes"))
-            {
-                ClearLoadedScenes();
-            }
+            if(GUILayout.Button("Clear Loaded Scenes")) ClearLoadedScenes();
             
-            if(GUILayout.Button("Open/Close Tilemap Window"))
-            {
-                OpenOrCloseTilemapWindow();
-            }
+            if(tilemapWindowClass != null && GUILayout.Button("Open/Close Tilemap Window")) OpenOrCloseTilemapWindow();
             
-            snap = EditorGUILayout.Vector2Field("Snap", snap);
-
-            showScenesInView = EditorGUILayout.Toggle("Show Scenes In View", showScenesInView);
+            snap.vec2 = EditorGUILayout.Vector2Field("Snap", snap.vec2);
+            
+            templateSceneAsset.value = EditorGUILayout.ObjectField("Template Scene", templateSceneAsset.value, typeof(SceneAsset), false) as SceneAsset;
+            
+            showScenesInView.value = EditorGUILayout.Toggle("Show Scenes In View", showScenesInView.value);
             
             drawAdjacents = EditorGUILayout.Toggle("Draw Adjacents", drawAdjacents);
             
@@ -263,12 +264,7 @@ namespace Prota.Editor
                 if(dragTo.HasValue) EditorGUILayout.Vector2Field("DragTo", dragTo.Value);            
             }
             
-            EditorGUILayout.EndScrollView();
-            
-            if(showScenesInView)
-            {
-                ShowScenesInViewInInspector(SceneView.lastActiveSceneView.camera);
-            }
+            if(showScenesInView.value) ShowScenesInViewInInspector(SceneView.lastActiveSceneView.camera);
             
             if(EditorGUI.EndChangeCheck())
             {
@@ -289,21 +285,20 @@ namespace Prota.Editor
             Repaint();
         }
 
-        static void OpenOrCloseTilemapWindow(bool forceClose = false)
+        void OpenOrCloseTilemapWindow(bool forceClose = false)
         {
-            var type = TypeCache.GetTypesDerivedFrom(typeof(EditorWindow))
-                .FirstOrDefault(x => x.Name == "GridPaintPaletteWindow");
             var hasOpenInstanceMethod = typeof(EditorWindow).GetMethod("HasOpenInstances");
-            var constructedMethod = hasOpenInstanceMethod.MakeGenericMethod(type);
+            var constructedMethod = hasOpenInstanceMethod.MakeGenericMethod(tilemapWindowClass);
             var hasOpenInstance = (bool)constructedMethod.Invoke(null, null);
             if (hasOpenInstance)
             {
-                var window = EditorWindow.GetWindow(type);
+                var window = EditorWindow.GetWindow(tilemapWindowClass);
                 window.Close();
             }
             else if(!forceClose)
             {
-                EditorWindow.GetWindow(type);
+                editMode = false;
+                EditorWindow.GetWindow(tilemapWindowClass);
             }
         }
 
@@ -316,6 +311,9 @@ namespace Prota.Editor
                 var scene = EditorSceneManager.GetSceneByName(entry.name);
                 EditorSceneManager.CloseScene(scene, true);
             }
+            
+            gameObjectsInSelect = Array.Empty<GameObject>();
+            selectOriginalPos = Array.Empty<Vector2>();
         }
 
         void SOOnSceneGUI(SceneView v)
@@ -340,6 +338,21 @@ namespace Prota.Editor
                         dragTo = null;
                         Event.current.Use();
                     }
+                    if(Event.current.keyCode == KeyCode.F)
+                    {
+                        Focus(v);
+                        Event.current.Use();
+                    }
+                    if(Event.current.keyCode == KeyCode.V)
+                    {
+                        LoadSceneByView(v);
+                        Event.current.Use();
+                    }
+                    if(Event.current.keyCode == KeyCode.A)
+                    {
+                        ClearLoadedScenes();
+                        Event.current.Use();
+                    }
                     break;
                 }
                 
@@ -355,12 +368,14 @@ namespace Prota.Editor
                     if(Event.current.button == 0)       // 左键按下
                     {
                         Event.current.Use();
-                        dragTo = dragFrom = GetPointerPos().SnapTo(snap);
+                        dragTo = dragFrom = GetPointerPos().SnapTo(snap.vec2);
+                        Undo.RecordObjects(gameObjectsInSelect.Select(x => x.transform).ToArray(), "Move GameObjects");
+                        Undo.RecordObject(info, "OverworldScenesInfo");
                     }
                     else if(Event.current.button == 1)  // 右键按下
                     {
                         Event.current.Use();
-                        dragTo = dragFrom = GetPointerPos().SnapTo(snap);
+                        dragTo = dragFrom = GetPointerPos().SnapTo(snap.vec2);
                     }
                     break;
                 }
@@ -375,8 +390,8 @@ namespace Prota.Editor
                         {
                             if(selectedScene.range.ContainsInclusive(dragFrom.Value)) moveMode = true;
                             if(!moveMode) break;
-                            dragTo = GetPointerPos().SnapTo(snap);
-                            var delta = (dragTo.Value - dragFrom.Value).SnapTo(snap);
+                            dragTo = GetPointerPos().SnapTo(snap.vec2);
+                            var delta = (dragTo.Value - dragFrom.Value).SnapTo(snap.vec2);
                             for(int i = 0; i < gameObjectsInSelect.Length; i++)
                             {
                                 gameObjectsInSelect[i].transform.position = selectOriginalPos[i] + delta;
@@ -387,7 +402,7 @@ namespace Prota.Editor
                     else if(Event.current.button == 1)  // 右键拖拽, 修改 dragTo.
                     {
                         Event.current.Use();
-                        dragTo = GetPointerPos().SnapTo(snap);
+                        dragTo = GetPointerPos().SnapTo(snap.vec2);
                     }
                     
                     break;
@@ -399,7 +414,6 @@ namespace Prota.Editor
                     if(Event.current.button == 0)       // 左键释放, 退出 moveMode, 如果没有进入 moveMode, 则选择区域.
                     {
                         Event.current.Use();
-                        SwapDrag();
                         if(moveMode)
                         {
                             moveMode = false;
@@ -411,13 +425,14 @@ namespace Prota.Editor
                         }
                         else
                         {
-                            Select(); // 左键单击, 选择区域.
+                            SelectByPointer(); // 左键单击, 选择区域.
                         }
                     }
                     else if(Event.current.button == 1)  // 右键释放, 修改 dragTo.
                     {
                         Event.current.Use();
-                        dragTo = GetPointerPos().SnapTo(snap);
+                        dragTo = GetPointerPos().SnapTo(snap.vec2);
+                        SwapDrag();
                     }
                     
                     break;
@@ -425,6 +440,8 @@ namespace Prota.Editor
                 
                 case EventType.Repaint:
                 {
+                    ValidateOverworldInfo();
+                    
                     if(moveMode)
                     {
                         Handles.DrawSolidRectangleWithOutline(
@@ -481,7 +498,17 @@ namespace Prota.Editor
             
             Repaint();
         }
-        
+
+        void ValidateOverworldInfo()
+        {
+            if(info == null) return;
+            if(info.entries == null) info.entries = Array.Empty<SceneEntry>();
+            foreach(var e in info.entries) e.info = info;
+            var n = info.entries.Length;
+            info.entries = info.entries.Remove(x => !File.Exists(x.assetPath));
+            if(n != info.entries.Length) ComputeAdjacents(info.entries);
+        }
+
         void Focus(SceneView view)
         {
             if(dragFrom == null || dragTo == null) return;
@@ -528,7 +555,7 @@ namespace Prota.Editor
                 return;
             }
             
-            var path = "Assets/Resources/" + info.scenePath.PathCombine(selectSceneName).ToStandardPath() + ".unity";
+            var path = info.GetAssetPathOfName(selectSceneName);
             EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
             
             foreach(var entry in info.entries)
@@ -558,8 +585,7 @@ namespace Prota.Editor
                 if(view.Overlaps(entry.range))
                 {
                     if(loadedScenes.ContainsKey(entry.name)) continue;
-                    var path = "Assets/Resources/" + info.scenePath.PathCombine(entry.name).ToStandardPath() + ".unity";
-                    EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
+                    EditorSceneManager.OpenScene(entry.assetPath, OpenSceneMode.Additive);
                 }
                 else
                 {
@@ -573,26 +599,10 @@ namespace Prota.Editor
         void SwapDrag()
         {
             if(dragFrom == null || dragTo == null) return;
-            
-            var from = dragFrom.Value;
-            var to = dragTo.Value;
-            
-            if(from.x > to.x)
-            {
-                var t = from.x;
-                from.x = to.x;
-                to.x = t;
-            }
-            
-            if(from.y > to.y)
-            {
-                var t = from.y;
-                from.y = to.y;
-                to.y = t;
-            }
-            
-            dragFrom = from;
-            dragTo = to;
+            var min = dragFrom.Value.Min(dragTo.Value);
+            var max = dragFrom.Value.Max(dragTo.Value);
+            dragFrom = min;
+            dragTo = max;
         }
         
         
@@ -629,6 +639,16 @@ namespace Prota.Editor
         // ====================================================================================================
         // Utils
         // ====================================================================================================
+        
+        static bool IsSceneOpened(string name)
+        {
+            for(int i = 0; i < EditorSceneManager.sceneCount; i++)
+            {
+                var scene = EditorSceneManager.GetSceneAt(i);
+                if(scene.name == name) return true;
+            }
+            return false;
+        }
         
         Vector2 GetPointerPos()
         {
