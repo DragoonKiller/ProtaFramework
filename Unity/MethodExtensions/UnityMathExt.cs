@@ -512,6 +512,21 @@ namespace Prota.Unity
             var t = -(a.origin.z - z) / a.direction.z;
             return a.origin + a.direction * t;
         }
+        
+        
+        public static Vector2 SnapTo(this Vector2 p, Vector2 snap)
+        {
+            return p.SnapTo(snap, Vector2.zero);
+        }
+        
+        public static Vector2 SnapTo(this Vector2 p, Vector2 snap, Vector2 origin)
+        {
+            if(snap.x <= 1e-12f || snap.y <= 1e-12f) return p;
+            var delta = p - origin;
+            var x = Mathf.Round(delta.x / snap.x) * snap.x;
+            var y = Mathf.Round(delta.y / snap.y) * snap.y;
+            return origin + new Vector2(x, y);
+        }
     }
     
 }
