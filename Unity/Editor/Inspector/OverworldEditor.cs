@@ -118,13 +118,15 @@ namespace Prota.Editor
             }
             
             entry = info.entries[index];
+            var originalRange = entry.range;
             entry.range = new Rect(dragFrom.Value, dragTo.Value - dragFrom.Value);
             ComputeAdjacents(info.entries);
             
             if(IsSceneOpened(entry.name))
             {
+                var param = new Rect[] { originalRange, entry.range };
                 var gs = EditorSceneManager.GetSceneByName(entry.name).GetRootGameObjects();
-                foreach(var g in gs) g.BroadcastMessage("OnOverworldUpdate", SendMessageOptions.DontRequireReceiver);
+                foreach(var g in gs) g.BroadcastMessage("OnOverworldUpdate", param, SendMessageOptions.DontRequireReceiver);
             }
             
             ApplySelect(entry);
