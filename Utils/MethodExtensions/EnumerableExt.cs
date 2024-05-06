@@ -164,5 +164,13 @@ namespace Prota
             if(a == 0) return e;
             return e.Skip(a).Concat(e.Take(a));
         }
+        
+        public static IEnumerable<T> WhereNotSelf<T>(this IEnumerable<T> e, T self)
+            => e.Where(x => !EqualityComparer<T>.Default.Equals(x, self));
+        
+        public static IEnumerable<T> WhereNotSelf<T>(this IEnumerable<T> e, int selfIndex)
+        {
+            return e.Where((x, i) => i != selfIndex);
+        }
     }
 }

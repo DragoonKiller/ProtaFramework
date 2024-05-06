@@ -338,5 +338,25 @@ namespace Prota.Unity
             sb.Remove(0, 1);        // 去掉斜杠
             return sb.ToString();
         }
+        
+        
+        public static Transform EnsureChildExists(this Transform tr, string name)
+        {
+            var child = tr.Find(name);
+            if(child == null)
+            {
+                var go = new GameObject(name);
+                go.transform.SetParent(tr, false);
+                return go.transform;
+            }
+            return child;
+        }
+        
+        public static T EnsureChildExists<T>(this Transform tr, string name) where T: Component
+        {
+            var g = tr.EnsureChildExists(name);
+            if(g.TryGetComponent<T>(out var res)) return res;
+            return g.gameObject.AddComponent<T>();
+        }
     }
 }

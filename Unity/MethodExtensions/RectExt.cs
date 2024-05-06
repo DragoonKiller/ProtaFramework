@@ -90,5 +90,13 @@ namespace Prota.Unity
             return Rect.MinMaxRect(xMin, yMin, xMax, yMax);
         }
         
+        public static Rect Normalize(this Rect r)
+        {
+            var min = r.min;
+            var max = r.max;
+            if(min.x > max.x) (min.x, max.x) = (max.x, min.x);
+            if(min.y > max.y) (min.y, max.y) = (max.y, min.y);
+            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
     }
 }

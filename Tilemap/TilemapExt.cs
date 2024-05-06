@@ -55,8 +55,19 @@ namespace Prota.Unity
                         }
                 }
             }
-            
-            
+        }
+        
+        public static void MoveAllCells(this Tilemap tilemap, Vector3Int delta)
+        {
+            var all = new List<(Vector3Int pos, TileBase tile)>();
+            foreach(var p in tilemap.cellBounds.allPositionsWithin)
+            {
+                var tile = tilemap.GetTile(p);
+                if(tile == null) continue;
+                all.Add((p, tile));
+            }
+            tilemap.ClearAllTiles();
+            foreach(var e in all) tilemap.SetTile(e.pos, e.tile);
         }
         
     }
