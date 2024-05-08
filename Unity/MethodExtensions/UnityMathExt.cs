@@ -537,6 +537,28 @@ namespace Prota.Unity
             var y = Mathf.Round(delta.y / snap.y) * snap.y;
             return origin + new Vector2(x, y);
         }
+        
+        public static Matrix4x4 GetShearMatrixRadial2D(this float angleInRadian, Vector2 pivot, bool radial)
+        {
+            var mat = Matrix4x4.zero;
+            mat.m33 = 1;
+            
+            if(radial)
+            {
+                var cos = Mathf.Cos(angleInRadian);
+                var sin = Mathf.Sin(angleInRadian);
+                mat.m00 = 1;
+                mat.m01 = sin;
+                mat.m11 = cos;
+            }
+            else
+            {
+                mat.m01 = Mathf.Tan(angleInRadian);
+            }
+            
+            if(pivot == Vector2.zero) return mat;
+            return Matrix4x4.Translate(pivot) * mat * Matrix4x4.Translate(-pivot);
+        }
     }
     
 }
