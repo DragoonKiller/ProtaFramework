@@ -358,5 +358,16 @@ namespace Prota.Unity
             if(g.TryGetComponent<T>(out var res)) return res;
             return g.gameObject.AddComponent<T>();
         }
+        
+        public static Matrix4x4 ToWorldMatrix(this RectTransform a)
+        {
+            // 把一个在 RectTransform 坐标系下的子矩形转换到世界坐标系下.
+            var trs = Matrix4x4.TRS(
+                a.position + a.rect.position.ToVec3(),
+                a.rotation,
+                a.lossyScale.Multiply(a.rect.size.ToVec3())
+            );
+            return trs;
+        }
     }
 }

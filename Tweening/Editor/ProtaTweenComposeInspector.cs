@@ -62,7 +62,7 @@ namespace Prota.Editor
                 var target = i.objectReferenceValue as ProtaTweener;
                 {
                     EditorGUI.TextField(p.WithWidth(140), target?.name);
-                    EditorGUI.PropertyField(p.MarginIn(140, 0, 0, 0), i, GUIContent.none);
+                    EditorGUI.PropertyField(p.Shrink(140, 0, 0, 0), i, GUIContent.none);
                 }
                 p = p.MoveUp(lineHeight);
             }

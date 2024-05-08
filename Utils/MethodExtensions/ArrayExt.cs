@@ -136,6 +136,36 @@ namespace Prota
             return l.ToArray();
         }
         
+        public static void CopyTo<T>(this T[] arr, T[] target)
+        {
+            if(arr == null) throw new ArgumentNullException("arr");
+            if(target == null) throw new ArgumentNullException("target");
+            var n = arr.Length.Min(target.Length);
+            for(int i = 0; i < n; i++) target[i] = arr[i];
+        }
+        
+        public static void CopyTo<T>(this T[] arr, int start, T[] target, int maxLength = int.MaxValue)
+        {
+            if(arr == null) throw new ArgumentNullException("arr");
+            if(target == null) throw new ArgumentNullException("target");
+            var n = (arr.Length - start).Min(maxLength).Min(target.Length);
+            for(int i = 0; i < n; i++) target[i] = arr[start + i];
+        }
+        
+        public static void CopyTo<T>(this T[] arr, int start, T[] target, int targetStart, int maxLength = int.MaxValue)
+        {
+            if(arr == null) throw new ArgumentNullException("arr");
+            if(target == null) throw new ArgumentNullException("target");
+            var n = (arr.Length - start).Min(maxLength).Min(target.Length);
+            for(int i = 0; i < n; i++) target[targetStart + i] = arr[start + i];
+        }
+        
+        public static T[] Fill<T>(this T[] arr, T value)
+        {
+            for(int i = 0; i < arr.Length; i++) arr[i] = value;
+            return arr;
+        }
+        
         internal static Span<T> AsSpan<T>(this T[] arr) => new Span<T>(arr);
     }
 }

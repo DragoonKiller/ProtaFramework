@@ -1,6 +1,7 @@
 
 using UnityEngine;
 using Prota.Unity;
+using Codice.Client.BaseCommands;
 
 namespace Prota.Unity
 {
@@ -51,6 +52,21 @@ namespace Prota.Unity
                 var f = a;
                 a = 1 - (1 - a) * 0.5f;
                 Debug.DrawLine((from, to).Lerp((f + a) / 2), (from, to).Lerp(a), color.Value, duration.Value);
+            }
+        }
+        
+        public static void DrawCircle2D(Vector3 center, float radius, Color? color = null, float? duration = null, int segment = 32)
+        {
+            if(color == null) color = Color.green;
+            if(duration == null) duration = 0;
+            float segStep = 360f / segment;
+            for(int i = 0; i < segment; i++)
+            {
+                var a = i * segStep * Mathf.Deg2Rad;
+                var b = (i + 1) * segStep * Mathf.Deg2Rad;
+                var p1 = center + new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * radius;
+                var p2 = center + new Vector3(Mathf.Cos(b), Mathf.Sin(b)) * radius;
+                Debug.DrawLine(p1, p2, color.Value, duration.Value);
             }
         }
         

@@ -472,6 +472,8 @@ namespace Prota.Unity
         public static int SumAllComponents(this Vector3Int a) => a.x + a.y + a.z;
         
         
+        public static Vector3 Multiply(this Vector3 a, Vector3 b) => new Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
+        
         
         // 切比雪夫距离
         public static int DistanceChebyshev(this Vector2Int a, Vector2Int b)

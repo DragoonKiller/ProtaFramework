@@ -147,11 +147,6 @@ namespace Prota.Unity
         [NonSerialized] float lastTempCreatedTime;
         [NonSerialized] bool meshNeedsToBeSet;
         
-        static readonly int[] defaultTriangles = new int[] {
-            0, 1, 2,
-            2, 1, 3,
-        };
-        
         void UpdateMeshValues()
         {
             // 记录临时对象被创建的时间.
@@ -163,24 +158,20 @@ namespace Prota.Unity
             var rect = trRect;
         
             // 计算扩展后的矩形.
-            rect.xMin -= extend.x;
-            rect.yMin -= extend.y;
-            rect.xMax += extend.z;
-            rect.yMax += extend.w;
+            rect = rect.Expend(extend.x, extend.z, extend.y, extend.w);
             
             // 顺序: 左上, 右上, 左下, 右下. uv 同.
-            tempVertices[0] = new Vector3(rect.xMin, rect.yMax, 0);
-            tempVertices[1] = new Vector3(rect.xMax, rect.yMax, 0);
-            tempVertices[2] = new Vector3(rect.xMin, rect.yMin, 0);
-            tempVertices[3] = new Vector3(rect.xMax, rect.yMin, 0);
+            rect.FillWithStandardMeshOrder(tempVertices);
+            
+            var radShear = shear.ToRadian();
             
             // 应用剪切形变.
             if(useRadialShear)
             {
-                var xOffsetTop = rect.yMax * Mathf.Sin(shear.ToRadian());
-                var xOffsetBottom = rect.yMin * Mathf.Sin(shear.ToRadian());
-                var yOffsetTop = rect.yMax * (1 - Mathf.Cos(shear.ToRadian()));
-                var yOffsetBottom = rect.yMin * (1 - Mathf.Cos(shear.ToRadian()));
+                var xOffsetTop = rect.yMax * Mathf.Sin(radShear);
+                var xOffsetBottom = rect.yMin * Mathf.Sin(radShear);
+                var yOffsetTop = rect.yMax * (1 - Mathf.Cos(radShear));
+                var yOffsetBottom = rect.yMin * (1 - Mathf.Cos(radShear));
                 tempVertices[0].x += xOffsetTop;
                 tempVertices[1].x += xOffsetTop;
                 tempVertices[2].x += xOffsetBottom;
@@ -192,46 +183,38 @@ namespace Prota.Unity
             }
             else
             {
-                var xOffsetTop = rect.yMax * Mathf.Tan(shear.ToRadian());
-                var xOffsetBottom = rect.yMin * Mathf.Tan(shear.ToRadian());
+                var xOffsetTop = rect.yMax * Mathf.Tan(radShear);
+                var xOffsetBottom = rect.yMin * Mathf.Tan(radShear);
                 tempVertices[0].x += xOffsetTop;
                 tempVertices[1].x += xOffsetTop;
                 tempVertices[2].x += xOffsetBottom;
                 tempVertices[3].x += xOffsetBottom;
             }
             
-            tempColors[0] = vertexColor;
-            tempColors[1] = vertexColor;
-            tempColors[2] = vertexColor;
-            tempColors[3] = vertexColor;
+            
+            tempColors.Fill(vertexColor);
             
             if(sprite)
             {
                 var uv = SpriteUVCache.Get(sprite);
-                tempUV[0] = uv[0];
-                tempUV[1] = uv[1];
-                tempUV[2] = uv[2];
-                tempUV[3] = uv[3];
+                uv.CopyTo(tempUV);
             }
             else
             {
-                tempUV[0] = new Vector2(0, 1);
-                tempUV[1] = new Vector2(1, 1);
-                tempUV[2] = new Vector2(0, 0);
-                tempUV[3] = new Vector2(1, 0);
+                ProtaUnityConstant.rectMeshUVs.CopyTo(tempUV);
             }
             
             TransformUVExtend(trRect.size, extend, tempUV);
             
             if(flipX)
             {
-                Swap(ref tempUV[0], ref tempUV[1]);
-                Swap(ref tempUV[2], ref tempUV[3]);
+                tempUV[0].Swap(ref tempUV[1]);
+                tempUV[2].Swap(ref tempUV[3]);
             }
             if(flipY)
             {
-                Swap(ref tempUV[0], ref tempUV[2]);
-                Swap(ref tempUV[1], ref tempUV[3]);
+                tempUV[0].Swap(ref tempUV[2]);
+                tempUV[1].Swap(ref tempUV[3]);
             }
             
             tempBounds.center = rect.center;
@@ -247,7 +230,7 @@ namespace Prota.Unity
             mesh.SetVertices(tempVertices);
             mesh.SetUVs(0, tempUV);
             mesh.SetColors(tempColors);
-            mesh.SetIndices(defaultTriangles, MeshTopology.Triangles, 0);
+            mesh.SetIndices(ProtaUnityConstant.rectMeshTriangles, MeshTopology.Triangles, 0);
             mesh.bounds = tempBounds;
             meshNeedsToBeSet = false;
         }
@@ -262,14 +245,6 @@ namespace Prota.Unity
                 tempColors = null;
             }
         }
-
-        static void Swap<T>(ref T a, ref T b)
-        {
-            var t = a;
-            a = b;
-            b = t;
-        }
-        
         
         static void TransformUVExtend(Vector2 size, Vector4 extend, Vector2[] points)
         {
