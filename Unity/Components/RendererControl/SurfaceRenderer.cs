@@ -28,7 +28,7 @@ namespace Prota.Unity
         
         public bool passRenderTextureToRenderer = false;
         
-        public bool render;
+        public bool renderInScene = true;
         
         public Renderer[] renderers = Array.Empty<Renderer>();
         
@@ -110,7 +110,7 @@ namespace Prota.Unity
                 renderers = this.GetComponentsInChildren<Renderer>().ToArray();
                 foreach(var rd in renderers) rd.enabled = false;
             }
-            if(render) Preview();
+            if(renderInScene) Preview();
         }
         
         // ====================================================================================================
